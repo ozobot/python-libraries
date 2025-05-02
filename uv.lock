@@ -1,0 +1,20 @@
+version = 1
+revision = 1
+requires-python = ">=3.12"
+
+[manifest]
+members = [
+    "ozobot-bluetooth",
+    "ozobot-library",
+    "ozobot-protocol-common",
+]
+
+[[package]]
+name = "ozobot-library"
+version = "0.1.0"
+source = { virtual = "." }
+
+[[package]]
+name = "ozobot-protocol-common"
+version = "0.1.0"
+source = { editable = "ozobot-protocol-common" }

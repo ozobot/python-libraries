@@ -1,0 +1,32 @@
+[project]
+name = "ozobot-protocol-common"
+version = "0.1.0"
+description = "Ozobot protocol common utils"
+readme = "README.md"
+authors = [
+    { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.hatch.build.targets.sdist]
+sources = ["src"]
+only-include = ["src/ozobot"]
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+only-include = ["src/ozobot"]
+
+[tool.hatch.envs.hatch-test]
+default-args = []
+extra-dependencies = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
