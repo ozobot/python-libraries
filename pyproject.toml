@@ -6,5 +6,6 @@ dependencies = []
 
 [tool.uv.workspace]
 members = [
+  "ozobot-ble",
   "ozobot-protocol-common",
 ]

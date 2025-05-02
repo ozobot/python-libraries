@@ -16,10 +16,10 @@ def s8_24_to_float(val: int) -> float:
     return val / float(1 << 24)
 
 
-def s8_24_serialize(self, val: float) -> bytes:
-    return struct.pack("<i", float_to_s8_24(self))
+def s8_24_serialize(val: float) -> bytes:
+    return struct.pack("<i", float_to_s8_24(val))
 
 
-def s8_24_deserialize(cls, val: bytes) -> float:
-    return cls(s8_24_to_float(*struct.unpack("<i", val)))
+def s8_24_deserialize(val: bytes) -> float:
+    return float(s8_24_to_float(*struct.unpack("<i", val)))
 

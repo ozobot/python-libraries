@@ -1,41 +1,50 @@
+import contextlib
+import typing
+
 import pytest
+
 from ozobot.protocol_common.rpc import RpcCall, RpcCallReentryError
 
 
-async def _generator() -> int:
-    yield 1
-    yield 2
-    yield 3
+@contextlib.asynccontextmanager
+async def _generator() -> typing.AsyncIterator[tuple[str, typing.AsyncIterator[int]]]:
+    async def _gen() -> typing.AsyncIterator[int]:
+        yield 1
+        yield 2
+        yield 3
+
+    yield "response", _gen()
 
 
 async def test_rpc_call_await():
     rpc = RpcCall(_generator())
     ret = await rpc
-    assert ret == 1
+    assert ret == "response"
 
 
 async def test_rpc_iterate_cm():
-    gen = _generator()
-    rpc = RpcCall[int, int](gen)
-    async with rpc as it:
-        values = [await anext(it) for _ in range(2)]
+    rpc = RpcCall(_generator())
+    async with rpc as (resp, events):
+        values = [await anext(events) for _ in range(3)]
 
-    with pytest.raises(StopAsyncIteration):
-        await anext(gen)
+        with pytest.raises(StopAsyncIteration):
+            await anext(events)
 
-    assert values == [1, 2]
+    assert resp == "response"
+    assert values == [1, 2, 3]
     
 
 async def test_rpc_iterate_exhaust():
-    rpc = RpcCall[int, int](_generator())
-    async with rpc as it:
-        values = [await anext(it) for _ in range(3)]
+    rpc = RpcCall(_generator())
+    async with rpc as (resp, events):
+        values = [await anext(events) for _ in range(3)]
 
+    assert resp == "response"
     assert values == [1, 2, 3]
     
 
 async def test_rpc_prevent_reentry():
-    rpc = RpcCall[int, int](_generator())
+    rpc = RpcCall(_generator())
     await rpc
 
     with pytest.raises(RpcCallReentryError):

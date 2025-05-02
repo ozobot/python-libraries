@@ -1,13 +1,15 @@
 [project]
-name = "ozobot-protocol-common"
+name = "ozobot-ble"
 version = "0.1.0"
-description = "Ozobot protocol common utils"
+description = "Ozobot BLE transport protocol"
 readme = "README.md"
 authors = [
     { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "ozobot-protocol-common",
+    "bleak>=0.22.3",
     "loguru"
 ]
 
@@ -19,15 +21,8 @@ only-include = ["src/ozobot"]
 sources = ["src"]
 only-include = ["src/ozobot"]
 
-[tool.hatch.envs.hatch-test]
-default-args = []
-extra-dependencies = [
-    "pytest",
-    "pytest-asyncio",
-]
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
+[tool.uv.sources]
+ozobot-protocol-common = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -7,23 +7,34 @@ class RpcCallReentryError(Exception):
         
 
 class RpcCall[TResponse, TEvent]:
-    def __init__(self, iterator: typing.AsyncGenerator[TResponse | TEvent, None]) -> None:
-        self._iterator = iterator
+    def __init__(self, response: typing.AsyncGenerator[TResponse, TEvent]) -> None:
+        self._response = response
         self._used = False
 
-    def __await__(self) -> TResponse:
+    def __await__(self) -> typing.Generator[None, None, TResponse]:
         if self._used:
             raise RpcCallReentryError()
         
         self._used = True
-        return anext(self._iterator).__await__()
+        async def x():
+            pass
         
-    async def __aenter__(self) -> typing.AsyncIterator[TEvent]:
+        return self._get_response_and_close().__await__()
+
+    async def _get_response_and_close(self) -> TResponse:
+        response = await anext(self._response)
+        await self._response.aclose()
+        return response
+        
+    async def __aenter__(self) -> tuple[TResponse, typing.AsyncIterator[TEvent]]:
         if self._used:
             raise RpcCallReentryError()
 
         self._used = True
-        return self._iterator
+
+        response = await anext(self._response)
+        return response, self._response
 
     async def __aexit__(self, *args, **kwargs) -> None:
-        await self._iterator.aclose()
+        await self._response.aclose()
+        
