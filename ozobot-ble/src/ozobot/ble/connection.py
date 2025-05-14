@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import contextvars
 import typing
 from dataclasses import dataclass
 from uuid import UUID, uuid4
