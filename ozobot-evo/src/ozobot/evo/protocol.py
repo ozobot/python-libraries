@@ -3,12 +3,13 @@
 #  #############################################################################
 from __future__ import annotations
 
+import contextlib
 import enum
 import struct
 import typing
 from loguru import logger
 from ozobot.protocol_common.crc import crc32
-from ozobot.protocol_common.convert import serialize_array, deserialize_array, convert_to
+from ozobot.protocol_common.convert import serialize_array, deserialize_array
 from ozobot.protocol_common.rlock import RLock
 from ozobot.protocol_common.rpc import RpcCall
 from ozobot.protocol_common.types import s8_24_deserialize, s8_24_serialize
@@ -45,6 +46,13 @@ class _ProtocolType(typing.Protocol):
 
     def is_event_of(self, request: _ProtocolType) -> bool:
         ...
+
+
+class PropertyMetadata(typing.TypedDict):
+    is_readable: bool
+    is_writable: bool
+    type: Type[_ProtocolType]
+    address: int
 
 
 class _Channel(typing.Protocol):
@@ -296,9 +304,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, major, minor, patch):
-            self.major = convert_to(Types.u8, major)
-            self.minor = convert_to(Types.u8, minor)
-            self.patch = convert_to(Types.u16, patch)
+            self.major = Types.u8(major)
+            self.minor = Types.u8(minor)
+            self.patch = Types.u16(patch)
 
         def __repr__(self):
             return f'Version(major={self.major}, minor={self.minor}, patch={self.patch})'
@@ -546,12 +554,12 @@ class Types:
             return cls.data_width
 
         def __init__(self, red, green, blue, clear, lightSource, timestamp):
-            self.red = convert_to(Types.u16, red)
-            self.green = convert_to(Types.u16, green)
-            self.blue = convert_to(Types.u16, blue)
-            self.clear = convert_to(Types.u16, clear)
-            self.lightSource = convert_to(Types.LightSource, lightSource)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.red = Types.u16(red)
+            self.green = Types.u16(green)
+            self.blue = Types.u16(blue)
+            self.clear = Types.u16(clear)
+            self.lightSource = Types.LightSource(lightSource)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'ColorSensorData(red={self.red}, green={self.green}, blue={self.blue}, clear={self.clear}, lightSource={self.lightSource}, timestamp={self.timestamp})'
@@ -643,13 +651,13 @@ class Types:
             return cls.data_width
 
         def __init__(self, red, green, blue, clear, lightSource, status, timestamp):
-            self.red = convert_to(Types.u16, red)
-            self.green = convert_to(Types.u16, green)
-            self.blue = convert_to(Types.u16, blue)
-            self.clear = convert_to(Types.u16, clear)
-            self.lightSource = convert_to(Types.LightSource, lightSource)
-            self.status = convert_to(Types.ColorSensorStatus, status)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.red = Types.u16(red)
+            self.green = Types.u16(green)
+            self.blue = Types.u16(blue)
+            self.clear = Types.u16(clear)
+            self.lightSource = Types.LightSource(lightSource)
+            self.status = Types.ColorSensorStatus(status)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'ColorSensorDataWithStatus(red={self.red}, green={self.green}, blue={self.blue}, clear={self.clear}, lightSource={self.lightSource}, status={self.status}, timestamp={self.timestamp})'
@@ -711,9 +719,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, red, green, blue):
-            self.red = convert_to(Types.u8, red)
-            self.green = convert_to(Types.u8, green)
-            self.blue = convert_to(Types.u8, blue)
+            self.red = Types.u8(red)
+            self.green = Types.u8(green)
+            self.blue = Types.u8(blue)
 
         def __repr__(self):
             return f'RGBColor(red={self.red}, green={self.green}, blue={self.blue})'
@@ -773,8 +781,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, color, timestamp):
-            self.color = convert_to(Types.RGBColor, color)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.color = Types.RGBColor(color)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'RGBColorWithTimestamp(color={self.color}, timestamp={self.timestamp})'
@@ -844,10 +852,10 @@ class Types:
             return cls.data_width
 
         def __init__(self, normalized, transformed, lightSource, timestamp):
-            self.normalized = convert_to(Types.RGBColor, normalized)
-            self.transformed = convert_to(Types.RGBColor, transformed)
-            self.lightSource = convert_to(Types.LightSource, lightSource)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.normalized = Types.RGBColor(normalized)
+            self.transformed = Types.RGBColor(transformed)
+            self.lightSource = Types.LightSource(lightSource)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'ProcessedRGBColor(normalized={self.normalized}, transformed={self.transformed}, lightSource={self.lightSource}, timestamp={self.timestamp})'
@@ -903,9 +911,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, hue, chroma, lightness):
-            self.hue = convert_to(Types.u16, hue)
-            self.chroma = convert_to(Types.u8, chroma)
-            self.lightness = convert_to(Types.u8, lightness)
+            self.hue = Types.u16(hue)
+            self.chroma = Types.u8(chroma)
+            self.lightness = Types.u8(lightness)
 
         def __repr__(self):
             return f'HCLColor(hue={self.hue}, chroma={self.chroma}, lightness={self.lightness})'
@@ -965,8 +973,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, color, timestamp):
-            self.color = convert_to(Types.HCLColor, color)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.color = Types.HCLColor(color)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'HCLColorWithTimestamp(color={self.color}, timestamp={self.timestamp})'
@@ -1016,8 +1024,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, proximity, timestamp):
-            self.proximity = convert_to(Types.u16, proximity)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.proximity = Types.u16(proximity)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'SurfaceProximityData(proximity={self.proximity}, timestamp={self.timestamp})'
@@ -1646,8 +1654,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, watcherCount, watcherRegionCount):
-            self.watcherCount = convert_to(Types.u8, watcherCount)
-            self.watcherRegionCount = convert_to(Types.u8, watcherRegionCount)
+            self.watcherCount = Types.u8(watcherCount)
+            self.watcherRegionCount = Types.u8(watcherRegionCount)
 
         def __repr__(self):
             return f'WatcherInfo(watcherCount={self.watcherCount}, watcherRegionCount={self.watcherRegionCount})'
@@ -2031,10 +2039,10 @@ class Types:
             return cls.data_width
 
         def __init__(self, position, width, characteristics, bitmap):
-            self.position = convert_to(Types.S8_24, position)
-            self.width = convert_to(Types.S8_24, width)
-            self.characteristics = convert_to(Types.LineCharacteristic, characteristics)
-            self.bitmap = convert_to(Types.u8, bitmap)
+            self.position = Types.S8_24(position)
+            self.width = Types.S8_24(width)
+            self.characteristics = Types.LineCharacteristic(characteristics)
+            self.bitmap = Types.u8(bitmap)
 
         def __repr__(self):
             return f'LineAttributes(position={self.position}, width={self.width}, characteristics={self.characteristics}, bitmap={self.bitmap})'
@@ -2086,7 +2094,7 @@ class Types:
             return cls.data_width
 
         def __init__(self, raw):
-            self.raw = list([convert_to(Types.u8, x) for x in raw])
+            self.raw = list([Types.u8(x) for x in raw])
 
         def __repr__(self):
             return f'LineSensorsRAW_8bit(raw={self.raw})'
@@ -2132,7 +2140,7 @@ class Types:
             return cls.data_width
 
         def __init__(self, raw):
-            self.raw = list([convert_to(Types.u16, x) for x in raw])
+            self.raw = list([Types.u16(x) for x in raw])
 
         def __repr__(self):
             return f'LineSensorsRAW_16bit(raw={self.raw})'
@@ -2192,9 +2200,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, normalized, attributes, timestamp):
-            self.normalized = list([convert_to(Types.u8, x) for x in normalized])
-            self.attributes = convert_to(Types.LineAttributes, attributes)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.normalized = list([Types.u8(x) for x in normalized])
+            self.attributes = Types.LineAttributes(attributes)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'Line(normalized={self.normalized}, attributes={self.attributes}, timestamp={self.timestamp})'
@@ -2260,10 +2268,10 @@ class Types:
             return cls.data_width
 
         def __init__(self, raw, normalized, attributes, timestamp):
-            self.raw = list([convert_to(Types.u8, x) for x in raw])
-            self.normalized = list([convert_to(Types.u8, x) for x in normalized])
-            self.attributes = convert_to(Types.LineAttributes, attributes)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.raw = list([Types.u8(x) for x in raw])
+            self.normalized = list([Types.u8(x) for x in normalized])
+            self.attributes = Types.LineAttributes(attributes)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'LineWithRAW_8bit(raw={self.raw}, normalized={self.normalized}, attributes={self.attributes}, timestamp={self.timestamp})'
@@ -2319,9 +2327,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, color, lightSource, timestamp):
-            self.color = convert_to(Types.LineColorEnum, color)
-            self.lightSource = convert_to(Types.LightSource, lightSource)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.color = Types.LineColorEnum(color)
+            self.lightSource = Types.LightSource(lightSource)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'LineColor(color={self.color}, lightSource={self.lightSource}, timestamp={self.timestamp})'
@@ -2378,10 +2386,10 @@ class Types:
             return cls.data_width
 
         def __init__(self, color, lightSource, counter, timestamp):
-            self.color = convert_to(Types.SurfaceColorEnum, color)
-            self.lightSource = convert_to(Types.LightSource, lightSource)
-            self.counter = convert_to(Types.u16, counter)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.color = Types.SurfaceColorEnum(color)
+            self.lightSource = Types.LightSource(lightSource)
+            self.counter = Types.u16(counter)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'SurfaceColor(color={self.color}, lightSource={self.lightSource}, counter={self.counter}, timestamp={self.timestamp})'
@@ -2435,8 +2443,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, type, timestamp):
-            self.type = convert_to(Types.SurfaceType, type)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.type = Types.SurfaceType(type)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'Surface(type={self.type}, timestamp={self.timestamp})'
@@ -2486,8 +2494,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, state, timestamp):
-            self.state = convert_to(Types.PickupDetectionEnum, state)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.state = Types.PickupDetectionEnum(state)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'PickupDetection(state={self.state}, timestamp={self.timestamp})'
@@ -2537,8 +2545,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, adcValue, timestamp):
-            self.adcValue = list([convert_to(Types.u16, x) for x in adcValue])
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.adcValue = list([Types.u16(x) for x in adcValue])
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'PickupSensorRaw(adcValue={self.adcValue}, timestamp={self.timestamp})'
@@ -2594,11 +2602,11 @@ class Types:
             return cls.data_width
 
         def __init__(self, leftRear, leftFront, rightRear, rightFront, timestamp):
-            self.leftRear = convert_to(Types.u8, leftRear)
-            self.leftFront = convert_to(Types.u8, leftFront)
-            self.rightRear = convert_to(Types.u8, rightRear)
-            self.rightFront = convert_to(Types.u8, rightFront)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.leftRear = Types.u8(leftRear)
+            self.leftFront = Types.u8(leftFront)
+            self.rightRear = Types.u8(rightRear)
+            self.rightFront = Types.u8(rightFront)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'IRProximity(leftRear={self.leftRear}, leftFront={self.leftFront}, rightRear={self.rightRear}, rightFront={self.rightFront}, timestamp={self.timestamp})'
@@ -2654,8 +2662,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, value, timestamp):
-            self.value = convert_to(Types.u16, value)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.value = Types.u16(value)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'IRProximity_u16(value={self.value}, timestamp={self.timestamp})'
@@ -2707,9 +2715,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, message, intensity, timestamp):
-            self.message = convert_to(Types.u8, message)
-            self.intensity = convert_to(Types.u8, intensity)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.message = Types.u8(message)
+            self.intensity = Types.u8(intensity)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'IRMessage(message={self.message}, intensity={self.intensity}, timestamp={self.timestamp})'
@@ -2761,8 +2769,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, message, active):
-            self.message = convert_to(Types.u8, message)
-            self.active = convert_to(Types.IRChannelEmitState, active)
+            self.message = Types.u8(message)
+            self.active = Types.IRChannelEmitState(active)
 
         def __repr__(self):
             return f'IRMessageEmit(message={self.message}, active={self.active})'
@@ -2820,12 +2828,12 @@ class Types:
             return cls.data_width
 
         def __init__(self, originCounter, x, y, angleX, angleY, timestamp):
-            self.originCounter = convert_to(Types.u8, originCounter)
-            self.x = convert_to(Types.S8_24, x)
-            self.y = convert_to(Types.S8_24, y)
-            self.angleX = convert_to(Types.S8_24, angleX)
-            self.angleY = convert_to(Types.S8_24, angleY)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.originCounter = Types.u8(originCounter)
+            self.x = Types.S8_24(x)
+            self.y = Types.S8_24(y)
+            self.angleX = Types.S8_24(angleX)
+            self.angleY = Types.S8_24(angleY)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'RelativePosition(originCounter={self.originCounter}, x={self.x}, y={self.y}, angleX={self.angleX}, angleY={self.angleY}, timestamp={self.timestamp})'
@@ -2885,9 +2893,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, leftWheel, rightWheel, timestamp):
-            self.leftWheel = convert_to(Types.u32, leftWheel)
-            self.rightWheel = convert_to(Types.u32, rightWheel)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.leftWheel = Types.u32(leftWheel)
+            self.rightWheel = Types.u32(rightWheel)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'WheelsEncoder(leftWheel={self.leftWheel}, rightWheel={self.rightWheel}, timestamp={self.timestamp})'
@@ -2939,8 +2947,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, state, timestamp):
-            self.state = convert_to(Types.ChargerStateEnum, state)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.state = Types.ChargerStateEnum(state)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'ChargerState(state={self.state}, timestamp={self.timestamp})'
@@ -2990,8 +2998,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, code, timestamp):
-            self.code = convert_to(Types.u32, code)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.code = Types.u32(code)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'ColorCode(code={self.code}, timestamp={self.timestamp})'
@@ -3045,10 +3053,10 @@ class Types:
             return cls.data_width
 
         def __init__(self, voltage, remainingPower, fields, timestamp):
-            self.voltage = convert_to(Types.u16, voltage)
-            self.remainingPower = convert_to(Types.u8, remainingPower)
-            self.fields = convert_to(Types.BatteryFieldsEnum, fields)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.voltage = Types.u16(voltage)
+            self.remainingPower = Types.u8(remainingPower)
+            self.fields = Types.BatteryFieldsEnum(fields)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'Battery(voltage={self.voltage}, remainingPower={self.remainingPower}, fields={self.fields}, timestamp={self.timestamp})'
@@ -3102,8 +3110,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, press, timestamp):
-            self.press = convert_to(Types.PressType, press)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.press = Types.PressType(press)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'Button(press={self.press}, timestamp={self.timestamp})'
@@ -3155,9 +3163,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, name, priority, remainingStack):
-            self.name = convert_to(Types.c8, name)
-            self.priority = convert_to(Types.u8, priority)
-            self.remainingStack = convert_to(Types.u32, remainingStack)
+            self.name = Types.c8(name)
+            self.priority = Types.u8(priority)
+            self.remainingStack = Types.u32(remainingStack)
 
         def __repr__(self):
             return f'TaskInformation(name={self.name}, priority={self.priority}, remainingStack={self.remainingStack})'
@@ -3211,9 +3219,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, P, I, D):
-            self.P = convert_to(Types.S8_24, P)
-            self.I = convert_to(Types.S8_24, I)
-            self.D = convert_to(Types.S8_24, D)
+            self.P = Types.S8_24(P)
+            self.I = Types.S8_24(I)
+            self.D = Types.S8_24(D)
 
         def __repr__(self):
             return f'PIDParameters(P={self.P}, I={self.I}, D={self.D})'
@@ -3269,10 +3277,10 @@ class Types:
             return cls.data_width
 
         def __init__(self, manufacturer, type, capacity, chipCount):
-            self.manufacturer = convert_to(Types.u8, manufacturer)
-            self.type = convert_to(Types.u8, type)
-            self.capacity = convert_to(Types.u32, capacity)
-            self.chipCount = convert_to(Types.u8, chipCount)
+            self.manufacturer = Types.u8(manufacturer)
+            self.type = Types.u8(type)
+            self.capacity = Types.u32(capacity)
+            self.chipCount = Types.u8(chipCount)
 
         def __repr__(self):
             return f'ExternalFlashInformation(manufacturer={self.manufacturer}, type={self.type}, capacity={self.capacity}, chipCount={self.chipCount})'
@@ -3326,8 +3334,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, min, max):
-            self.min = convert_to(Types.u16, min)
-            self.max = convert_to(Types.u16, max)
+            self.min = Types.u16(min)
+            self.max = Types.u16(max)
 
         def __repr__(self):
             return f'SensorRange(min={self.min}, max={self.max})'
@@ -3377,8 +3385,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, min, max):
-            self.min = convert_to(Types.u16, min)
-            self.max = convert_to(Types.u16, max)
+            self.min = Types.u16(min)
+            self.max = Types.u16(max)
 
         def __repr__(self):
             return f'UnsignedRange(min={self.min}, max={self.max})'
@@ -3428,8 +3436,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, min, max):
-            self.min = convert_to(Types.S8_24, min)
-            self.max = convert_to(Types.S8_24, max)
+            self.min = Types.S8_24(min)
+            self.max = Types.S8_24(max)
 
         def __repr__(self):
             return f'S8_24Range(min={self.min}, max={self.max})'
@@ -3483,7 +3491,7 @@ class Types:
             return cls.data_width
 
         def __init__(self, sensorsRange):
-            self.sensorsRange = list([convert_to(Types.SensorRange, x) for x in sensorsRange])
+            self.sensorsRange = list([Types.SensorRange(x) for x in sensorsRange])
 
         def __repr__(self):
             return f'LineSensorsCalibration(sensorsRange={self.sensorsRange})'
@@ -3551,9 +3559,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, redRange, greenRange, blueRange):
-            self.redRange = convert_to(Types.SensorRange, redRange)
-            self.greenRange = convert_to(Types.SensorRange, greenRange)
-            self.blueRange = convert_to(Types.SensorRange, blueRange)
+            self.redRange = Types.SensorRange(redRange)
+            self.greenRange = Types.SensorRange(greenRange)
+            self.blueRange = Types.SensorRange(blueRange)
 
         def __repr__(self):
             return f'ColorSensorCalibration(redRange={self.redRange}, greenRange={self.greenRange}, blueRange={self.blueRange})'
@@ -3605,8 +3613,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, leftThreshold, rightThreshold):
-            self.leftThreshold = convert_to(Types.u8, leftThreshold)
-            self.rightThreshold = convert_to(Types.u8, rightThreshold)
+            self.leftThreshold = Types.u8(leftThreshold)
+            self.rightThreshold = Types.u8(rightThreshold)
 
         def __repr__(self):
             return f'EncodersCalibration(leftThreshold={self.leftThreshold}, rightThreshold={self.rightThreshold})'
@@ -3656,8 +3664,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, speed, approximated):
-            self.speed = convert_to(Types.S8_24, speed)
-            self.approximated = convert_to(Types.u8, approximated)
+            self.speed = Types.S8_24(speed)
+            self.approximated = Types.u8(approximated)
 
         def __repr__(self):
             return f'WheelSpeed(speed={self.speed}, approximated={self.approximated})'
@@ -3713,8 +3721,8 @@ class Types:
             return cls.data_width
 
         def __init__(self, speed, timestamp):
-            self.speed = list([convert_to(Types.WheelSpeed, x) for x in speed])
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.speed = list([Types.WheelSpeed(x) for x in speed])
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'WheelsSpeed(speed={self.speed}, timestamp={self.timestamp})'
@@ -3766,9 +3774,9 @@ class Types:
             return cls.data_width
 
         def __init__(self, status, cells, timestamp):
-            self.status = convert_to(Types.CalibrationStatus, status)
-            self.cells = list([convert_to(Types.CalibrationRangeStatus, x) for x in cells])
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.status = Types.CalibrationStatus(status)
+            self.cells = list([Types.CalibrationRangeStatus(x) for x in cells])
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'CalibrationStatusLineSensor(status={self.status}, cells={self.cells}, timestamp={self.timestamp})'
@@ -3826,11 +3834,11 @@ class Types:
             return cls.data_width
 
         def __init__(self, status, red, green, blue, timestamp):
-            self.status = convert_to(Types.CalibrationStatus, status)
-            self.red = convert_to(Types.CalibrationRangeStatus, red)
-            self.green = convert_to(Types.CalibrationRangeStatus, green)
-            self.blue = convert_to(Types.CalibrationRangeStatus, blue)
-            self.timestamp = convert_to(Types.time_t, timestamp)
+            self.status = Types.CalibrationStatus(status)
+            self.red = Types.CalibrationRangeStatus(red)
+            self.green = Types.CalibrationRangeStatus(green)
+            self.blue = Types.CalibrationRangeStatus(blue)
+            self.timestamp = Types.time_t(timestamp)
 
         def __repr__(self):
             return f'CalibrationStatusColorSensor(status={self.status}, red={self.red}, green={self.green}, blue={self.blue}, timestamp={self.timestamp})'
@@ -3892,11 +3900,11 @@ class Types:
             return cls.data_width
 
         def __init__(self, ledStrip, sensorBoard, flexStrip, bleChip, productID):
-            self.ledStrip = convert_to(Types.u8, ledStrip)
-            self.sensorBoard = convert_to(Types.u8, sensorBoard)
-            self.flexStrip = convert_to(Types.u8, flexStrip)
-            self.bleChip = convert_to(Types.u8, bleChip)
-            self.productID = convert_to(Types.u8, productID)
+            self.ledStrip = Types.u8(ledStrip)
+            self.sensorBoard = Types.u8(sensorBoard)
+            self.flexStrip = Types.u8(flexStrip)
+            self.bleChip = Types.u8(bleChip)
+            self.productID = Types.u8(productID)
 
         def __repr__(self):
             return f'BoardsConfiguration(ledStrip={self.ledStrip}, sensorBoard={self.sensorBoard}, flexStrip={self.flexStrip}, bleChip={self.bleChip}, productID={self.productID})'
@@ -3993,8 +4001,8 @@ class _PacketTypes:
         message_id = Types.u16(1)
 
         def __init__(self, addr, length):
-            self.addr = convert_to(Types.addr_t, addr)
-            self.length = convert_to(Types.size_t, length)
+            self.addr = Types.addr_t(addr)
+            self.length = Types.size_t(length)
 
         def __repr__(self):
             return f'PacketRequest_MemRead(message_id={self.message_id}, addr={self.addr}, length={self.length})'
@@ -4040,9 +4048,9 @@ class _PacketTypes:
         message_id = Types.u16(2)
 
         def __init__(self, result, length, data):
-            self.result = convert_to(Types.IOResult, result)
-            self.length = convert_to(Types.size_t, length)
-            self.data = list([convert_to(Types.u8, x) for x in data])
+            self.result = Types.IOResult(result)
+            self.length = Types.size_t(length)
+            self.data = list([Types.u8(x) for x in data])
 
         def __repr__(self):
             return f'PacketResponse_MemRead(message_id={self.message_id}, result={self.result}, length={self.length}, data={self.data})'
@@ -4088,9 +4096,9 @@ class _PacketTypes:
         message_id = Types.u16(3)
 
         def __init__(self, addr, length, data):
-            self.addr = convert_to(Types.addr_t, addr)
-            self.length = convert_to(Types.size_t, length)
-            self.data = list([convert_to(Types.u8, x) for x in data])
+            self.addr = Types.addr_t(addr)
+            self.length = Types.size_t(length)
+            self.data = list([Types.u8(x) for x in data])
 
         def __repr__(self):
             return f'PacketRequest_MemWrite(message_id={self.message_id}, addr={self.addr}, length={self.length}, data={self.data})'
@@ -4140,7 +4148,7 @@ class _PacketTypes:
         message_id = Types.u16(4)
 
         def __init__(self, result):
-            self.result = convert_to(Types.IOResult, result)
+            self.result = Types.IOResult(result)
 
         def __repr__(self):
             return f'PacketResponse_MemWrite(message_id={self.message_id}, result={self.result})'
@@ -4180,9 +4188,9 @@ class _PacketTypes:
         message_id = Types.u16(100)
 
         def __init__(self, requestId, distance, speed):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.distance = convert_to(Types.S8_24, distance)
-            self.speed = convert_to(Types.S8_24, speed)
+            self.requestId = Types.RequestID(requestId)
+            self.distance = Types.S8_24(distance)
+            self.speed = Types.S8_24(speed)
 
         def __repr__(self):
             return f'PacketRequest_MoveStraight(message_id={self.message_id}, requestId={self.requestId}, distance={self.distance}, speed={self.speed})'
@@ -4230,7 +4238,7 @@ class _PacketTypes:
         message_id = Types.u16(101)
 
         def __init__(self, requestId):
-            self.requestId = convert_to(Types.RequestID, requestId)
+            self.requestId = Types.RequestID(requestId)
 
         def __repr__(self):
             return f'PacketResponse_MoveStraight(message_id={self.message_id}, requestId={self.requestId})'
@@ -4272,9 +4280,9 @@ class _PacketTypes:
         message_id = Types.u16(102)
 
         def __init__(self, requestId, angle, speed):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.angle = convert_to(Types.S8_24, angle)
-            self.speed = convert_to(Types.S8_24, speed)
+            self.requestId = Types.RequestID(requestId)
+            self.angle = Types.S8_24(angle)
+            self.speed = Types.S8_24(speed)
 
         def __repr__(self):
             return f'PacketRequest_Rotate(message_id={self.message_id}, requestId={self.requestId}, angle={self.angle}, speed={self.speed})'
@@ -4322,7 +4330,7 @@ class _PacketTypes:
         message_id = Types.u16(103)
 
         def __init__(self, requestId):
-            self.requestId = convert_to(Types.RequestID, requestId)
+            self.requestId = Types.RequestID(requestId)
 
         def __repr__(self):
             return f'PacketResponse_Rotate(message_id={self.message_id}, requestId={self.requestId})'
@@ -4364,10 +4372,10 @@ class _PacketTypes:
         message_id = Types.u16(104)
 
         def __init__(self, requestId, linearSpeed, rotationSpeed, durationTime):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.linearSpeed = convert_to(Types.S8_24, linearSpeed)
-            self.rotationSpeed = convert_to(Types.S8_24, rotationSpeed)
-            self.durationTime = convert_to(Types.i32, durationTime)
+            self.requestId = Types.RequestID(requestId)
+            self.linearSpeed = Types.S8_24(linearSpeed)
+            self.rotationSpeed = Types.S8_24(rotationSpeed)
+            self.durationTime = Types.i32(durationTime)
 
         def __repr__(self):
             return f'PacketRequest_Velocity(message_id={self.message_id}, requestId={self.requestId}, linearSpeed={self.linearSpeed}, rotationSpeed={self.rotationSpeed}, durationTime={self.durationTime})'
@@ -4417,7 +4425,7 @@ class _PacketTypes:
         message_id = Types.u16(105)
 
         def __init__(self, requestId):
-            self.requestId = convert_to(Types.RequestID, requestId)
+            self.requestId = Types.RequestID(requestId)
 
         def __repr__(self):
             return f'PacketResponse_Velocity(message_id={self.message_id}, requestId={self.requestId})'
@@ -4459,9 +4467,9 @@ class _PacketTypes:
         message_id = Types.u16(106)
 
         def __init__(self, requestId, direction, action):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.direction = convert_to(Types.IntersectionDirection, direction)
-            self.action = convert_to(Types.LineNavigationAction, action)
+            self.requestId = Types.RequestID(requestId)
+            self.direction = Types.IntersectionDirection(direction)
+            self.action = Types.LineNavigationAction(action)
 
         def __repr__(self):
             return f'PacketRequest_LineNavigation(message_id={self.message_id}, requestId={self.requestId}, direction={self.direction}, action={self.action})'
@@ -4509,7 +4517,7 @@ class _PacketTypes:
         message_id = Types.u16(107)
 
         def __init__(self, requestId):
-            self.requestId = convert_to(Types.RequestID, requestId)
+            self.requestId = Types.RequestID(requestId)
 
         def __repr__(self):
             return f'PacketResponse_LineNavigation(message_id={self.message_id}, requestId={self.requestId})'
@@ -4551,7 +4559,7 @@ class _PacketTypes:
         message_id = Types.u16(120)
 
         def __init__(self, requestId):
-            self.requestId = convert_to(Types.RequestID, requestId)
+            self.requestId = Types.RequestID(requestId)
 
         def __repr__(self):
             return f'PacketRequest_StopExecution(message_id={self.message_id}, requestId={self.requestId})'
@@ -4595,7 +4603,7 @@ class _PacketTypes:
         message_id = Types.u16(121)
 
         def __init__(self, requestId):
-            self.requestId = convert_to(Types.RequestID, requestId)
+            self.requestId = Types.RequestID(requestId)
 
         def __repr__(self):
             return f'PacketResponse_StopExecution(message_id={self.message_id}, requestId={self.requestId})'
@@ -4637,10 +4645,10 @@ class _PacketTypes:
         message_id = Types.u16(122)
 
         def __init__(self, watcherID, flags, notificationPeriodMin, notificationPeriodMax):
-            self.watcherID = convert_to(Types.u8, watcherID)
-            self.flags = convert_to(Types.WatcherFlags, flags)
-            self.notificationPeriodMin = convert_to(Types.u16, notificationPeriodMin)
-            self.notificationPeriodMax = convert_to(Types.u16, notificationPeriodMax)
+            self.watcherID = Types.u8(watcherID)
+            self.flags = Types.WatcherFlags(flags)
+            self.notificationPeriodMin = Types.u16(notificationPeriodMin)
+            self.notificationPeriodMax = Types.u16(notificationPeriodMax)
 
         def __repr__(self):
             return f'PacketRequest_WatcherSetup(message_id={self.message_id}, watcherID={self.watcherID}, flags={self.flags}, notificationPeriodMin={self.notificationPeriodMin}, notificationPeriodMax={self.notificationPeriodMax})'
@@ -4690,7 +4698,7 @@ class _PacketTypes:
         message_id = Types.u16(123)
 
         def __init__(self, callStatus):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_WatcherSetup(message_id={self.message_id}, callStatus={self.callStatus})'
@@ -4730,11 +4738,11 @@ class _PacketTypes:
         message_id = Types.u16(124)
 
         def __init__(self, watcherID, regionID, address, size, flags):
-            self.watcherID = convert_to(Types.u8, watcherID)
-            self.regionID = convert_to(Types.u8, regionID)
-            self.address = convert_to(Types.u16, address)
-            self.size = convert_to(Types.u8, size)
-            self.flags = convert_to(Types.WatcherRegionFlags, flags)
+            self.watcherID = Types.u8(watcherID)
+            self.regionID = Types.u8(regionID)
+            self.address = Types.u16(address)
+            self.size = Types.u8(size)
+            self.flags = Types.WatcherRegionFlags(flags)
 
         def __repr__(self):
             return f'PacketRequest_WatcherRegionSetup(message_id={self.message_id}, watcherID={self.watcherID}, regionID={self.regionID}, address={self.address}, size={self.size}, flags={self.flags})'
@@ -4786,7 +4794,7 @@ class _PacketTypes:
         message_id = Types.u16(125)
 
         def __init__(self, callStatus):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_WatcherRegionSetup(message_id={self.message_id}, callStatus={self.callStatus})'
@@ -4826,8 +4834,8 @@ class _PacketTypes:
         message_id = Types.u16(108)
 
         def __init__(self, requestId, path):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.path = convert_to(Types.c8, path)
+            self.requestId = Types.RequestID(requestId)
+            self.path = Types.c8(path)
 
         def __repr__(self):
             return f'PacketRequest_ExecuteFile(message_id={self.message_id}, requestId={self.requestId}, path={self.path})'
@@ -4874,8 +4882,8 @@ class _PacketTypes:
         message_id = Types.u16(109)
 
         def __init__(self, requestId, callStatus):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.requestId = Types.RequestID(requestId)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_ExecuteFile(message_id={self.message_id}, requestId={self.requestId}, callStatus={self.callStatus})'
@@ -4919,11 +4927,11 @@ class _PacketTypes:
         message_id = Types.u16(110)
 
         def __init__(self, ledsMask, red, green, blue, alpha):
-            self.ledsMask = convert_to(Types.LEDsMask, ledsMask)
-            self.red = convert_to(Types.u8, red)
-            self.green = convert_to(Types.u8, green)
-            self.blue = convert_to(Types.u8, blue)
-            self.alpha = convert_to(Types.u8, alpha)
+            self.ledsMask = Types.LEDsMask(ledsMask)
+            self.red = Types.u8(red)
+            self.green = Types.u8(green)
+            self.blue = Types.u8(blue)
+            self.alpha = Types.u8(alpha)
 
         def __repr__(self):
             return f'PacketRequest_SetLED(message_id={self.message_id}, ledsMask={self.ledsMask}, red={self.red}, green={self.green}, blue={self.blue}, alpha={self.alpha})'
@@ -4975,7 +4983,7 @@ class _PacketTypes:
         message_id = Types.u16(111)
 
         def __init__(self, callStatus):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_SetLED(message_id={self.message_id}, callStatus={self.callStatus})'
@@ -5015,7 +5023,7 @@ class _PacketTypes:
         message_id = Types.u16(112)
 
         def __init__(self, type):
-            self.type = convert_to(Types.CalibrationType, type)
+            self.type = Types.CalibrationType(type)
 
         def __repr__(self):
             return f'PacketRequest_Calibrate(message_id={self.message_id}, type={self.type})'
@@ -5059,7 +5067,7 @@ class _PacketTypes:
         message_id = Types.u16(113)
 
         def __init__(self, callStatus):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_Calibrate(message_id={self.message_id}, callStatus={self.callStatus})'
@@ -5141,7 +5149,7 @@ class _PacketTypes:
         message_id = Types.u16(115)
 
         def __init__(self, callStatus):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_TurnOff(message_id={self.message_id}, callStatus={self.callStatus})'
@@ -5181,8 +5189,8 @@ class _PacketTypes:
         message_id = Types.u16(116)
 
         def __init__(self, target, source):
-            self.target = convert_to(Types.FirmwareUpdateTargetEnum, target)
-            self.source = convert_to(Types.FirmwareUpdateSourceEnum, source)
+            self.target = Types.FirmwareUpdateTargetEnum(target)
+            self.source = Types.FirmwareUpdateSourceEnum(source)
 
         def __repr__(self):
             return f'PacketRequest_UpdateFirmware(message_id={self.message_id}, target={self.target}, source={self.source})'
@@ -5228,7 +5236,7 @@ class _PacketTypes:
         message_id = Types.u16(117)
 
         def __init__(self, callStatus):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_UpdateFirmware(message_id={self.message_id}, callStatus={self.callStatus})'
@@ -5268,10 +5276,10 @@ class _PacketTypes:
         message_id = Types.u16(118)
 
         def __init__(self, requestId, frequency, duration, volume):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.frequency = convert_to(Types.u16, frequency)
-            self.duration = convert_to(Types.u16, duration)
-            self.volume = convert_to(Types.u8, volume)
+            self.requestId = Types.RequestID(requestId)
+            self.frequency = Types.u16(frequency)
+            self.duration = Types.u16(duration)
+            self.volume = Types.u8(volume)
 
         def __repr__(self):
             return f'PacketRequest_PlayTone(message_id={self.message_id}, requestId={self.requestId}, frequency={self.frequency}, duration={self.duration}, volume={self.volume})'
@@ -5321,7 +5329,7 @@ class _PacketTypes:
         message_id = Types.u16(119)
 
         def __init__(self, requestId):
-            self.requestId = convert_to(Types.RequestID, requestId)
+            self.requestId = Types.RequestID(requestId)
 
         def __repr__(self):
             return f'PacketResponse_PlayTone(message_id={self.message_id}, requestId={self.requestId})'
@@ -5363,8 +5371,8 @@ class _PacketTypes:
         message_id = Types.u16(126)
 
         def __init__(self, dataLength, dataCRC):
-            self.dataLength = convert_to(Types.size_t, dataLength)
-            self.dataCRC = convert_to(Types.u32, dataCRC)
+            self.dataLength = Types.size_t(dataLength)
+            self.dataCRC = Types.u32(dataCRC)
 
         def __repr__(self):
             return f'PacketRequest_LongRPCExtensionExecute(message_id={self.message_id}, dataLength={self.dataLength}, dataCRC={self.dataCRC})'
@@ -5410,9 +5418,9 @@ class _PacketTypes:
         message_id = Types.u16(127)
 
         def __init__(self, callStatus, dataLength, dataCRC):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
-            self.dataLength = convert_to(Types.size_t, dataLength)
-            self.dataCRC = convert_to(Types.u32, dataCRC)
+            self.callStatus = Types.CallStatus(callStatus)
+            self.dataLength = Types.size_t(dataLength)
+            self.dataCRC = Types.u32(dataCRC)
 
         def __repr__(self):
             return f'PacketResponse_LongRPCExtensionExecute(message_id={self.message_id}, callStatus={self.callStatus}, dataLength={self.dataLength}, dataCRC={self.dataCRC})'
@@ -5456,7 +5464,7 @@ class _PacketTypes:
         message_id = Types.u16(130)
 
         def __init__(self, seed):
-            self.seed = convert_to(Types.u32, seed)
+            self.seed = Types.u32(seed)
 
         def __repr__(self):
             return f'PacketRequest_SetRNGSeed(message_id={self.message_id}, seed={self.seed})'
@@ -5500,7 +5508,7 @@ class _PacketTypes:
         message_id = Types.u16(131)
 
         def __init__(self, callStatus):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_SetRNGSeed(message_id={self.message_id}, callStatus={self.callStatus})'
@@ -5540,7 +5548,7 @@ class _PacketTypes:
         message_id = Types.u16(132)
 
         def __init__(self, newState):
-            self.newState = convert_to(Types.LoggingState, newState)
+            self.newState = Types.LoggingState(newState)
 
         def __repr__(self):
             return f'PacketRequest_SensorsLogging(message_id={self.message_id}, newState={self.newState})'
@@ -5584,7 +5592,7 @@ class _PacketTypes:
         message_id = Types.u16(133)
 
         def __init__(self, callStatus):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_SensorsLogging(message_id={self.message_id}, callStatus={self.callStatus})'
@@ -5624,7 +5632,7 @@ class _PacketTypes:
         message_id = Types.u16(134)
 
         def __init__(self, testType):
-            self.testType = convert_to(Types.MemoryTestTypes, testType)
+            self.testType = Types.MemoryTestTypes(testType)
 
         def __repr__(self):
             return f'PacketRequest_MemoryTest(message_id={self.message_id}, testType={self.testType})'
@@ -5668,7 +5676,7 @@ class _PacketTypes:
         message_id = Types.u16(135)
 
         def __init__(self, callStatus):
-            self.callStatus = convert_to(Types.CallStatus, callStatus)
+            self.callStatus = Types.CallStatus(callStatus)
 
         def __repr__(self):
             return f'PacketResponse_MemoryTest(message_id={self.message_id}, callStatus={self.callStatus})'
@@ -5708,11 +5716,11 @@ class _PacketTypes:
         message_id = Types.u16(256)
 
         def __init__(self, requestId, executionState, overshotTime, overshotDistance, maxSpeed):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.executionState = convert_to(Types.ExecutionStateEnum, executionState)
-            self.overshotTime = convert_to(Types.S8_24, overshotTime)
-            self.overshotDistance = convert_to(Types.S8_24, overshotDistance)
-            self.maxSpeed = convert_to(Types.S8_24, maxSpeed)
+            self.requestId = Types.RequestID(requestId)
+            self.executionState = Types.ExecutionStateEnum(executionState)
+            self.overshotTime = Types.S8_24(overshotTime)
+            self.overshotDistance = Types.S8_24(overshotDistance)
+            self.maxSpeed = Types.S8_24(maxSpeed)
 
         def __repr__(self):
             return f'PacketEvent_PreciseMovementExecutionUpdate(message_id={self.message_id}, requestId={self.requestId}, executionState={self.executionState}, overshotTime={self.overshotTime}, overshotDistance={self.overshotDistance}, maxSpeed={self.maxSpeed})'
@@ -5756,15 +5764,15 @@ class _PacketTypes:
         def is_event_of(self, request: _ProtocolType) -> bool:
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_MoveStraight)
+            return isinstance(request, _PacketTypes.PacketRequest_MoveStraight) or isinstance(request, _PacketTypes.PacketRequest_Rotate) or isinstance(request, _PacketTypes.PacketRequest_StopExecution)
 
     class PacketEvent_LineNavigationExecutionUpdate:
         message_id = Types.u16(257)
 
         def __init__(self, requestId, executionState, intersection):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.executionState = convert_to(Types.ExecutionStateEnum, executionState)
-            self.intersection = convert_to(Types.IntersectionBitmap, intersection)
+            self.requestId = Types.RequestID(requestId)
+            self.executionState = Types.ExecutionStateEnum(executionState)
+            self.intersection = Types.IntersectionBitmap(intersection)
 
         def __repr__(self):
             return f'PacketEvent_LineNavigationExecutionUpdate(message_id={self.message_id}, requestId={self.requestId}, executionState={self.executionState}, intersection={self.intersection})'
@@ -5804,14 +5812,14 @@ class _PacketTypes:
         def is_event_of(self, request: _ProtocolType) -> bool:
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_LineNavigation)
+            return isinstance(request, _PacketTypes.PacketRequest_LineNavigation) or isinstance(request, _PacketTypes.PacketRequest_StopExecution)
 
     class PacketEvent_VelocityExecutionState:
         message_id = Types.u16(266)
 
         def __init__(self, requestId, executionState):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.executionState = convert_to(Types.ExecutionStateEnum, executionState)
+            self.requestId = Types.RequestID(requestId)
+            self.executionState = Types.ExecutionStateEnum(executionState)
 
         def __repr__(self):
             return f'PacketEvent_VelocityExecutionState(message_id={self.message_id}, requestId={self.requestId}, executionState={self.executionState})'
@@ -5855,8 +5863,8 @@ class _PacketTypes:
         message_id = Types.u16(260)
 
         def __init__(self, id, data):
-            self.id = convert_to(Types.u8, id)
-            self.data = list([convert_to(Types.u8, x) for x in data])
+            self.id = Types.u8(id)
+            self.data = list([Types.u8(x) for x in data])
 
         def __repr__(self):
             return f'PacketEvent_WatcherDirty(message_id={self.message_id}, id={self.id}, data={self.data})'
@@ -5895,14 +5903,14 @@ class _PacketTypes:
         def is_event_of(self, request: _ProtocolType) -> bool:
             if request.id != self.id:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_WatcherSetup)
+            return isinstance(request, _PacketTypes.PacketRequest_WatcherSetup) or isinstance(request, _PacketTypes.PacketRequest_WatcherRegionSetup)
 
     class PacketEvent_ModuleError:
         message_id = Types.u16(263)
 
         def __init__(self, moduleID, errorCode):
-            self.moduleID = convert_to(Types.ErrorModuleIDs, moduleID)
-            self.errorCode = convert_to(Types.u32, errorCode)
+            self.moduleID = Types.ErrorModuleIDs(moduleID)
+            self.errorCode = Types.u32(errorCode)
 
         def __repr__(self):
             return f'PacketEvent_ModuleError(message_id={self.message_id}, moduleID={self.moduleID}, errorCode={self.errorCode})'
@@ -5944,7 +5952,7 @@ class _PacketTypes:
         message_id = Types.u16(258)
 
         def __init__(self, source):
-            self.source = convert_to(Types.ShutdownSource, source)
+            self.source = Types.ShutdownSource(source)
 
         def __repr__(self):
             return f'PacketEvent_Shutdown(message_id={self.message_id}, source={self.source})'
@@ -5984,8 +5992,8 @@ class _PacketTypes:
         message_id = Types.u16(259)
 
         def __init__(self, requestId, executionState):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.executionState = convert_to(Types.ExecutionStateEnum, executionState)
+            self.requestId = Types.RequestID(requestId)
+            self.executionState = Types.ExecutionStateEnum(executionState)
 
         def __repr__(self):
             return f'PacketEvent_AudioExecutionState(message_id={self.message_id}, requestId={self.requestId}, executionState={self.executionState})'
@@ -6023,13 +6031,13 @@ class _PacketTypes:
         def is_event_of(self, request: _ProtocolType) -> bool:
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_StopExecution)
+            return isinstance(request, _PacketTypes.PacketRequest_StopExecution) or isinstance(request, _PacketTypes.PacketRequest_ExecuteFile) or isinstance(request, _PacketTypes.PacketRequest_PlayTone)
 
     class PacketEvent_CalibrationStatus:
         message_id = Types.u16(261)
 
         def __init__(self, status):
-            self.status = convert_to(Types.CalibrationResultEnum, status)
+            self.status = Types.CalibrationResultEnum(status)
 
         def __repr__(self):
             return f'PacketEvent_CalibrationStatus(message_id={self.message_id}, status={self.status})'
@@ -6069,11 +6077,11 @@ class _PacketTypes:
         message_id = Types.u16(262)
 
         def __init__(self, executionState, progress, flashID, address, fields):
-            self.executionState = convert_to(Types.ExecutionStateEnum, executionState)
-            self.progress = convert_to(Types.u8, progress)
-            self.flashID = convert_to(Types.u8, flashID)
-            self.address = convert_to(Types.addr_t, address)
-            self.fields = convert_to(Types.MemoryTestFields, fields)
+            self.executionState = Types.ExecutionStateEnum(executionState)
+            self.progress = Types.u8(progress)
+            self.flashID = Types.u8(flashID)
+            self.address = Types.addr_t(address)
+            self.fields = Types.MemoryTestFields(fields)
 
         def __repr__(self):
             return f'PacketEvent_MemoryTestStatus(message_id={self.message_id}, executionState={self.executionState}, progress={self.progress}, flashID={self.flashID}, address={self.address}, fields={self.fields})'
@@ -6121,8 +6129,8 @@ class _PacketTypes:
         message_id = Types.u16(264)
 
         def __init__(self, requestId, executionState):
-            self.requestId = convert_to(Types.RequestID, requestId)
-            self.executionState = convert_to(Types.ExecutionStateEnum, executionState)
+            self.requestId = Types.RequestID(requestId)
+            self.executionState = Types.ExecutionStateEnum(executionState)
 
         def __repr__(self):
             return f'PacketEvent_VirtualMachineExecutionState(message_id={self.message_id}, requestId={self.requestId}, executionState={self.executionState})'
@@ -6160,13 +6168,13 @@ class _PacketTypes:
         def is_event_of(self, request: _ProtocolType) -> bool:
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_StopExecution)
+            return isinstance(request, _PacketTypes.PacketRequest_StopExecution) or isinstance(request, _PacketTypes.PacketRequest_ExecuteFile)
 
     class PacketEvent_SensorsLoggingExecutionUpdate:
         message_id = Types.u16(265)
 
         def __init__(self, executionState):
-            self.executionState = convert_to(Types.ExecutionStateEnum, executionState)
+            self.executionState = Types.ExecutionStateEnum(executionState)
 
         def __repr__(self):
             return f'PacketEvent_SensorsLoggingExecutionUpdate(message_id={self.message_id}, executionState={self.executionState})'
@@ -6208,6 +6216,7 @@ class AsyncControl:
     def __init__(self, channel: _Channel) -> None:
         self._channel = channel
         self._rpc_lock = RLock()
+        self._request_counter = 0
 
     def MemRead(self, addr: int | Types.addr_t, length: int | Types.size_t) -> RpcCall[_PacketTypes.PacketResponse_MemRead, typing.Never]:
         '''Virtual memory read. It supports variable and whole read from an entry or segments. Entry is a singular logic object in the memory, segments are collections of entries. Read is atomic. Unclaimed/unused memory by the firmware is filled with zeroes. Memory has been read before returning the result of the operation, meaning memory can be changed after firmware returns read data.
@@ -6448,7 +6457,8 @@ class AsyncControl:
         request = _PacketTypes.PacketRequest_MemoryTest(testType)
         return RpcCall[_PacketTypes.PacketResponse_MemoryTest, _PacketTypes.PacketEvent_MemoryTestStatus](self._rpc(request, _PacketTypes.PacketResponse_MemoryTest))
 
-    async def _rpc[TResponse: _ProtocolType, TEvent: _ProtocolType](self, request: _ProtocolType, response_type: type[TResponse]) -> typing.AsyncIterator[TEvent]:
+    @contextlib.asynccontextmanager
+    async def _rpc[TResponse: _ProtocolType, TEvent: _ProtocolType](self, request: _ProtocolType, response_type: type[TResponse]) -> typing.AsyncIterator[tuple[TResponse, typing.AsyncIterator[TEvent]]]:
         length = max(len(request.serialize()), response_type.expected_length(request))
         logger.debug('Executing RPC', request_len=length, request=request)
         async with self._channel.open_session() as events_session:
@@ -6464,12 +6474,18 @@ class AsyncControl:
                         response = message
                         break
                 logger.debug('got rpc response', response=response)
-            yield response
-            logger.debug('expecting events')
-            async for message in self._receive(events_session):
-                if message.is_event_of(request):
-                    logger.debug('got event', event=message)
-                    yield message
+
+            async def _event_generator():
+                logger.debug('expecting events')
+                async for message in self._receive(events_session):
+                    if message.is_event_of(request):
+                        logger.debug('got event', event=message)
+                        yield message
+            event_generator = _event_generator()
+            try:
+                yield response, event_generator
+            finally:
+                await event_generator.aclose()
 
     async def _long_rpc[T: _ProtocolType](self, request: _ProtocolType, response_type: type[T]) -> T:
         data = request.serialize()
@@ -6499,3 +6515,43 @@ class AsyncControl:
             logger.debug('received packet', message_id=message_id, packet_type=packet_type)
             if packet_type:
                 yield packet_type.deserialize(message_bytes)
+
+    def get_next_request_id(self) -> int:
+        self._request_counter += 1
+        source = b'\2'  # 2 is for BLE source
+        counter = int.to_bytes(self._request_counter, length=3, byteorder='big').ljust(3, b'\0')
+        return int.from_bytes(source + counter)
+    property_metadata: typing.Dict[str, PropertyMetadata] = {
+        "hwConfiguration": {"is_readable": True, "is_writable": False, "type": Types.u8, "address": 65575}, "fwVersion": {"is_readable": True, "is_writable": False, "type": Types.Version, "address": 65580}, "fwCommitHash": {"is_readable": True,
+        "is_writable": False, "type": Types.c8, "address": 65584}, "fwBuildType": {"is_readable": True, "is_writable": False, "type": Types.c8, "address": 65598}, "serialNumber": {"is_readable": True, "is_writable": False, "type": Types.u8, "address":
+        65616}, "watchersInfo": {"is_readable": True, "is_writable": False, "type": Types.WatcherInfo, "address": 65651}, "protocolHash": {"is_readable": True, "is_writable": False, "type": Types.c8, "address": 65653}, "lineSensorsPaper": {"is_readable":
+        True, "is_writable": False, "type": Types.LineWithRAW_8bit, "address": 0}, "lineSensorsScreen": {"is_readable": True, "is_writable": False, "type": Types.LineWithRAW_8bit, "address": 28}, "colorSensorData": {"is_readable": True, "is_writable": False,
+        "type": Types.ColorSensorData, "address": 56}, "processedColor": {"is_readable": True, "is_writable": False, "type": Types.ProcessedRGBColor, "address": 69}, "surfaceProximityData": {"is_readable": True, "is_writable": False, "type":
+        Types.SurfaceProximityData, "address": 80}, "lineColor": {"is_readable": True, "is_writable": False, "type": Types.LineColor, "address": 86}, "colorCode": {"is_readable": True, "is_writable": False, "type": Types.ColorCode, "address": 92},
+        "surfaceColor": {"is_readable": True, "is_writable": False, "type": Types.SurfaceColor, "address": 100}, "surfaceType": {"is_readable": True, "is_writable": False, "type": Types.Surface, "address": 108}, "pickupDetection": {"is_readable": True,
+        "is_writable": False, "type": Types.PickupDetection, "address": 113}, "irProximity": {"is_readable": True, "is_writable": False, "type": Types.IRProximity, "address": 118}, "irMessageLeftRear": {"is_readable": True, "is_writable": False, "type":
+        Types.IRMessage, "address": 126}, "irMessageLeftFront": {"is_readable": True, "is_writable": False, "type": Types.IRMessage, "address": 132}, "irMessageRightRear": {"is_readable": True, "is_writable": False, "type": Types.IRMessage, "address": 138},
+        "irMessageRightFront": {"is_readable": True, "is_writable": False, "type": Types.IRMessage, "address": 144}, "wheelsEncoder": {"is_readable": True, "is_writable": False, "type": Types.WheelsEncoder, "address": 150}, "relativePosition":
+        {"is_readable": True, "is_writable": False, "type": Types.RelativePosition, "address": 162}, "chargerState": {"is_readable": True, "is_writable": False, "type": Types.ChargerState, "address": 183}, "batteryState": {"is_readable": True, "is_writable":
+        False, "type": Types.Battery, "address": 188}, "button": {"is_readable": True, "is_writable": False, "type": Types.Button, "address": 196}, "deviceName": {"is_readable": True, "is_writable": True, "type": Types.c8, "address": 16384}, "audioVolume":
+        {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 16401}, "ledsBrightness": {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 16402}, "accountType": {"is_readable": True, "is_writable": True, "type":
+        Types.AccountTypeEnum, "address": 16403}, "behaviour": {"is_readable": True, "is_writable": True, "type": Types.BehaviourTypeEnum, "address": 16404}, "irMessageLeftRearEmitting": {"is_readable": True, "is_writable": True, "type": Types.IRMessageEmit,
+        "address": 16405}, "irMessageLeftFrontEmitting": {"is_readable": True, "is_writable": True, "type": Types.IRMessageEmit, "address": 16407}, "irMessageRightRearEmitting": {"is_readable": True, "is_writable": True, "type": Types.IRMessageEmit,
+        "address": 16409}, "irMessageRightFrontEmitting": {"is_readable": True, "is_writable": True, "type": Types.IRMessageEmit, "address": 16411}, "virtualMachineSharedRegisters": {"is_readable": True, "is_writable": True, "type": Types.u8, "address":
+        16413}, "lineNavigationSpeed": {"is_readable": True, "is_writable": True, "type": Types.S8_24, "address": 16421}, "chargeRate": {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 16425}, "buttonOverride": {"is_readable": True,
+        "is_writable": True, "type": Types.ButtonOverrideEnum, "address": 16426}, "speedPID": {"is_readable": True, "is_writable": True, "type": Types.PIDParameters, "address": 16438}, "lineNavigationPID": {"is_readable": True, "is_writable": True, "type":
+        Types.PIDParameters, "address": 16462}, "bleAdvertisingInterval": {"is_readable": True, "is_writable": True, "type": Types.UnsignedRange, "address": 16474}, "qaTrackLog": {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 16482},
+        "colorCodeExecution": {"is_readable": True, "is_writable": True, "type": Types.ColorCodeExecution, "address": 16483}, "longRPCExtensionData": {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 24576}, "testMode": {"is_readable":
+        True, "is_writable": True, "type": Types.TestModeFields, "address": 28672}, "bootloaderVersion": {"is_readable": True, "is_writable": False, "type": Types.Version, "address": 65536}, "bootloaderCommitHash": {"is_readable": True, "is_writable": False,
+        "type": Types.c8, "address": 65540}, "bootloaderFields": {"is_readable": True, "is_writable": False, "type": Types.BootloaderFields, "address": 65554}, "bootloaderErrorCode": {"is_readable": True, "is_writable": False, "type":
+        Types.BootloaderErrorCodes, "address": 65559}, "bootloaderPress": {"is_readable": True, "is_writable": False, "type": Types.time_t, "address": 65555}, "keyVariant": {"is_readable": True, "is_writable": False, "type": Types.EncryptionKeyVariant,
+        "address": 65560}, "keyFingerPrint": {"is_readable": True, "is_writable": False, "type": Types.u8, "address": 65561}, "productType": {"is_readable": True, "is_writable": False, "type": Types.ProductTypeEnum, "address": 65573}, "productRevision":
+        {"is_readable": True, "is_writable": False, "type": Types.u8, "address": 65574}, "plasticColor": {"is_readable": True, "is_writable": False, "type": Types.PlasticColor, "address": 65579}, "bluetoothVersion": {"is_readable": True, "is_writable":
+        False, "type": Types.Version, "address": 65632}, "bluetoothInitializedCode": {"is_readable": True, "is_writable": False, "type": Types.BluetoothInitializedCode, "address": 65636}, "bluetoothAddress": {"is_readable": True, "is_writable": False,
+        "type": Types.u8, "address": 65637}, "bluetoothUpdateStatus": {"is_readable": True, "is_writable": False, "type": Types.BluetoothUpdateErrorCodes, "address": 65643}, "externalFlashInformation": {"is_readable": True, "is_writable": False, "type":
+        Types.ExternalFlashInformation, "address": 65644}, "lineSensorsPaperCalibration": {"is_readable": True, "is_writable": False, "type": Types.LineSensorsCalibration, "address": 65667}, "lineSensorsScreenCalibration": {"is_readable": True,
+        "is_writable": False, "type": Types.LineSensorsCalibration, "address": 65695}, "colorSensorPaperCalibration": {"is_readable": True, "is_writable": False, "type": Types.ColorSensorCalibration, "address": 65723}, "colorSensorScreenCalibration":
+        {"is_readable": True, "is_writable": False, "type": Types.ColorSensorCalibration, "address": 65735}, "encodersCalibration": {"is_readable": True, "is_writable": False, "type": Types.EncodersCalibration, "address": 65747}, "colorSensorType":
+        {"is_readable": True, "is_writable": False, "type": Types.c8, "address": 65749}, "boardsConfiguration": {"is_readable": True, "is_writable": False, "type": Types.BoardsConfiguration, "address": 65765}, "tasksInformation": {"is_readable": True,
+        "is_writable": False, "type": Types.TaskInformation, "address": 73728},
+    }
