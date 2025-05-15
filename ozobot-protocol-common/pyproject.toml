@@ -19,13 +19,6 @@ only-include = ["src/ozobot"]
 sources = ["src"]
 only-include = ["src/ozobot"]
 
-[tool.hatch.envs.hatch-test]
-default-args = []
-extra-dependencies = [
-    "pytest",
-    "pytest-asyncio",
-]
-
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 

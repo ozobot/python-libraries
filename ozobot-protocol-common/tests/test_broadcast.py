@@ -12,6 +12,7 @@ def test_contains_context_manager() -> None:
 
     assert queue not in manager
 
+
 async def test_broadcast():
     m = BroadcastManager[int]()
     with m.output() as o1, m.output() as o2:

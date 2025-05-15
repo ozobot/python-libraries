@@ -10,3 +10,46 @@ members = [
   "ozobot-evo",
   "ozobot-protocol-common",
 ]
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "pytest-asyncio",
+  "pytest-mypy",
+  "pytest-ruff",
+]
+
+[tool.hatch.envs.default]
+installer = "uv"
+
+[tool.hatch.envs.hatch-test]
+default-args = []
+extra-dependencies = [
+  "ozobot-ble @ ./ozobot-ble",
+  "ozobot-evo @ ./ozobot-evo",
+  "ozobot-protocol-common @ ./ozobot-protocol-common",
+
+  "pytest",
+  "pytest-asyncio",
+  "pytest-mypy",
+  "pytest-ruff",
+]
+
+[tool.mypy]
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = [
+  "ozobot-ble/src",
+  "ozobot-evo/src",
+  "ozobot-protocol-common/src",
+]
+
+[tool.pytest.ini_options]
+required_plugins = ["pytest-asyncio", "pytest-mypy", "pytest-ruff"]
+addopts = """
+  --mypy
+  --ruff
+  --ruff-format
+  --deselect=ozobot-evo/src/ozobot/evo/protocol.py
+"""
+asyncio_mode = "auto"

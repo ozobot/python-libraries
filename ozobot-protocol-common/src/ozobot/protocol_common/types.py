@@ -1,5 +1,6 @@
 import struct
 
+
 class FloatOutOfRangeError(ValueError):
     def __init__(self, val: float | int):
         super().__init__(f"Float value out of supported range (-128, 128): {val}")
@@ -22,4 +23,3 @@ def s8_24_serialize(val: float) -> bytes:
 
 def s8_24_deserialize(val: bytes) -> float:
     return float(s8_24_to_float(*struct.unpack("<i", val)))
-

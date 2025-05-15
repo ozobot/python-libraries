@@ -32,7 +32,7 @@ async def test_rpc_iterate_cm():
 
     assert resp == "response"
     assert values == [1, 2, 3]
-    
+
 
 async def test_rpc_iterate_exhaust():
     rpc = RpcCall(_generator())
@@ -41,7 +41,7 @@ async def test_rpc_iterate_exhaust():
 
     assert resp == "response"
     assert values == [1, 2, 3]
-    
+
 
 async def test_rpc_prevent_reentry():
     rpc = RpcCall(_generator())
@@ -53,5 +53,3 @@ async def test_rpc_prevent_reentry():
     with pytest.raises(RpcCallReentryError):
         async with rpc:
             ...
-    
-    

@@ -34,7 +34,6 @@ async def test_rlock_two_tasks():
         async with lock:
             pass
 
-        
         async with asyncio.TaskGroup() as tg:
             tg.create_task(task1())
             with pytest.raises(TimeoutError):

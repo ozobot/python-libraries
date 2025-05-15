@@ -4,6 +4,7 @@ import typing
 
 from loguru import logger
 
+
 class BroadcastManager[T]:
     """Broadcast manager that broadcasts an item to its open queues
 
@@ -12,6 +13,7 @@ class BroadcastManager[T]:
         * calling :py:meth:`output` which returns an asynchronous context manager yielding a queue on enter (queue is closed on exit),
         * calling :py:meth:`open_queue` (note that :py:meth:`close_queue` must be called to close the queue).
     """
+
     _queues: set[asyncio.Queue[T]]
 
     def __init__(self):
@@ -33,7 +35,7 @@ class BroadcastManager[T]:
 
     @contextlib.contextmanager
     def output(self) -> typing.Iterator[asyncio.Queue[T]]:
-        """ Returns an asynchronous context manager that opens a new queue on enter and closes it on exit """
+        """Returns an asynchronous context manager that opens a new queue on enter and closes it on exit"""
         logger.debug("Opening output")
         queue = self._subscribe()
         try:
@@ -43,15 +45,15 @@ class BroadcastManager[T]:
             self._unsubscribe(queue)
 
     async def broadcast(self, item: T):
-        """ Broadcasts the item to all open queues. Blocking variant. """
+        """Broadcasts the item to all open queues. Blocking variant."""
         logger.debug("Broadcasting", item=item)
 
         for queue in self._queues:
             await queue.put(item)
 
     def broadcast_nowait(self, item: T):
-        """ Broadcasts the item to all open queues. Non-blocking variant. """
-        self._logger.debug("Broadcasting", item=item)
+        """Broadcasts the item to all open queues. Non-blocking variant."""
+        logger.debug("Broadcasting", item=item)
 
         for queue in self._queues:
             queue.put_nowait(item)
