@@ -11,7 +11,7 @@ from loguru import logger
 
 from ozobot.protocol_common.broadcast import BroadcastManager
 
-from .datatypes import DeviceDescription, ProductName
+from .datatypes import DeviceDescription
 
 
 class BLEError(Exception): ...
@@ -60,7 +60,6 @@ async def _get_device(
     name: str | None = None,
     address: str | None = None,
     id_prefix: str | None = None,
-    product: ProductName | None = None,
 ) -> bleak.BLEDevice:
     async with scan_devices() as devices:
         async for device, handle in devices:
@@ -69,9 +68,8 @@ async def _get_device(
             name_match = name is None or device.name == name
             address_match = address is None or device.address == address
             id_match = id_prefix is None or normalized_id.startswith(id_prefix)
-            product_match = product is None or device.product == product
 
-            if product_match and name_match and address_match and id_match:
+            if name_match and address_match and id_match:
                 logger.info("Device scan match", device=device)
                 return handle
 
@@ -84,11 +82,8 @@ async def open_client(
     name: str | None = None,
     address: str | None = None,
     id_prefix: str | None = None,
-    product: ProductName | None = None,
 ) -> typing.AsyncIterator[Client]:
-    handle = await _get_device(
-        name=name, address=address, id_prefix=id_prefix, product=product
-    )
+    handle = await _get_device(name=name, address=address, id_prefix=id_prefix)
     logger.info("Opening connection")
     async with bleak.BleakClient(handle) as client:
         yield Client(client)
