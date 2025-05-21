@@ -22,19 +22,6 @@ dev = [
 [tool.hatch.envs.default]
 installer = "uv"
 
-[tool.hatch.envs.hatch-test]
-default-args = []
-extra-dependencies = [
-  "ozobot-ble @ ./ozobot-ble",
-  "ozobot-evo @ ./ozobot-evo",
-  "ozobot-protocol-common @ ./ozobot-protocol-common",
-
-  "pytest",
-  "pytest-asyncio",
-  "pytest-mypy",
-  "pytest-ruff",
-]
-
 [tool.mypy]
 namespace_packages = true
 explicit_package_bases = true
