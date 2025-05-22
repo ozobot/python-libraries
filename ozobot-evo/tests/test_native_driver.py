@@ -3,8 +3,8 @@ import typing
 from unittest.mock import ANY, Mock, patch, sentinel
 
 import pytest
-from ozobot.evo.drivers import LEDMask
-from ozobot.evo.drivers.native import NativeDriver
+from ozobot.evo.driver import LEDMask
+from ozobot.evo.driver.native import NativeDriver
 from ozobot.evo.protocol import Types
 
 
@@ -36,15 +36,15 @@ def _create_command(
     return _resp()
 
 
-@patch("ozobot.evo.drivers.sys.platform", "linux")
+@patch("ozobot.evo.driver.sys.platform", "linux")
 def test_import_native() -> None:
-    from ozobot.evo.drivers import get_driver
+    from ozobot.evo.driver import get_driver
 
     assert issubclass(get_driver(), NativeDriver)
 
 
 async def test_open() -> None:
-    with patch("ozobot.evo.drivers.native.open_client") as open_client_mock:
+    with patch("ozobot.evo.driver.native.open_client") as open_client_mock:
         async with NativeDriver.open(address="11:22:33:44:55:66", id_prefix="1234", name="EVO-ABCDEF") as driver:
             assert isinstance(driver, NativeDriver)
             open_client_mock.assert_called_with(address="11:22:33:44:55:66", id_prefix="1234", name="EVO-ABCDEF")
