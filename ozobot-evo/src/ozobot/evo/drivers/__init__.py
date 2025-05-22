@@ -1,6 +1,14 @@
-from .driver import Driver as DriverCls, LEDMask
+import sys
+
+from .driver import Driver as Driver, LEDMask
 from .native import NativeDriver
+from .web import WebDriver
 
-__all__ = ["Driver", "LEDMask"]
+__all__ = ["get_driver", "LEDMask"]
 
-Driver: type[DriverCls] = NativeDriver
+
+def get_driver() -> type[Driver]:
+    if sys.platform == "emscripten":
+        return WebDriver
+    else:
+        return NativeDriver

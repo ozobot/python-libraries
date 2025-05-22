@@ -41,42 +41,40 @@ class NativeDriver:
         id_prefix: str | None = None,
         name: str | None = None,
     ) -> typing.AsyncIterator[NativeDriver]:
-        async with open_client(
-            address=address, id_prefix=id_prefix, name=name
-        ) as client:
+        async with open_client(address=address, id_prefix=id_prefix, name=name) as client:
             char = client.get_characteristic(_SERVICE_UUID, _CHARACTERISTIC_UUID)
             yield cls(char)
 
     async def move(self, distance_m: float, speed_ms: float) -> None:
-        async with self._control.MoveStraight(
-            self._control.get_next_request_id(), distance_m, speed_ms
-        ) as (resp, evts):
+        async with self._control.MoveStraight(self._control.get_next_request_id(), distance_m, speed_ms) as (
+            resp,
+            evts,
+        ):
             await self._handle_events("MoveStraight", evts)
 
     async def rotate(self, angle_rad: float, angular_speed_radps: float) -> None:
-        async with self._control.Rotate(
-            self._control.get_next_request_id(), angle_rad, angular_speed_radps
-        ) as (resp, evts):
+        async with self._control.Rotate(self._control.get_next_request_id(), angle_rad, angular_speed_radps) as (
+            resp,
+            evts,
+        ):
             await self._handle_events("Rotate", evts)
 
-    async def velocity(
-        self, linear_mps: float, angular_radps: float, duration_ms: int
-    ) -> None:
+    async def velocity(self, linear_mps: float, angular_radps: float, duration_ms: int) -> None:
         async with self._control.Velocity(
             self._control.get_next_request_id(), linear_mps, angular_radps, duration_ms
         ) as (resp, evts):
             await self._handle_events("Velocity", evts)
 
     async def play_tone(self, frequency_hz: int, duration_ms: int, volume: int) -> None:
-        async with self._control.PlayTone(
-            self._control.get_next_request_id(), frequency_hz, duration_ms, volume
-        ) as (resp, evts):
+        async with self._control.PlayTone(self._control.get_next_request_id(), frequency_hz, duration_ms, volume) as (
+            resp,
+            evts,
+        ):
             await self._handle_events("PlayTone", evts)
 
     async def execute_file(self, filename: str) -> None:
-        async with self._control.ExecuteFile(
-            self._control.get_next_request_id(), filename
-        ) as (resp, evts):
+        async with self._control.ExecuteFile(self._control.get_next_request_id(), filename) as (resp, evts):
+            self._handle_response("ExecuteFile", resp)
             await self._handle_events("ExecuteFile", evts)
 
     async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None:
@@ -114,14 +112,11 @@ class NativeDriver:
             case _:
                 typing.assert_never(direction)
 
-        action = (
-            Types.LineNavigationAction.Follow
-            if follow
-            else Types.LineNavigationAction.DoNotFollow
-        )
-        async with self._control.LineNavigation(
-            self._control.get_next_request_id(), direction_protocol, action
-        ) as (resp, evts):
+        action = Types.LineNavigationAction.Follow if follow else Types.LineNavigationAction.DoNotFollow
+        async with self._control.LineNavigation(self._control.get_next_request_id(), direction_protocol, action) as (
+            resp,
+            evts,
+        ):
             await self._handle_events("LineNavigation", evts)
 
     async def follow_speed(self, speed_mps: float) -> None:
@@ -133,23 +128,15 @@ class NativeDriver:
         )
         self._handle_response("follow_speed", response)
 
-    def _handle_response(
-        self, function_name: str, response: _HasCallStatus | _HasResult
-    ) -> None:
+    def _handle_response(self, function_name: str, response: _HasCallStatus | _HasResult) -> None:
         if isinstance(response, _HasCallStatus):
             if response.callStatus != Types.CallStatus.CallSuccess:
-                raise OzobotProtocolCommandError(
-                    function_name, response.callStatus.name, description="call failed"
-                )
+                raise OzobotProtocolCommandError(function_name, response.callStatus.name, description="call failed")
         elif isinstance(response, _HasResult):
             if response.result != Types.IOResult.Success:
-                raise OzobotProtocolCommandError(
-                    function_name, response.result.name, description="call failed"
-                )
+                raise OzobotProtocolCommandError(function_name, response.result.name, description="call failed")
 
-    async def _handle_events(
-        self, function_name: str, events: typing.AsyncIterator[_HasExecutionState]
-    ) -> None:
+    async def _handle_events(self, function_name: str, events: typing.AsyncIterator[_HasExecutionState]) -> None:
         async for event in events:
             if event.executionState == Types.ExecutionStateEnum.FinishedNormal:
                 return
