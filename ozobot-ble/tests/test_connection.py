@@ -72,9 +72,7 @@ async def test_scan_devices() -> None:
 
 
 @contextlib.asynccontextmanager
-async def _scan_devices() -> typing.AsyncGenerator[
-    tuple[DeviceDescription, Mock], None
-]:
+async def _scan_devices() -> typing.AsyncGenerator[tuple[DeviceDescription, Mock], None]:
     desc1 = DeviceDescription(
         name="EVO-123456",
         address="11:22:33:44:55:66",
@@ -123,19 +121,13 @@ async def _scan_devices() -> typing.AsyncGenerator[
         ),
     ],
 )
-async def test_open_client(
-    filters: dict[str, str], expected_device: Mock | None
-) -> None:
+async def test_open_client(filters: dict[str, str], expected_device: Mock | None) -> None:
     with (
         patch("ozobot.ble.connection.bleak.BleakClient") as client_cls,
         patch("ozobot.ble.connection.scan_devices") as scan_devices_func,
     ):
         scan_devices_func.return_value = _scan_devices()
-        exception_check = (
-            contextlib.nullcontext()
-            if expected_device
-            else pytest.raises(DeviceNotFoundError)
-        )
+        exception_check = contextlib.nullcontext() if expected_device else pytest.raises(DeviceNotFoundError)
 
         with exception_check:
             async with open_client(**filters):
@@ -164,9 +156,7 @@ def _get_mock_characteristic() -> tuple[Characteristic, Mock]:
     bleak_client_mock = AsyncMock()
     bleak_client_mock.services.get_service = Mock()
 
-    char = Characteristic(
-        service=svc_uuid, characteristic=char_uuid, client=bleak_client_mock
-    )
+    char = Characteristic(service=svc_uuid, characteristic=char_uuid, client=bleak_client_mock)
 
     return char, bleak_client_mock
 

@@ -61,16 +61,12 @@ def str2asciiz(txt: str | bytes, size: int | None = None) -> bytes:
     if length < size:
         txt += b"\0" * (size - length)
     elif length > size:
-        raise ValueError(
-            f"Provided string is larger than the limit: string {length}, limit: {size}"
-        )
+        raise ValueError(f"Provided string is larger than the limit: string {length}, limit: {size}")
 
     return txt
 
 
-def deserialize_array[T: _Deserializable](
-    member_type: type[str | T], data: bytes
-) -> str | list[T]:
+def deserialize_array[T: _Deserializable](member_type: type[str | T], data: bytes) -> str | list[T]:
     """Deserialize ``bytes`` to array of instances of requested type
 
     Takes bytes and creates array of items based on items sizes. If requested type is based on ``str``,
@@ -111,18 +107,12 @@ def serialize_array[T: _Serializable](
             # Convert str to ASCIIZ
             data = str2asciiz(array, size)
         else:
-            raise ValueError(
-                "Only str and bytes types can be serialized to str and bytes"
-            )
+            raise ValueError("Only str and bytes types can be serialized to str and bytes")
     else:
         # The rest is converted from list of type based items
-        data = functools.reduce(
-            operator.add, [member_type(x).serialize() for x in array]
-        )
+        data = functools.reduce(operator.add, [member_type(x).serialize() for x in array])
 
     if size is not None and len(data) > size:
-        raise ValueError(
-            f"Expected array size does not match the real size, expected: {size}, real: {len(data)}"
-        )
+        raise ValueError(f"Expected array size does not match the real size, expected: {size}, real: {len(data)}")
 
     return data

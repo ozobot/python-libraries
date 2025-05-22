@@ -22,9 +22,7 @@ class DeviceNotFoundError(BLEError): ...
 
 class DeviceDescriptionError(BLEError):
     def __init__(self, reason: str):
-        super().__init__(
-            f"Device description does not match the expected one: {reason}"
-        )
+        super().__init__(f"Device description does not match the expected one: {reason}")
 
 
 async def _scan_devices(
@@ -32,17 +30,13 @@ async def _scan_devices(
 ) -> typing.AsyncIterator[tuple[DeviceDescription, bleak.BLEDevice]]:
     async for ble_device, adv_data in scanner.advertisement_data():
         device = DeviceDescription.parse_from_advertisement_data(ble_device, adv_data)
-        logger.debug(
-            "Device scanned", device=device, supported=device.product is not None
-        )
+        logger.debug("Device scanned", device=device, supported=device.product is not None)
 
         yield device, ble_device
 
 
 @contextlib.asynccontextmanager
-async def scan_devices() -> typing.AsyncIterator[
-    typing.AsyncIterator[tuple[DeviceDescription, bleak.BLEDevice]]
-]:
+async def scan_devices() -> typing.AsyncIterator[typing.AsyncIterator[tuple[DeviceDescription, bleak.BLEDevice]]]:
     scanner = bleak.BleakScanner()
 
     logger.debug("Starting BLE scanning")
@@ -103,17 +97,13 @@ class Client:
 
     def get_characteristic(self, service: UUID, characteristic: UUID) -> Characteristic:
         with logger.contextualize(service=service, characteristic=characteristic):
-            handle = CharacteristicHandle(
-                service=service, characteristic=characteristic
-            )
+            handle = CharacteristicHandle(service=service, characteristic=characteristic)
             if handle in self._characteristics:
                 logger.debug("Reusing characteristic")
                 char = self._characteristics[handle]
             else:
                 logger.debug("Instantiating characteristic")
-                char = Characteristic(
-                    client=self._client, service=service, characteristic=characteristic
-                )
+                char = Characteristic(client=self._client, service=service, characteristic=characteristic)
                 self._characteristics[handle] = char
 
         return char
@@ -124,9 +114,7 @@ class Characteristic:
     def packet_size_max(self) -> int:
         return self._characteristic_handle.max_write_without_response_size
 
-    def __init__(
-        self, *, service: UUID, characteristic: UUID, client: bleak.BleakClient
-    ) -> None:
+    def __init__(self, *, service: UUID, characteristic: UUID, client: bleak.BleakClient) -> None:
         self._notify_lock = asyncio.Lock()
         self._refcount = 0
         self._broadcast = BroadcastManager[bytes]()
@@ -158,9 +146,7 @@ class Characteristic:
                 return
 
             logger.debug("Subscribing")
-            await self._client.start_notify(
-                self._characteristic_handle, self._notify_callback
-            )
+            await self._client.start_notify(self._characteristic_handle, self._notify_callback)
 
     async def _unsubscribe_notifications(self) -> None:
         async with self._notify_lock:
@@ -183,9 +169,7 @@ class Characteristic:
 
         return char
 
-    async def _notify_callback(
-        self, char: bleak.BleakGATTCharacteristic, data: bytearray
-    ) -> None:
+    async def _notify_callback(self, char: bleak.BleakGATTCharacteristic, data: bytearray) -> None:
         if char == self._characteristic_handle:
             logger.debug("Read data", len=len(data), bytes=data)
             await self._broadcast.broadcast(data)

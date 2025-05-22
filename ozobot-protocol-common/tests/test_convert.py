@@ -24,10 +24,7 @@ def test_serialize_bytes_str() -> None:
 
 
 def test_serialize_array() -> None:
-    assert (
-        convert.serialize_array([5, 2], _Serializable)
-        == b"\x00\x01\x02\x03\x04\x00\x01"
-    )
+    assert convert.serialize_array([5, 2], _Serializable) == b"\x00\x01\x02\x03\x04\x00\x01"
 
 
 def test_deserialize_array() -> None:
