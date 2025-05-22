@@ -8,7 +8,7 @@ from ozobot.ble.connection import Characteristic, open_client
 from ozobot.evo.protocol import AsyncControl, Types
 from ozobot.protocol_common.exceptions import OzobotProtocolCommandError
 
-from .driver import LEDMask, TDirections
+from .driver import LEDMask, TDirection
 
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
@@ -99,7 +99,7 @@ class NativeDriver:
         response = await self._control.SetLED(protocol_mask, red, green, blue, 255)
         self._handle_response("SetLED", response)
 
-    async def line_navigation(self, direction: TDirections, follow: bool) -> None:
+    async def line_navigation(self, direction: TDirection, follow: bool) -> None:
         match direction:
             case "left":
                 direction_protocol = Types.IntersectionDirection.Left
@@ -126,7 +126,10 @@ class NativeDriver:
             speed_vmem_properties["type"].get_data_width(),
             Types.S8_24(speed_mps).serialize(),
         )
-        self._handle_response("follow_speed", response)
+        self._handle_response("MemWrite(lineNavigationSpeed)", response)
+
+    async def stop_all(self) -> None:
+        await self._control.StopExecution(0)
 
     def _handle_response(self, function_name: str, response: _HasCallStatus | _HasResult) -> None:
         if isinstance(response, _HasCallStatus):

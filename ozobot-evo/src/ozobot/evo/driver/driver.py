@@ -1,20 +1,8 @@
 from __future__ import annotations
 
-import enum
+from typing import AsyncContextManager, Protocol
 
-from typing import AsyncContextManager, Literal, Protocol, TypeAlias
-
-
-TDirections: TypeAlias = Literal["backward", "left", "right", "straight"]
-
-
-class LEDMask(enum.Flag):
-    FRONT_CENTER = enum.auto()
-    FRONT_LEFT = enum.auto()
-    FRONT_LEFT_CENTER = enum.auto()
-    FRONT_RIGHT = enum.auto()
-    FRONT_RIGHT_CENTER = enum.auto()
-    TOP = enum.auto()
+from ozobot.evo.datatypes import LEDMask, TDirection
 
 
 class Driver(Protocol):
@@ -38,6 +26,8 @@ class Driver(Protocol):
 
     async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None: ...
 
-    async def line_navigation(self, directions: TDirections, follow: bool) -> None: ...
+    async def line_navigation(self, direction: TDirection, follow: bool) -> None: ...
 
     async def follow_speed(self, speed_mps: float) -> None: ...
+
+    async def stop_all(self) -> None: ...
