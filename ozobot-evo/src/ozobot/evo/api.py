@@ -147,7 +147,7 @@ class Evo:
     def _convert_note_to_frequency(octave: int, note_idx: int) -> int:
         # credit goes to https://gist.github.com/CGrassin/26a1fdf4fc5de788da9b376ff717516e
         a4 = 440
-        key = note_idx + 12 + ((octave - 2)* 12) + 1
+        key = note_idx + 12 + ((octave - 2) * 12) + 1
         if note_idx < 3:
             key += 12
 
