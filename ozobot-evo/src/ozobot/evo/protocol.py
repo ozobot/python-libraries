@@ -4269,6 +4269,8 @@ class _PacketTypes:
             return 6
 
         def is_response_to(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_MoveStraight)
@@ -4361,6 +4363,8 @@ class _PacketTypes:
             return 6
 
         def is_response_to(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_Rotate)
@@ -4456,6 +4460,8 @@ class _PacketTypes:
             return 6
 
         def is_response_to(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_Velocity)
@@ -4548,6 +4554,8 @@ class _PacketTypes:
             return 6
 
         def is_response_to(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_LineNavigation)
@@ -4634,6 +4642,8 @@ class _PacketTypes:
             return 6
 
         def is_response_to(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_StopExecution)
@@ -4916,6 +4926,8 @@ class _PacketTypes:
             return 7
 
         def is_response_to(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_ExecuteFile)
@@ -5360,6 +5372,8 @@ class _PacketTypes:
             return 6
 
         def is_response_to(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_PlayTone)
@@ -5762,6 +5776,8 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_MoveStraight) or isinstance(request, _PacketTypes.PacketRequest_Rotate) or isinstance(request, _PacketTypes.PacketRequest_StopExecution)
@@ -5810,6 +5826,8 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_LineNavigation) or isinstance(request, _PacketTypes.PacketRequest_StopExecution)
@@ -5855,6 +5873,8 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_Velocity)
@@ -5901,6 +5921,8 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'id'):
+                return False
             if request.id != self.id:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_WatcherSetup) or isinstance(request, _PacketTypes.PacketRequest_WatcherRegionSetup)
@@ -6029,6 +6051,8 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_StopExecution) or isinstance(request, _PacketTypes.PacketRequest_ExecuteFile) or isinstance(request, _PacketTypes.PacketRequest_PlayTone)
@@ -6166,6 +6190,8 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
+            if not hasattr(request, 'requestId'):
+                return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_StopExecution) or isinstance(request, _PacketTypes.PacketRequest_ExecuteFile)
