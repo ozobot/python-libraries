@@ -1,7 +1,7 @@
 [project]
-name = "ozobot-protocol-common"
+name = "ozobot-common"
 version = "0.1.0"
-description = "Ozobot protocol common utils"
+description = "Ozobot common utils"
 readme = "README.md"
 authors = [
     { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }

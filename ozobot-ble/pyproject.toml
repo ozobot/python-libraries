@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "ozobot-protocol-common",
+    "ozobot-common",
     "bleak>=0.22.3",
     "loguru"
 ]
@@ -22,7 +22,7 @@ sources = ["src"]
 only-include = ["src/ozobot"]
 
 [tool.uv.sources]
-ozobot-protocol-common = { workspace = true }
+ozobot-common = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from ozobot.protocol_common.broadcast import BroadcastManager
+from ozobot.common.broadcast import BroadcastManager
 
 
 def test_contains_context_manager() -> None:

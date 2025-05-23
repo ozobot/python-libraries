@@ -5,9 +5,9 @@ requires-python = ">=3.12"
 [manifest]
 members = [
     "ozobot-ble",
+    "ozobot-common",
     "ozobot-evo",
     "ozobot-library",
-    "ozobot-protocol-common",
 ]
 
 [[package]]
@@ -135,15 +135,26 @@ source = { editable = "ozobot-ble" }
 dependencies = [
     { name = "bleak" },
     { name = "loguru" },
-    { name = "ozobot-protocol-common" },
+    { name = "ozobot-common" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "bleak", specifier = ">=0.22.3" },
     { name = "loguru" },
-    { name = "ozobot-protocol-common", editable = "ozobot-protocol-common" },
+    { name = "ozobot-common", editable = "ozobot-common" },
 ]
+
+[[package]]
+name = "ozobot-common"
+version = "0.1.0"
+source = { editable = "ozobot-common" }
+dependencies = [
+    { name = "loguru" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "loguru" }]
 
 [[package]]
 name = "ozobot-evo"
@@ -182,17 +193,6 @@ dev = [
     { name = "pytest-mypy" },
     { name = "pytest-ruff" },
 ]
-
-[[package]]
-name = "ozobot-protocol-common"
-version = "0.1.0"
-source = { editable = "ozobot-protocol-common" }
-dependencies = [
-    { name = "loguru" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "loguru" }]
 
 [[package]]
 name = "packaging"

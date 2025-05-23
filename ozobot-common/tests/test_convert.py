@@ -1,4 +1,4 @@
-from ozobot.protocol_common import convert
+from ozobot.common import convert
 
 
 class _Serializable:

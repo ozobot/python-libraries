@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from ozobot.protocol_common.rlock import RLock
+from ozobot.common.rlock import RLock
 
 
 async def test_rlock():

@@ -6,7 +6,7 @@ from uuid import UUID
 
 from ozobot.ble.connection import Characteristic, open_client
 from ozobot.evo.protocol import AsyncControl, Types
-from ozobot.protocol_common.exceptions import OzobotProtocolCommandError
+from ozobot.common.exceptions import OzobotProtocolCommandError
 
 from .driver import LEDMask, TDirection
 

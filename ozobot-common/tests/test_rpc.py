@@ -3,7 +3,7 @@ import typing
 
 import pytest
 
-from ozobot.protocol_common.rpc import RpcCall, RpcCallReentryError
+from ozobot.common.rpc import RpcCall, RpcCallReentryError
 
 
 @contextlib.asynccontextmanager

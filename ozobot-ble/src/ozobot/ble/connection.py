@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 import bleak
 from loguru import logger
 
-from ozobot.protocol_common.broadcast import BroadcastManager
+from ozobot.common.broadcast import BroadcastManager
 
 from .datatypes import DeviceDescription
 
