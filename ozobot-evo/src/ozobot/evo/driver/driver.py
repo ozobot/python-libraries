@@ -1,8 +1,20 @@
 from __future__ import annotations
 
-from typing import AsyncContextManager, Protocol
+from typing import AsyncContextManager, PropertyMetadata, Protocol, Self
 
+from ozobot.evo.api.watchers import WatcherSubscription
 from ozobot.evo.datatypes import LEDMask, TDirection
+
+
+class _Deserializable(Protocol):
+    @classmethod
+    def deserialize(cls, data: bytes) -> Self: ...
+
+
+class WatcherConfig[T: _Deserializable](Protocol):
+    address: int
+    size: int
+    type: T
 
 
 class Driver(Protocol):
@@ -31,3 +43,5 @@ class Driver(Protocol):
     async def follow_speed(self, speed_mps: float) -> None: ...
 
     async def stop_all(self) -> None: ...
+
+    async def watch[T](self, config: tuple[PropertyMetadata[T], ...]) -> WatcherSubscription[T]: ...

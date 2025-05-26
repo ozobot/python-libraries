@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import enum
 import struct
 import typing
@@ -48,10 +49,11 @@ class _ProtocolType(typing.Protocol):
         ...
 
 
-class PropertyMetadata(typing.TypedDict):
+@dataclasses.dataclass
+class PropertyMetadata[T: _ProtocolType]:
     is_readable: bool
     is_writable: bool
-    type: Type[_ProtocolType]
+    type: Type[T]
     address: int
 
 
@@ -3940,60 +3942,60 @@ class Types:
             return 5
 
 
-class _PacketTypes:
+class PacketTypes:
 
     @classmethod
     def get_packet_type_by_message_id(cls, id: int) -> typing.Type[_ProtocolType] | None:
         type_by_id: dict[int, typing.Type[_ProtocolType]] = {
-            1: _PacketTypes.PacketRequest_MemRead,
-            2: _PacketTypes.PacketResponse_MemRead,
-            3: _PacketTypes.PacketRequest_MemWrite,
-            4: _PacketTypes.PacketResponse_MemWrite,
-            100: _PacketTypes.PacketRequest_MoveStraight,
-            101: _PacketTypes.PacketResponse_MoveStraight,
-            102: _PacketTypes.PacketRequest_Rotate,
-            103: _PacketTypes.PacketResponse_Rotate,
-            104: _PacketTypes.PacketRequest_Velocity,
-            105: _PacketTypes.PacketResponse_Velocity,
-            106: _PacketTypes.PacketRequest_LineNavigation,
-            107: _PacketTypes.PacketResponse_LineNavigation,
-            120: _PacketTypes.PacketRequest_StopExecution,
-            121: _PacketTypes.PacketResponse_StopExecution,
-            122: _PacketTypes.PacketRequest_WatcherSetup,
-            123: _PacketTypes.PacketResponse_WatcherSetup,
-            124: _PacketTypes.PacketRequest_WatcherRegionSetup,
-            125: _PacketTypes.PacketResponse_WatcherRegionSetup,
-            108: _PacketTypes.PacketRequest_ExecuteFile,
-            109: _PacketTypes.PacketResponse_ExecuteFile,
-            110: _PacketTypes.PacketRequest_SetLED,
-            111: _PacketTypes.PacketResponse_SetLED,
-            112: _PacketTypes.PacketRequest_Calibrate,
-            113: _PacketTypes.PacketResponse_Calibrate,
-            114: _PacketTypes.PacketRequest_TurnOff,
-            115: _PacketTypes.PacketResponse_TurnOff,
-            116: _PacketTypes.PacketRequest_UpdateFirmware,
-            117: _PacketTypes.PacketResponse_UpdateFirmware,
-            118: _PacketTypes.PacketRequest_PlayTone,
-            119: _PacketTypes.PacketResponse_PlayTone,
-            126: _PacketTypes.PacketRequest_LongRPCExtensionExecute,
-            127: _PacketTypes.PacketResponse_LongRPCExtensionExecute,
-            130: _PacketTypes.PacketRequest_SetRNGSeed,
-            131: _PacketTypes.PacketResponse_SetRNGSeed,
-            132: _PacketTypes.PacketRequest_SensorsLogging,
-            133: _PacketTypes.PacketResponse_SensorsLogging,
-            134: _PacketTypes.PacketRequest_MemoryTest,
-            135: _PacketTypes.PacketResponse_MemoryTest,
-            256: _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate,
-            257: _PacketTypes.PacketEvent_LineNavigationExecutionUpdate,
-            266: _PacketTypes.PacketEvent_VelocityExecutionState,
-            260: _PacketTypes.PacketEvent_WatcherDirty,
-            263: _PacketTypes.PacketEvent_ModuleError,
-            258: _PacketTypes.PacketEvent_Shutdown,
-            259: _PacketTypes.PacketEvent_AudioExecutionState,
-            261: _PacketTypes.PacketEvent_CalibrationStatus,
-            262: _PacketTypes.PacketEvent_MemoryTestStatus,
-            264: _PacketTypes.PacketEvent_VirtualMachineExecutionState,
-            265: _PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate,
+            1: PacketTypes.PacketRequest_MemRead,
+            2: PacketTypes.PacketResponse_MemRead,
+            3: PacketTypes.PacketRequest_MemWrite,
+            4: PacketTypes.PacketResponse_MemWrite,
+            100: PacketTypes.PacketRequest_MoveStraight,
+            101: PacketTypes.PacketResponse_MoveStraight,
+            102: PacketTypes.PacketRequest_Rotate,
+            103: PacketTypes.PacketResponse_Rotate,
+            104: PacketTypes.PacketRequest_Velocity,
+            105: PacketTypes.PacketResponse_Velocity,
+            106: PacketTypes.PacketRequest_LineNavigation,
+            107: PacketTypes.PacketResponse_LineNavigation,
+            120: PacketTypes.PacketRequest_StopExecution,
+            121: PacketTypes.PacketResponse_StopExecution,
+            122: PacketTypes.PacketRequest_WatcherSetup,
+            123: PacketTypes.PacketResponse_WatcherSetup,
+            124: PacketTypes.PacketRequest_WatcherRegionSetup,
+            125: PacketTypes.PacketResponse_WatcherRegionSetup,
+            108: PacketTypes.PacketRequest_ExecuteFile,
+            109: PacketTypes.PacketResponse_ExecuteFile,
+            110: PacketTypes.PacketRequest_SetLED,
+            111: PacketTypes.PacketResponse_SetLED,
+            112: PacketTypes.PacketRequest_Calibrate,
+            113: PacketTypes.PacketResponse_Calibrate,
+            114: PacketTypes.PacketRequest_TurnOff,
+            115: PacketTypes.PacketResponse_TurnOff,
+            116: PacketTypes.PacketRequest_UpdateFirmware,
+            117: PacketTypes.PacketResponse_UpdateFirmware,
+            118: PacketTypes.PacketRequest_PlayTone,
+            119: PacketTypes.PacketResponse_PlayTone,
+            126: PacketTypes.PacketRequest_LongRPCExtensionExecute,
+            127: PacketTypes.PacketResponse_LongRPCExtensionExecute,
+            130: PacketTypes.PacketRequest_SetRNGSeed,
+            131: PacketTypes.PacketResponse_SetRNGSeed,
+            132: PacketTypes.PacketRequest_SensorsLogging,
+            133: PacketTypes.PacketResponse_SensorsLogging,
+            134: PacketTypes.PacketRequest_MemoryTest,
+            135: PacketTypes.PacketResponse_MemoryTest,
+            256: PacketTypes.PacketEvent_PreciseMovementExecutionUpdate,
+            257: PacketTypes.PacketEvent_LineNavigationExecutionUpdate,
+            266: PacketTypes.PacketEvent_VelocityExecutionState,
+            260: PacketTypes.PacketEvent_WatcherDirty,
+            263: PacketTypes.PacketEvent_ModuleError,
+            258: PacketTypes.PacketEvent_Shutdown,
+            259: PacketTypes.PacketEvent_AudioExecutionState,
+            261: PacketTypes.PacketEvent_CalibrationStatus,
+            262: PacketTypes.PacketEvent_MemoryTestStatus,
+            264: PacketTypes.PacketEvent_VirtualMachineExecutionState,
+            265: PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate,
         }
         return type_by_id.get(id, None)
 
@@ -4087,7 +4089,7 @@ class _PacketTypes:
             return 5 + getattr(source, 'length', 0)
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_MemRead)
+            return isinstance(request, PacketTypes.PacketRequest_MemRead)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -4179,7 +4181,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_MemWrite)
+            return isinstance(request, PacketTypes.PacketRequest_MemWrite)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -4232,7 +4234,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate, 
+            return PacketTypes.PacketEvent_PreciseMovementExecutionUpdate, 
 
     class PacketResponse_MoveStraight:
         message_id = Types.u16(101)
@@ -4273,7 +4275,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_MoveStraight)
+            return isinstance(request, PacketTypes.PacketRequest_MoveStraight)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -4326,7 +4328,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate, 
+            return PacketTypes.PacketEvent_PreciseMovementExecutionUpdate, 
 
     class PacketResponse_Rotate:
         message_id = Types.u16(103)
@@ -4367,7 +4369,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_Rotate)
+            return isinstance(request, PacketTypes.PacketRequest_Rotate)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -4423,7 +4425,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_VelocityExecutionState, 
+            return PacketTypes.PacketEvent_VelocityExecutionState, 
 
     class PacketResponse_Velocity:
         message_id = Types.u16(105)
@@ -4464,7 +4466,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_Velocity)
+            return isinstance(request, PacketTypes.PacketRequest_Velocity)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -4517,7 +4519,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_LineNavigationExecutionUpdate, 
+            return PacketTypes.PacketEvent_LineNavigationExecutionUpdate, 
 
     class PacketResponse_LineNavigation:
         message_id = Types.u16(107)
@@ -4558,7 +4560,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_LineNavigation)
+            return isinstance(request, PacketTypes.PacketRequest_LineNavigation)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -4605,7 +4607,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_AudioExecutionState, _PacketTypes.PacketEvent_VirtualMachineExecutionState, _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate, _PacketTypes.PacketEvent_LineNavigationExecutionUpdate, 
+            return PacketTypes.PacketEvent_AudioExecutionState, PacketTypes.PacketEvent_VirtualMachineExecutionState, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate, PacketTypes.PacketEvent_LineNavigationExecutionUpdate, 
 
     class PacketResponse_StopExecution:
         message_id = Types.u16(121)
@@ -4646,7 +4648,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_StopExecution)
+            return isinstance(request, PacketTypes.PacketRequest_StopExecution)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -4702,7 +4704,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_WatcherDirty, 
+            return PacketTypes.PacketEvent_WatcherDirty, 
 
     class PacketResponse_WatcherSetup:
         message_id = Types.u16(123)
@@ -4739,7 +4741,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_WatcherSetup)
+            return isinstance(request, PacketTypes.PacketRequest_WatcherSetup)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -4798,7 +4800,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_WatcherDirty, 
+            return PacketTypes.PacketEvent_WatcherDirty, 
 
     class PacketResponse_WatcherRegionSetup:
         message_id = Types.u16(125)
@@ -4835,7 +4837,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_WatcherRegionSetup)
+            return isinstance(request, PacketTypes.PacketRequest_WatcherRegionSetup)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -4886,7 +4888,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_VirtualMachineExecutionState, _PacketTypes.PacketEvent_AudioExecutionState, 
+            return PacketTypes.PacketEvent_VirtualMachineExecutionState, PacketTypes.PacketEvent_AudioExecutionState, 
 
     class PacketResponse_ExecuteFile:
         message_id = Types.u16(109)
@@ -4930,7 +4932,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_ExecuteFile)
+            return isinstance(request, PacketTypes.PacketRequest_ExecuteFile)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5026,7 +5028,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_SetLED)
+            return isinstance(request, PacketTypes.PacketRequest_SetLED)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5073,7 +5075,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_CalibrationStatus, 
+            return PacketTypes.PacketEvent_CalibrationStatus, 
 
     class PacketResponse_Calibrate:
         message_id = Types.u16(113)
@@ -5110,7 +5112,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_Calibrate)
+            return isinstance(request, PacketTypes.PacketRequest_Calibrate)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5192,7 +5194,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_TurnOff)
+            return isinstance(request, PacketTypes.PacketRequest_TurnOff)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5279,7 +5281,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_UpdateFirmware)
+            return isinstance(request, PacketTypes.PacketRequest_UpdateFirmware)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5335,7 +5337,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_AudioExecutionState, 
+            return PacketTypes.PacketEvent_AudioExecutionState, 
 
     class PacketResponse_PlayTone:
         message_id = Types.u16(119)
@@ -5376,7 +5378,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_PlayTone)
+            return isinstance(request, PacketTypes.PacketRequest_PlayTone)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5469,7 +5471,7 @@ class _PacketTypes:
             return 9
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_LongRPCExtensionExecute)
+            return isinstance(request, PacketTypes.PacketRequest_LongRPCExtensionExecute)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5553,7 +5555,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_SetRNGSeed)
+            return isinstance(request, PacketTypes.PacketRequest_SetRNGSeed)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5600,7 +5602,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate, 
+            return PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate, 
 
     class PacketResponse_SensorsLogging:
         message_id = Types.u16(133)
@@ -5637,7 +5639,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_SensorsLogging)
+            return isinstance(request, PacketTypes.PacketRequest_SensorsLogging)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5684,7 +5686,7 @@ class _PacketTypes:
 
         @property
         def associated_events(self):
-            return _PacketTypes.PacketEvent_MemoryTestStatus, 
+            return PacketTypes.PacketEvent_MemoryTestStatus, 
 
     class PacketResponse_MemoryTest:
         message_id = Types.u16(135)
@@ -5721,7 +5723,7 @@ class _PacketTypes:
             return 3
 
         def is_response_to(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_MemoryTest)
+            return isinstance(request, PacketTypes.PacketRequest_MemoryTest)
 
         def is_event_of(self, request: _ProtocolType) -> bool:
             return False
@@ -5780,7 +5782,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_MoveStraight) or isinstance(request, _PacketTypes.PacketRequest_Rotate) or isinstance(request, _PacketTypes.PacketRequest_StopExecution)
+            return isinstance(request, PacketTypes.PacketRequest_MoveStraight) or isinstance(request, PacketTypes.PacketRequest_Rotate) or isinstance(request, PacketTypes.PacketRequest_StopExecution)
 
     class PacketEvent_LineNavigationExecutionUpdate:
         message_id = Types.u16(257)
@@ -5830,7 +5832,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_LineNavigation) or isinstance(request, _PacketTypes.PacketRequest_StopExecution)
+            return isinstance(request, PacketTypes.PacketRequest_LineNavigation) or isinstance(request, PacketTypes.PacketRequest_StopExecution)
 
     class PacketEvent_VelocityExecutionState:
         message_id = Types.u16(266)
@@ -5877,7 +5879,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_Velocity)
+            return isinstance(request, PacketTypes.PacketRequest_Velocity)
 
     class PacketEvent_WatcherDirty:
         message_id = Types.u16(260)
@@ -5925,7 +5927,7 @@ class _PacketTypes:
                 return False
             if request.watcherID != self.id:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_WatcherSetup) or isinstance(request, _PacketTypes.PacketRequest_WatcherRegionSetup)
+            return isinstance(request, PacketTypes.PacketRequest_WatcherSetup) or isinstance(request, PacketTypes.PacketRequest_WatcherRegionSetup)
 
     class PacketEvent_ModuleError:
         message_id = Types.u16(263)
@@ -6055,7 +6057,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_StopExecution) or isinstance(request, _PacketTypes.PacketRequest_ExecuteFile) or isinstance(request, _PacketTypes.PacketRequest_PlayTone)
+            return isinstance(request, PacketTypes.PacketRequest_StopExecution) or isinstance(request, PacketTypes.PacketRequest_ExecuteFile) or isinstance(request, PacketTypes.PacketRequest_PlayTone)
 
     class PacketEvent_CalibrationStatus:
         message_id = Types.u16(261)
@@ -6095,7 +6097,7 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_Calibrate)
+            return isinstance(request, PacketTypes.PacketRequest_Calibrate)
 
     class PacketEvent_MemoryTestStatus:
         message_id = Types.u16(262)
@@ -6147,7 +6149,7 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_MemoryTest)
+            return isinstance(request, PacketTypes.PacketRequest_MemoryTest)
 
     class PacketEvent_VirtualMachineExecutionState:
         message_id = Types.u16(264)
@@ -6194,7 +6196,7 @@ class _PacketTypes:
                 return False
             if request.requestId != self.requestId:
                 return False
-            return isinstance(request, _PacketTypes.PacketRequest_StopExecution) or isinstance(request, _PacketTypes.PacketRequest_ExecuteFile)
+            return isinstance(request, PacketTypes.PacketRequest_StopExecution) or isinstance(request, PacketTypes.PacketRequest_ExecuteFile)
 
     class PacketEvent_SensorsLoggingExecutionUpdate:
         message_id = Types.u16(265)
@@ -6234,7 +6236,430 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
-            return isinstance(request, _PacketTypes.PacketRequest_SensorsLogging)
+            return isinstance(request, PacketTypes.PacketRequest_SensorsLogging)
+
+
+class VirtualMemory:
+    hwConfiguration = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.u8,
+        address=65575,
+    )
+    fwVersion = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.Version,
+        address=65580,
+    )
+    fwCommitHash = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.c8,
+        address=65584,
+    )
+    fwBuildType = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.c8,
+        address=65598,
+    )
+    serialNumber = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.u8,
+        address=65616,
+    )
+    watchersInfo = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.WatcherInfo,
+        address=65651,
+    )
+    protocolHash = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.c8,
+        address=65653,
+    )
+    lineSensorsPaper = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.LineWithRAW_8bit,
+        address=0,
+    )
+    lineSensorsScreen = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.LineWithRAW_8bit,
+        address=28,
+    )
+    colorSensorData = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.ColorSensorData,
+        address=56,
+    )
+    processedColor = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.ProcessedRGBColor,
+        address=69,
+    )
+    surfaceProximityData = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.SurfaceProximityData,
+        address=80,
+    )
+    lineColor = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.LineColor,
+        address=86,
+    )
+    colorCode = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.ColorCode,
+        address=92,
+    )
+    surfaceColor = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.SurfaceColor,
+        address=100,
+    )
+    surfaceType = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.Surface,
+        address=108,
+    )
+    pickupDetection = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.PickupDetection,
+        address=113,
+    )
+    irProximity = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.IRProximity,
+        address=118,
+    )
+    irMessageLeftRear = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.IRMessage,
+        address=126,
+    )
+    irMessageLeftFront = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.IRMessage,
+        address=132,
+    )
+    irMessageRightRear = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.IRMessage,
+        address=138,
+    )
+    irMessageRightFront = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.IRMessage,
+        address=144,
+    )
+    wheelsEncoder = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.WheelsEncoder,
+        address=150,
+    )
+    relativePosition = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.RelativePosition,
+        address=162,
+    )
+    chargerState = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.ChargerState,
+        address=183,
+    )
+    batteryState = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.Battery,
+        address=188,
+    )
+    button = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.Button,
+        address=196,
+    )
+    deviceName = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.c8,
+        address=16384,
+    )
+    audioVolume = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.u8,
+        address=16401,
+    )
+    ledsBrightness = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.u8,
+        address=16402,
+    )
+    accountType = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.AccountTypeEnum,
+        address=16403,
+    )
+    behaviour = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.BehaviourTypeEnum,
+        address=16404,
+    )
+    irMessageLeftRearEmitting = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.IRMessageEmit,
+        address=16405,
+    )
+    irMessageLeftFrontEmitting = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.IRMessageEmit,
+        address=16407,
+    )
+    irMessageRightRearEmitting = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.IRMessageEmit,
+        address=16409,
+    )
+    irMessageRightFrontEmitting = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.IRMessageEmit,
+        address=16411,
+    )
+    virtualMachineSharedRegisters = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.u8,
+        address=16413,
+    )
+    lineNavigationSpeed = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.S8_24,
+        address=16421,
+    )
+    chargeRate = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.u8,
+        address=16425,
+    )
+    buttonOverride = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.ButtonOverrideEnum,
+        address=16426,
+    )
+    speedPID = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.PIDParameters,
+        address=16438,
+    )
+    lineNavigationPID = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.PIDParameters,
+        address=16462,
+    )
+    bleAdvertisingInterval = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.UnsignedRange,
+        address=16474,
+    )
+    qaTrackLog = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.u8,
+        address=16482,
+    )
+    colorCodeExecution = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.ColorCodeExecution,
+        address=16483,
+    )
+    longRPCExtensionData = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.u8,
+        address=24576,
+    )
+    testMode = PropertyMetadata(
+        is_readable=True,
+        is_writable=True,
+        type=Types.TestModeFields,
+        address=28672,
+    )
+    bootloaderVersion = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.Version,
+        address=65536,
+    )
+    bootloaderCommitHash = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.c8,
+        address=65540,
+    )
+    bootloaderFields = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.BootloaderFields,
+        address=65554,
+    )
+    bootloaderErrorCode = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.BootloaderErrorCodes,
+        address=65559,
+    )
+    bootloaderPress = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.time_t,
+        address=65555,
+    )
+    keyVariant = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.EncryptionKeyVariant,
+        address=65560,
+    )
+    keyFingerPrint = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.u8,
+        address=65561,
+    )
+    productType = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.ProductTypeEnum,
+        address=65573,
+    )
+    productRevision = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.u8,
+        address=65574,
+    )
+    plasticColor = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.PlasticColor,
+        address=65579,
+    )
+    bluetoothVersion = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.Version,
+        address=65632,
+    )
+    bluetoothInitializedCode = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.BluetoothInitializedCode,
+        address=65636,
+    )
+    bluetoothAddress = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.u8,
+        address=65637,
+    )
+    bluetoothUpdateStatus = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.BluetoothUpdateErrorCodes,
+        address=65643,
+    )
+    externalFlashInformation = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.ExternalFlashInformation,
+        address=65644,
+    )
+    lineSensorsPaperCalibration = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.LineSensorsCalibration,
+        address=65667,
+    )
+    lineSensorsScreenCalibration = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.LineSensorsCalibration,
+        address=65695,
+    )
+    colorSensorPaperCalibration = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.ColorSensorCalibration,
+        address=65723,
+    )
+    colorSensorScreenCalibration = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.ColorSensorCalibration,
+        address=65735,
+    )
+    encodersCalibration = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.EncodersCalibration,
+        address=65747,
+    )
+    colorSensorType = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.c8,
+        address=65749,
+    )
+    boardsConfiguration = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.BoardsConfiguration,
+        address=65765,
+    )
+    tasksInformation = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.TaskInformation,
+        address=73728,
+    )
 
 
 class AsyncControl:
@@ -6248,58 +6673,58 @@ class AsyncControl:
         self._rpc_lock = RLock()
         self._request_counter = 0
 
-    def MemRead(self, addr: int | Types.addr_t, length: int | Types.size_t) -> RpcCall[_PacketTypes.PacketResponse_MemRead, typing.Never]:
+    def MemRead(self, addr: int | Types.addr_t, length: int | Types.size_t) -> RpcCall[PacketTypes.PacketResponse_MemRead, typing.Never]:
         '''Virtual memory read. It supports variable and whole read from an entry or segments. Entry is a singular logic object in the memory, segments are collections of entries. Read is atomic. Unclaimed/unused memory by the firmware is filled with zeroes. Memory has been read before returning the result of the operation, meaning memory can be changed after firmware returns read data.
 
         :param addr:             Virtual memory address.
         :param length:           Size of read.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_MemRead, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_MemRead, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_MemRead(addr, length)
-        return RpcCall[_PacketTypes.PacketResponse_MemRead, typing.Never](self._rpc(request, _PacketTypes.PacketResponse_MemRead))
+        request = PacketTypes.PacketRequest_MemRead(addr, length)
+        return RpcCall[PacketTypes.PacketResponse_MemRead, typing.Never](self._rpc(request, PacketTypes.PacketResponse_MemRead))
 
-    def MemWrite(self, addr: int | Types.addr_t, length: int | Types.size_t, data: str | bytes) -> RpcCall[_PacketTypes.PacketResponse_MemWrite, typing.Never]:
+    def MemWrite(self, addr: int | Types.addr_t, length: int | Types.size_t, data: str | bytes) -> RpcCall[PacketTypes.PacketResponse_MemWrite, typing.Never]:
         '''Virtual memory write. Entire entries have to be written in a single write operation except entries with permitted partial writes. Write is done atomically. Response to the operation is returned after writing the memory, meaning the memory should be present for consecutive reads after this operation compeletes.
 
         :param addr:             Virtual memory address.
         :param length:           Size of data to be written in the virtual memory.
         :param data:             New virtual memory data written at the address.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_MemWrite, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_MemWrite, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_MemWrite(addr, length, data)
-        return RpcCall[_PacketTypes.PacketResponse_MemWrite, typing.Never](self._rpc(request, _PacketTypes.PacketResponse_MemWrite))
+        request = PacketTypes.PacketRequest_MemWrite(addr, length, data)
+        return RpcCall[PacketTypes.PacketResponse_MemWrite, typing.Never](self._rpc(request, PacketTypes.PacketResponse_MemWrite))
 
-    def MoveStraight(self, requestId: int | Types.RequestID, distance: float | Types.S8_24, speed: float | Types.S8_24) -> RpcCall[_PacketTypes.PacketResponse_MoveStraight, _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]:
+    def MoveStraight(self, requestId: int | Types.RequestID, distance: float | Types.S8_24, speed: float | Types.S8_24) -> RpcCall[PacketTypes.PacketResponse_MoveStraight, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]:
         '''Move robot along a straight line. The function returns as soon as movement is queued, but may not have started executing yet. Note that if both distance and speed are negative, the resulting movement is forward.
 
         :param requestId:        Unique request identifier. Returned in PreciseMovementExecutionUpdate event.
         :param distance:         Distance to travel in meters. When negative, robot moves backwards.
         :param speed:            Average speed of the movement in meters per second. When negative, robot moves backwards.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_MoveStraight, _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_MoveStraight, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_MoveStraight(requestId, distance, speed)
-        return RpcCall[_PacketTypes.PacketResponse_MoveStraight, _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate](self._rpc(request, _PacketTypes.PacketResponse_MoveStraight))
+        request = PacketTypes.PacketRequest_MoveStraight(requestId, distance, speed)
+        return RpcCall[PacketTypes.PacketResponse_MoveStraight, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_MoveStraight))
 
-    def Rotate(self, requestId: int | Types.RequestID, angle: float | Types.S8_24, speed: float | Types.S8_24) -> RpcCall[_PacketTypes.PacketResponse_Rotate, _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]:
+    def Rotate(self, requestId: int | Types.RequestID, angle: float | Types.S8_24, speed: float | Types.S8_24) -> RpcCall[PacketTypes.PacketResponse_Rotate, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]:
         '''Rotate around vertical axis to a specified angle. The function returns as soon as movement is queued, but may not have started executing yet.
 
         :param requestId:        Unique request identifier. Returned in PreciseMovementExecutionUpdate event.
         :param angle:            Rotation angle in radians (counter-clockwise when positive and clockwise when negative).
         :param speed:            Average rotation speed in radians per second (if negative, reverse the direction given by angle.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_Rotate, _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_Rotate, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_Rotate(requestId, angle, speed)
-        return RpcCall[_PacketTypes.PacketResponse_Rotate, _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate](self._rpc(request, _PacketTypes.PacketResponse_Rotate))
+        request = PacketTypes.PacketRequest_Rotate(requestId, angle, speed)
+        return RpcCall[PacketTypes.PacketResponse_Rotate, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_Rotate))
 
-    def Velocity(self, requestId: int | Types.RequestID, linearSpeed: float | Types.S8_24, rotationSpeed: float | Types.S8_24, durationTime: int | Types.i32) -> RpcCall[_PacketTypes.PacketResponse_Velocity, _PacketTypes.PacketEvent_VelocityExecutionState]:
+    def Velocity(self, requestId: int | Types.RequestID, linearSpeed: float | Types.S8_24, rotationSpeed: float | Types.S8_24, durationTime: int | Types.i32) -> RpcCall[PacketTypes.PacketResponse_Velocity, PacketTypes.PacketEvent_VelocityExecutionState]:
         '''Set forward and rotation velocity. Setting expiration and waiting for it to expire can cause lag in movement or sudden snaps, prefer setting expiration to multiple of the expected duration (2x, 3x, ...) and replace it with another movement just in time - this applies to cases where chaining velocity is wanted. One-shot change in velocity can remain with exact expiration time. Cancelling this movement modification is still possible and can exhibit aforementioned behavior, but resets the speed(s) to the default.
 
         :param requestId:        Unique request identifier used to cancel this speed(s) modification.
@@ -6307,37 +6732,37 @@ class AsyncControl:
         :param rotationSpeed:    Rotation speed in rad/s.
         :param durationTime:     Time for which velocity is maintained. For infinite use -1. The best practise is to set shorter duration and keep calling it in a loop instead infinite or long duration. It serves as safety feature when connection is lost robot stops instead drop from a surface.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_Velocity, _PacketTypes.PacketEvent_VelocityExecutionState]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_Velocity, PacketTypes.PacketEvent_VelocityExecutionState]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_Velocity(requestId, linearSpeed, rotationSpeed, durationTime)
-        return RpcCall[_PacketTypes.PacketResponse_Velocity, _PacketTypes.PacketEvent_VelocityExecutionState](self._rpc(request, _PacketTypes.PacketResponse_Velocity))
+        request = PacketTypes.PacketRequest_Velocity(requestId, linearSpeed, rotationSpeed, durationTime)
+        return RpcCall[PacketTypes.PacketResponse_Velocity, PacketTypes.PacketEvent_VelocityExecutionState](self._rpc(request, PacketTypes.PacketResponse_Velocity))
 
-    def LineNavigation(self, requestId: int | Types.RequestID, direction: Types.IntersectionDirection, action: Types.LineNavigationAction) -> RpcCall[_PacketTypes.PacketResponse_LineNavigation, _PacketTypes.PacketEvent_LineNavigationExecutionUpdate]:
+    def LineNavigation(self, requestId: int | Types.RequestID, direction: Types.IntersectionDirection, action: Types.LineNavigationAction) -> RpcCall[PacketTypes.PacketResponse_LineNavigation, PacketTypes.PacketEvent_LineNavigationExecutionUpdate]:
         '''Line navigation is capable to follow lines, recognize intersections and turn in chosen direction on them.
 
         :param requestId:        Unique request identifier. Returned in LineNavigationExecutionUpdate event.
         :param direction:        Direction in which line navigation aligns.
         :param action:           Action taken after direction alignment.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_LineNavigation, _PacketTypes.PacketEvent_LineNavigationExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_LineNavigation, PacketTypes.PacketEvent_LineNavigationExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_LineNavigation(requestId, direction, action)
-        return RpcCall[_PacketTypes.PacketResponse_LineNavigation, _PacketTypes.PacketEvent_LineNavigationExecutionUpdate](self._rpc(request, _PacketTypes.PacketResponse_LineNavigation))
+        request = PacketTypes.PacketRequest_LineNavigation(requestId, direction, action)
+        return RpcCall[PacketTypes.PacketResponse_LineNavigation, PacketTypes.PacketEvent_LineNavigationExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_LineNavigation))
 
-    def StopExecution(self, requestId: int | Types.RequestID) -> RpcCall[_PacketTypes.PacketResponse_StopExecution, _PacketTypes.PacketEvent_AudioExecutionState | _PacketTypes.PacketEvent_VirtualMachineExecutionState | _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate | _PacketTypes.PacketEvent_LineNavigationExecutionUpdate]:
+    def StopExecution(self, requestId: int | Types.RequestID) -> RpcCall[PacketTypes.PacketResponse_StopExecution, PacketTypes.PacketEvent_AudioExecutionState | PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_PreciseMovementExecutionUpdate | PacketTypes.PacketEvent_LineNavigationExecutionUpdate]:
         '''Stop execution. It can be audio playback, movement etc.
 
         :param requestId:        Unique identifier of a request which will be stopped. To stop all execution use 0.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_StopExecution, _PacketTypes.PacketEvent_AudioExecutionState | _PacketTypes.PacketEvent_VirtualMachineExecutionState | _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate | _PacketTypes.PacketEvent_LineNavigationExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_StopExecution, PacketTypes.PacketEvent_AudioExecutionState | PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_PreciseMovementExecutionUpdate | PacketTypes.PacketEvent_LineNavigationExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_StopExecution(requestId)
-        return RpcCall[_PacketTypes.PacketResponse_StopExecution, _PacketTypes.PacketEvent_AudioExecutionState | _PacketTypes.PacketEvent_VirtualMachineExecutionState | _PacketTypes.PacketEvent_PreciseMovementExecutionUpdate | _PacketTypes.PacketEvent_LineNavigationExecutionUpdate](self._rpc(request, _PacketTypes.PacketResponse_StopExecution))
+        request = PacketTypes.PacketRequest_StopExecution(requestId)
+        return RpcCall[PacketTypes.PacketResponse_StopExecution, PacketTypes.PacketEvent_AudioExecutionState | PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_PreciseMovementExecutionUpdate | PacketTypes.PacketEvent_LineNavigationExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_StopExecution))
 
-    def WatcherSetup(self, watcherID: int | Types.u8, flags: Types.WatcherFlags, notificationPeriodMin: int | Types.u16, notificationPeriodMax: int | Types.u16) -> RpcCall[_PacketTypes.PacketResponse_WatcherSetup, _PacketTypes.PacketEvent_WatcherDirty]:
+    def WatcherSetup(self, watcherID: int | Types.u8, flags: Types.WatcherFlags, notificationPeriodMin: int | Types.u16, notificationPeriodMax: int | Types.u16) -> RpcCall[PacketTypes.PacketResponse_WatcherSetup, PacketTypes.PacketEvent_WatcherDirty]:
         '''Watcher setup (flags and notification period). After enabling the watcher using 'flags', device keeps emitting WatcherDirty unless **explicitly disabled**.
 
         In cases where firmware is detached from controlling authority and controlling authority crashes or otherwise experiences a loss of control, the controlling authority must disable the watcher or otherwise reset this device.
@@ -6347,13 +6772,13 @@ class AsyncControl:
         :param notificationPeriodMin: Watcher data emissions are throttled to this period. Meaning the watcher cannot emit unless this period has elapsed. To disable throttling, set it to 0.
         :param notificationPeriodMax: Clone of the latest watcher data is sent when there was no change to the sector in the specified period. To disable this feature, set it to 0.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_WatcherSetup, _PacketTypes.PacketEvent_WatcherDirty]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_WatcherSetup, PacketTypes.PacketEvent_WatcherDirty]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_WatcherSetup(watcherID, flags, notificationPeriodMin, notificationPeriodMax)
-        return RpcCall[_PacketTypes.PacketResponse_WatcherSetup, _PacketTypes.PacketEvent_WatcherDirty](self._rpc(request, _PacketTypes.PacketResponse_WatcherSetup))
+        request = PacketTypes.PacketRequest_WatcherSetup(watcherID, flags, notificationPeriodMin, notificationPeriodMax)
+        return RpcCall[PacketTypes.PacketResponse_WatcherSetup, PacketTypes.PacketEvent_WatcherDirty](self._rpc(request, PacketTypes.PacketResponse_WatcherSetup))
 
-    def WatcherRegionSetup(self, watcherID: int | Types.u8, regionID: int | Types.u8, address: int | Types.u16, size: int | Types.u8, flags: Types.WatcherRegionFlags) -> RpcCall[_PacketTypes.PacketResponse_WatcherRegionSetup, _PacketTypes.PacketEvent_WatcherDirty]:
+    def WatcherRegionSetup(self, watcherID: int | Types.u8, regionID: int | Types.u8, address: int | Types.u16, size: int | Types.u8, flags: Types.WatcherRegionFlags) -> RpcCall[PacketTypes.PacketResponse_WatcherRegionSetup, PacketTypes.PacketEvent_WatcherDirty]:
         '''Watcher region setup as address, size and flags. Emission does not start unless WatcherSetup is invoked with an appropriate Enable flag.
 
         :param watcherID:        Watcher identifier. Must be equal to the corresponding WatcherSetup.watcherID in order to apply changes correctly.
@@ -6362,25 +6787,25 @@ class AsyncControl:
         :param size:             Size of the memory region. On purpose it is clamped to allow watcher watch over up to 256B. Frequently observable memory regions are clumped together, that said if the requirement is to observe large amount of memory, register multiple watchers.
         :param flags:            Memory region flags. For the most use-cases should be 0 or otherwise empty.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_WatcherRegionSetup, _PacketTypes.PacketEvent_WatcherDirty]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_WatcherRegionSetup, PacketTypes.PacketEvent_WatcherDirty]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_WatcherRegionSetup(watcherID, regionID, address, size, flags)
-        return RpcCall[_PacketTypes.PacketResponse_WatcherRegionSetup, _PacketTypes.PacketEvent_WatcherDirty](self._rpc(request, _PacketTypes.PacketResponse_WatcherRegionSetup))
+        request = PacketTypes.PacketRequest_WatcherRegionSetup(watcherID, regionID, address, size, flags)
+        return RpcCall[PacketTypes.PacketResponse_WatcherRegionSetup, PacketTypes.PacketEvent_WatcherDirty](self._rpc(request, PacketTypes.PacketResponse_WatcherRegionSetup))
 
-    def ExecuteFile(self, requestId: int | Types.RequestID, path: str | bytes) -> RpcCall[_PacketTypes.PacketResponse_ExecuteFile, _PacketTypes.PacketEvent_VirtualMachineExecutionState | _PacketTypes.PacketEvent_AudioExecutionState]:
+    def ExecuteFile(self, requestId: int | Types.RequestID, path: str | bytes) -> RpcCall[PacketTypes.PacketResponse_ExecuteFile, PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_AudioExecutionState]:
         '''Execute file like audio file, virtual machine program etc.
 
         :param requestId:        Unique request identifier. Returned in ExecutionState event.
         :param path:             File path. It has to be terminated with null character.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_ExecuteFile, _PacketTypes.PacketEvent_VirtualMachineExecutionState | _PacketTypes.PacketEvent_AudioExecutionState]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_ExecuteFile, PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_AudioExecutionState]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_ExecuteFile(requestId, path)
-        return RpcCall[_PacketTypes.PacketResponse_ExecuteFile, _PacketTypes.PacketEvent_VirtualMachineExecutionState | _PacketTypes.PacketEvent_AudioExecutionState](self._rpc(request, _PacketTypes.PacketResponse_ExecuteFile))
+        request = PacketTypes.PacketRequest_ExecuteFile(requestId, path)
+        return RpcCall[PacketTypes.PacketResponse_ExecuteFile, PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_AudioExecutionState](self._rpc(request, PacketTypes.PacketResponse_ExecuteFile))
 
-    def SetLED(self, ledsMask: Types.LEDsMask, red: int | Types.u8, green: int | Types.u8, blue: int | Types.u8, alpha: int | Types.u8) -> RpcCall[_PacketTypes.PacketResponse_SetLED, typing.Never]:
+    def SetLED(self, ledsMask: Types.LEDsMask, red: int | Types.u8, green: int | Types.u8, blue: int | Types.u8, alpha: int | Types.u8) -> RpcCall[PacketTypes.PacketResponse_SetLED, typing.Never]:
         '''Set LEDs brightness.
 
         :param ledsMask:         LEDs mask. Bits set to one specify on which LEDs following parameters will be aplied.
@@ -6389,46 +6814,46 @@ class AsyncControl:
         :param blue:             Blue channel value
         :param alpha:            Alpha channel
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_SetLED, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_SetLED, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_SetLED(ledsMask, red, green, blue, alpha)
-        return RpcCall[_PacketTypes.PacketResponse_SetLED, typing.Never](self._rpc(request, _PacketTypes.PacketResponse_SetLED))
+        request = PacketTypes.PacketRequest_SetLED(ledsMask, red, green, blue, alpha)
+        return RpcCall[PacketTypes.PacketResponse_SetLED, typing.Never](self._rpc(request, PacketTypes.PacketResponse_SetLED))
 
-    def Calibrate(self, type: Types.CalibrationType) -> RpcCall[_PacketTypes.PacketResponse_Calibrate, _PacketTypes.PacketEvent_CalibrationStatus]:
+    def Calibrate(self, type: Types.CalibrationType) -> RpcCall[PacketTypes.PacketResponse_Calibrate, PacketTypes.PacketEvent_CalibrationStatus]:
         '''Request to calibrate sensors.
 
         :param type:             TODO: Do we want to use the same enum as used in the old protocol?
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_Calibrate, _PacketTypes.PacketEvent_CalibrationStatus]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_Calibrate, PacketTypes.PacketEvent_CalibrationStatus]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_Calibrate(type)
-        return RpcCall[_PacketTypes.PacketResponse_Calibrate, _PacketTypes.PacketEvent_CalibrationStatus](self._rpc(request, _PacketTypes.PacketResponse_Calibrate))
+        request = PacketTypes.PacketRequest_Calibrate(type)
+        return RpcCall[PacketTypes.PacketResponse_Calibrate, PacketTypes.PacketEvent_CalibrationStatus](self._rpc(request, PacketTypes.PacketResponse_Calibrate))
 
-    def TurnOff(self) -> RpcCall[_PacketTypes.PacketResponse_TurnOff, typing.Never]:
+    def TurnOff(self) -> RpcCall[PacketTypes.PacketResponse_TurnOff, typing.Never]:
         '''Request to turn off.
 
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_TurnOff, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_TurnOff, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_TurnOff()
-        return RpcCall[_PacketTypes.PacketResponse_TurnOff, typing.Never](self._rpc(request, _PacketTypes.PacketResponse_TurnOff))
+        request = PacketTypes.PacketRequest_TurnOff()
+        return RpcCall[PacketTypes.PacketResponse_TurnOff, typing.Never](self._rpc(request, PacketTypes.PacketResponse_TurnOff))
 
-    def UpdateFirmware(self, target: Types.FirmwareUpdateTargetEnum, source: Types.FirmwareUpdateSourceEnum) -> RpcCall[_PacketTypes.PacketResponse_UpdateFirmware, typing.Never]:
+    def UpdateFirmware(self, target: Types.FirmwareUpdateTargetEnum, source: Types.FirmwareUpdateSourceEnum) -> RpcCall[PacketTypes.PacketResponse_UpdateFirmware, typing.Never]:
         '''Request to update firmware.
 
         :param target:           Update target as main MCU or an external one.
         :param source:           Update source as file system or special recovery location.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_UpdateFirmware, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_UpdateFirmware, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_UpdateFirmware(target, source)
-        return RpcCall[_PacketTypes.PacketResponse_UpdateFirmware, typing.Never](self._rpc(request, _PacketTypes.PacketResponse_UpdateFirmware))
+        request = PacketTypes.PacketRequest_UpdateFirmware(target, source)
+        return RpcCall[PacketTypes.PacketResponse_UpdateFirmware, typing.Never](self._rpc(request, PacketTypes.PacketResponse_UpdateFirmware))
 
-    def PlayTone(self, requestId: int | Types.RequestID, frequency: int | Types.u16, duration: int | Types.u16, volume: int | Types.u8) -> RpcCall[_PacketTypes.PacketResponse_PlayTone, _PacketTypes.PacketEvent_AudioExecutionState]:
+    def PlayTone(self, requestId: int | Types.RequestID, frequency: int | Types.u16, duration: int | Types.u16, volume: int | Types.u8) -> RpcCall[PacketTypes.PacketResponse_PlayTone, PacketTypes.PacketEvent_AudioExecutionState]:
         '''Play tone.
 
         :param requestId:        Unique request identifier. Returned in ExecutionState event.
@@ -6436,56 +6861,56 @@ class AsyncControl:
         :param duration:         Tone duration in ms
         :param volume:           Tone volume
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_PlayTone, _PacketTypes.PacketEvent_AudioExecutionState]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_PlayTone, PacketTypes.PacketEvent_AudioExecutionState]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_PlayTone(requestId, frequency, duration, volume)
-        return RpcCall[_PacketTypes.PacketResponse_PlayTone, _PacketTypes.PacketEvent_AudioExecutionState](self._rpc(request, _PacketTypes.PacketResponse_PlayTone))
+        request = PacketTypes.PacketRequest_PlayTone(requestId, frequency, duration, volume)
+        return RpcCall[PacketTypes.PacketResponse_PlayTone, PacketTypes.PacketEvent_AudioExecutionState](self._rpc(request, PacketTypes.PacketResponse_PlayTone))
 
-    def LongRPCExtensionExecute(self, dataLength: int | Types.size_t, dataCRC: int | Types.u32) -> RpcCall[_PacketTypes.PacketResponse_LongRPCExtensionExecute, typing.Never]:
+    def LongRPCExtensionExecute(self, dataLength: int | Types.size_t, dataCRC: int | Types.u32) -> RpcCall[PacketTypes.PacketResponse_LongRPCExtensionExecute, typing.Never]:
         '''Execute preloaded RPC call from the virtual memory.
 
         :param dataLength:       RPC call data length.
         :param dataCRC:          RPC call data CRC to verify theirs integrity.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_LongRPCExtensionExecute, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_LongRPCExtensionExecute, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_LongRPCExtensionExecute(dataLength, dataCRC)
-        return RpcCall[_PacketTypes.PacketResponse_LongRPCExtensionExecute, typing.Never](self._rpc(request, _PacketTypes.PacketResponse_LongRPCExtensionExecute))
+        request = PacketTypes.PacketRequest_LongRPCExtensionExecute(dataLength, dataCRC)
+        return RpcCall[PacketTypes.PacketResponse_LongRPCExtensionExecute, typing.Never](self._rpc(request, PacketTypes.PacketResponse_LongRPCExtensionExecute))
 
-    def SetRNGSeed(self, seed: int | Types.u32) -> RpcCall[_PacketTypes.PacketResponse_SetRNGSeed, typing.Never]:
+    def SetRNGSeed(self, seed: int | Types.u32) -> RpcCall[PacketTypes.PacketResponse_SetRNGSeed, typing.Never]:
         '''Set random generator seed.
 
         :param seed:             Any integer to be used as the internal RNG pseudogenerator seed for blockly.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_SetRNGSeed, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_SetRNGSeed, typing.Never]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_SetRNGSeed(seed)
-        return RpcCall[_PacketTypes.PacketResponse_SetRNGSeed, typing.Never](self._rpc(request, _PacketTypes.PacketResponse_SetRNGSeed))
+        request = PacketTypes.PacketRequest_SetRNGSeed(seed)
+        return RpcCall[PacketTypes.PacketResponse_SetRNGSeed, typing.Never](self._rpc(request, PacketTypes.PacketResponse_SetRNGSeed))
 
-    def SensorsLogging(self, newState: Types.LoggingState) -> RpcCall[_PacketTypes.PacketResponse_SensorsLogging, _PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate]:
+    def SensorsLogging(self, newState: Types.LoggingState) -> RpcCall[PacketTypes.PacketResponse_SensorsLogging, PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate]:
         '''Turn sensors logging on or off.
 
         :param newState:         New sensors logging state.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_SensorsLogging, _PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_SensorsLogging, PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_SensorsLogging(newState)
-        return RpcCall[_PacketTypes.PacketResponse_SensorsLogging, _PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate](self._rpc(request, _PacketTypes.PacketResponse_SensorsLogging))
+        request = PacketTypes.PacketRequest_SensorsLogging(newState)
+        return RpcCall[PacketTypes.PacketResponse_SensorsLogging, PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_SensorsLogging))
 
-    def MemoryTest(self, testType: Types.MemoryTestTypes) -> RpcCall[_PacketTypes.PacketResponse_MemoryTest, _PacketTypes.PacketEvent_MemoryTestStatus]:
+    def MemoryTest(self, testType: Types.MemoryTestTypes) -> RpcCall[PacketTypes.PacketResponse_MemoryTest, PacketTypes.PacketEvent_MemoryTestStatus]:
         '''Start external flash memories test.
 
         :param testType:         Test type as full, short etc.
 
-        :return:                 Instance of `RpcCall[_PacketTypes.PacketResponse_MemoryTest, _PacketTypes.PacketEvent_MemoryTestStatus]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
+        :return:                 Instance of `RpcCall[PacketTypes.PacketResponse_MemoryTest, PacketTypes.PacketEvent_MemoryTestStatus]` that can be either awaited to get the RPC response or used as async context manager providing async iterator to get the response and associated events
         '''
 
-        request = _PacketTypes.PacketRequest_MemoryTest(testType)
-        return RpcCall[_PacketTypes.PacketResponse_MemoryTest, _PacketTypes.PacketEvent_MemoryTestStatus](self._rpc(request, _PacketTypes.PacketResponse_MemoryTest))
+        request = PacketTypes.PacketRequest_MemoryTest(testType)
+        return RpcCall[PacketTypes.PacketResponse_MemoryTest, PacketTypes.PacketEvent_MemoryTestStatus](self._rpc(request, PacketTypes.PacketResponse_MemoryTest))
 
     @contextlib.asynccontextmanager
     async def _rpc[TResponse: _ProtocolType, TEvent: _ProtocolType](self, request: _ProtocolType, response_type: type[TResponse]) -> typing.AsyncIterator[tuple[TResponse, typing.AsyncIterator[TEvent]]]:
@@ -6541,7 +6966,7 @@ class AsyncControl:
     async def _receive(self, session: _Session) -> typing.AsyncIterator[_ProtocolType]:
         async for message_bytes in session.read():
             message_id = Types.u16.deserialize(message_bytes[:2])
-            packet_type = _PacketTypes.get_packet_type_by_message_id(message_id)
+            packet_type = PacketTypes.get_packet_type_by_message_id(message_id)
             logger.debug('received packet', message_id=message_id, packet_type=packet_type)
             if packet_type:
                 yield packet_type.deserialize(message_bytes)
@@ -6551,37 +6976,3 @@ class AsyncControl:
         source = b'\2'  # 2 is for BLE source
         counter = int.to_bytes(self._request_counter, length=3, byteorder='big').ljust(3, b'\0')
         return int.from_bytes(source + counter)
-    property_metadata: typing.Dict[str, PropertyMetadata] = {
-        "hwConfiguration": {"is_readable": True, "is_writable": False, "type": Types.u8, "address": 65575}, "fwVersion": {"is_readable": True, "is_writable": False, "type": Types.Version, "address": 65580}, "fwCommitHash": {"is_readable": True,
-        "is_writable": False, "type": Types.c8, "address": 65584}, "fwBuildType": {"is_readable": True, "is_writable": False, "type": Types.c8, "address": 65598}, "serialNumber": {"is_readable": True, "is_writable": False, "type": Types.u8, "address":
-        65616}, "watchersInfo": {"is_readable": True, "is_writable": False, "type": Types.WatcherInfo, "address": 65651}, "protocolHash": {"is_readable": True, "is_writable": False, "type": Types.c8, "address": 65653}, "lineSensorsPaper": {"is_readable":
-        True, "is_writable": False, "type": Types.LineWithRAW_8bit, "address": 0}, "lineSensorsScreen": {"is_readable": True, "is_writable": False, "type": Types.LineWithRAW_8bit, "address": 28}, "colorSensorData": {"is_readable": True, "is_writable": False,
-        "type": Types.ColorSensorData, "address": 56}, "processedColor": {"is_readable": True, "is_writable": False, "type": Types.ProcessedRGBColor, "address": 69}, "surfaceProximityData": {"is_readable": True, "is_writable": False, "type":
-        Types.SurfaceProximityData, "address": 80}, "lineColor": {"is_readable": True, "is_writable": False, "type": Types.LineColor, "address": 86}, "colorCode": {"is_readable": True, "is_writable": False, "type": Types.ColorCode, "address": 92},
-        "surfaceColor": {"is_readable": True, "is_writable": False, "type": Types.SurfaceColor, "address": 100}, "surfaceType": {"is_readable": True, "is_writable": False, "type": Types.Surface, "address": 108}, "pickupDetection": {"is_readable": True,
-        "is_writable": False, "type": Types.PickupDetection, "address": 113}, "irProximity": {"is_readable": True, "is_writable": False, "type": Types.IRProximity, "address": 118}, "irMessageLeftRear": {"is_readable": True, "is_writable": False, "type":
-        Types.IRMessage, "address": 126}, "irMessageLeftFront": {"is_readable": True, "is_writable": False, "type": Types.IRMessage, "address": 132}, "irMessageRightRear": {"is_readable": True, "is_writable": False, "type": Types.IRMessage, "address": 138},
-        "irMessageRightFront": {"is_readable": True, "is_writable": False, "type": Types.IRMessage, "address": 144}, "wheelsEncoder": {"is_readable": True, "is_writable": False, "type": Types.WheelsEncoder, "address": 150}, "relativePosition":
-        {"is_readable": True, "is_writable": False, "type": Types.RelativePosition, "address": 162}, "chargerState": {"is_readable": True, "is_writable": False, "type": Types.ChargerState, "address": 183}, "batteryState": {"is_readable": True, "is_writable":
-        False, "type": Types.Battery, "address": 188}, "button": {"is_readable": True, "is_writable": False, "type": Types.Button, "address": 196}, "deviceName": {"is_readable": True, "is_writable": True, "type": Types.c8, "address": 16384}, "audioVolume":
-        {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 16401}, "ledsBrightness": {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 16402}, "accountType": {"is_readable": True, "is_writable": True, "type":
-        Types.AccountTypeEnum, "address": 16403}, "behaviour": {"is_readable": True, "is_writable": True, "type": Types.BehaviourTypeEnum, "address": 16404}, "irMessageLeftRearEmitting": {"is_readable": True, "is_writable": True, "type": Types.IRMessageEmit,
-        "address": 16405}, "irMessageLeftFrontEmitting": {"is_readable": True, "is_writable": True, "type": Types.IRMessageEmit, "address": 16407}, "irMessageRightRearEmitting": {"is_readable": True, "is_writable": True, "type": Types.IRMessageEmit,
-        "address": 16409}, "irMessageRightFrontEmitting": {"is_readable": True, "is_writable": True, "type": Types.IRMessageEmit, "address": 16411}, "virtualMachineSharedRegisters": {"is_readable": True, "is_writable": True, "type": Types.u8, "address":
-        16413}, "lineNavigationSpeed": {"is_readable": True, "is_writable": True, "type": Types.S8_24, "address": 16421}, "chargeRate": {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 16425}, "buttonOverride": {"is_readable": True,
-        "is_writable": True, "type": Types.ButtonOverrideEnum, "address": 16426}, "speedPID": {"is_readable": True, "is_writable": True, "type": Types.PIDParameters, "address": 16438}, "lineNavigationPID": {"is_readable": True, "is_writable": True, "type":
-        Types.PIDParameters, "address": 16462}, "bleAdvertisingInterval": {"is_readable": True, "is_writable": True, "type": Types.UnsignedRange, "address": 16474}, "qaTrackLog": {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 16482},
-        "colorCodeExecution": {"is_readable": True, "is_writable": True, "type": Types.ColorCodeExecution, "address": 16483}, "longRPCExtensionData": {"is_readable": True, "is_writable": True, "type": Types.u8, "address": 24576}, "testMode": {"is_readable":
-        True, "is_writable": True, "type": Types.TestModeFields, "address": 28672}, "bootloaderVersion": {"is_readable": True, "is_writable": False, "type": Types.Version, "address": 65536}, "bootloaderCommitHash": {"is_readable": True, "is_writable": False,
-        "type": Types.c8, "address": 65540}, "bootloaderFields": {"is_readable": True, "is_writable": False, "type": Types.BootloaderFields, "address": 65554}, "bootloaderErrorCode": {"is_readable": True, "is_writable": False, "type":
-        Types.BootloaderErrorCodes, "address": 65559}, "bootloaderPress": {"is_readable": True, "is_writable": False, "type": Types.time_t, "address": 65555}, "keyVariant": {"is_readable": True, "is_writable": False, "type": Types.EncryptionKeyVariant,
-        "address": 65560}, "keyFingerPrint": {"is_readable": True, "is_writable": False, "type": Types.u8, "address": 65561}, "productType": {"is_readable": True, "is_writable": False, "type": Types.ProductTypeEnum, "address": 65573}, "productRevision":
-        {"is_readable": True, "is_writable": False, "type": Types.u8, "address": 65574}, "plasticColor": {"is_readable": True, "is_writable": False, "type": Types.PlasticColor, "address": 65579}, "bluetoothVersion": {"is_readable": True, "is_writable":
-        False, "type": Types.Version, "address": 65632}, "bluetoothInitializedCode": {"is_readable": True, "is_writable": False, "type": Types.BluetoothInitializedCode, "address": 65636}, "bluetoothAddress": {"is_readable": True, "is_writable": False,
-        "type": Types.u8, "address": 65637}, "bluetoothUpdateStatus": {"is_readable": True, "is_writable": False, "type": Types.BluetoothUpdateErrorCodes, "address": 65643}, "externalFlashInformation": {"is_readable": True, "is_writable": False, "type":
-        Types.ExternalFlashInformation, "address": 65644}, "lineSensorsPaperCalibration": {"is_readable": True, "is_writable": False, "type": Types.LineSensorsCalibration, "address": 65667}, "lineSensorsScreenCalibration": {"is_readable": True,
-        "is_writable": False, "type": Types.LineSensorsCalibration, "address": 65695}, "colorSensorPaperCalibration": {"is_readable": True, "is_writable": False, "type": Types.ColorSensorCalibration, "address": 65723}, "colorSensorScreenCalibration":
-        {"is_readable": True, "is_writable": False, "type": Types.ColorSensorCalibration, "address": 65735}, "encodersCalibration": {"is_readable": True, "is_writable": False, "type": Types.EncodersCalibration, "address": 65747}, "colorSensorType":
-        {"is_readable": True, "is_writable": False, "type": Types.c8, "address": 65749}, "boardsConfiguration": {"is_readable": True, "is_writable": False, "type": Types.BoardsConfiguration, "address": 65765}, "tasksInformation": {"is_readable": True,
-        "is_writable": False, "type": Types.TaskInformation, "address": 73728},
-    }

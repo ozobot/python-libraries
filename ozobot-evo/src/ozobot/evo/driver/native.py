@@ -5,7 +5,8 @@ import typing
 from uuid import UUID
 
 from ozobot.ble.connection import Characteristic, open_client
-from ozobot.evo.protocol import AsyncControl, Types
+from ozobot.evo.protocol import AsyncControl, Types, PropertyMetadata
+from ozobot.evo.api.watchers import EvoWatcher, WatcherSubscription
 from ozobot.common.exceptions import OzobotProtocolCommandError
 
 from .driver import LEDMask, TDirection
@@ -150,3 +151,8 @@ class NativeDriver:
                     event.executionState.name,
                     description="failure execution state",
                 )
+
+    async def watch[T](self, config: tuple[PropertyMetadata, ...]) -> tuple[WatcherSubscription[T], ...]:
+        watcher = EvoWatcher(self._control)
+        async with watcher.watch(config) as subscriptions:
+            yield subscriptions
