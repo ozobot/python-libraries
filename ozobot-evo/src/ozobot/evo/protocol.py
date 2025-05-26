@@ -5921,9 +5921,9 @@ class _PacketTypes:
             return False
 
         def is_event_of(self, request: _ProtocolType) -> bool:
-            if not hasattr(request, 'id'):
+            if not hasattr(request, 'watcherID'):
                 return False
-            if request.id != self.id:
+            if request.watcherID != self.id:
                 return False
             return isinstance(request, _PacketTypes.PacketRequest_WatcherSetup) or isinstance(request, _PacketTypes.PacketRequest_WatcherRegionSetup)
 
@@ -6238,6 +6238,10 @@ class _PacketTypes:
 
 
 class AsyncControl:
+
+    @property
+    def packet_size_max(self) -> int:
+        return self._channel.packet_size_max
 
     def __init__(self, channel: _Channel) -> None:
         self._channel = channel
