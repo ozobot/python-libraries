@@ -1,39 +1,12 @@
 from __future__ import annotations
 
-import asyncio
-import contextlib
-import functools
 import math
 import typing
-from dataclasses import dataclass
 
 from loguru import logger
 from ozobot.evo.datatypes import Color, LEDMask, TDirection
-from ozobot.evo.driver import Driver, get_driver
+from ozobot.evo.driver import Driver
 from ozobot.evo.exceptions import EvoError
-
-_loop = asyncio.get_event_loop()
-
-
-def as_sync[**P, T](func: typing.Callable[P, typing.Awaitable[T]]) -> typing.Callable[P, T]:
-    if func is None:
-        raise Exception("Deceorator does not support arguments, remove parentheses")
-
-    @functools.wraps(func)
-    def _inner(*args, **kwargs):
-        return _loop.run_until_complete(func(*args, **kwargs))
-
-    return functools.update_wrapper(_inner, func)
-
-
-@contextlib.contextmanager
-def as_sync_context_manager[T](async_context_manager: typing.AsyncContextManager[T]) -> typing.Iterator[T]:
-    exit_stack = contextlib.AsyncExitStack()
-    try:
-        yield _loop.run_until_complete(exit_stack.enter_async_context(async_context_manager))
-    finally:
-        _loop.run_until_complete(exit_stack.aclose())
-
 
 _map_audioname_filename = {
     "happy": "01010100",
@@ -58,44 +31,12 @@ _map_audioname_filename = {
     **{f"num{i}": f"010400{format(i, 'x').rjust(2, '0').upper()}" for i in range(99)},
 }
 
-_TNote: typing.TypeAlias = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
+TNote: typing.TypeAlias = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
 
 
 class AudioFileNotFoundError(EvoError):
     def __init__(self, audio_name: str) -> None:
         super().__init__(f"Audio file not found: {audio_name}")
-
-
-@dataclass(frozen=True, kw_only=True)
-class EvoHandle:
-    address: str | None = None
-    id_prefix: str | None = None
-    name: str | None = None
-
-    @typing.overload
-    def connect(self, *, get_async: typing.Literal[False] = False) -> typing.ContextManager[EvoSync]: ...
-
-    @typing.overload
-    def connect(self, *, get_async: typing.Literal[True]) -> typing.AsyncContextManager[Evo]: ...
-
-    def connect(self, *, get_async: bool = False) -> typing.ContextManager[EvoSync] | typing.AsyncContextManager[Evo]:
-        @contextlib.asynccontextmanager
-        async def connect_async() -> typing.AsyncIterator[Evo]:
-            Driver = get_driver()
-            async with Driver.open(address=self.address, id_prefix=self.id_prefix, name=self.name) as driver:
-                await driver.stop_all()
-                yield Evo(driver)
-
-        if get_async:
-            return connect_async()
-        else:
-
-            @contextlib.contextmanager
-            def connect_sync() -> typing.Iterator[EvoSync]:
-                with as_sync_context_manager(connect_async()) as evo:
-                    yield EvoSync(evo)
-
-            return connect_sync()
 
 
 class Evo:
@@ -129,7 +70,7 @@ class Evo:
             volume,
         )
 
-    async def emit_note(self, note: _TNote, octave: int, duration_s: float, volume: int) -> None:
+    async def emit_note(self, note: TNote, octave: int, duration_s: float, volume: int) -> None:
         notes = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
         note_idx = notes.index(note.upper())
 
@@ -183,44 +124,3 @@ class Evo:
     async def set_follow_line_speed(self, speed_mps: float) -> None:
         logger.debug("Setting line following speed", speed=speed_mps)
         await self._driver.follow_speed(speed_mps)
-
-
-class EvoSync:
-    def __init__(self, evo_async: Evo) -> None:
-        self._evo = evo_async
-
-    @as_sync
-    async def move(self, distance_m: float, speed_mps: float) -> None:
-        await self._evo.move(distance_m, speed_mps)
-
-    @as_sync
-    async def rotate(self, angle_deg: float, angular_speed_degps: float) -> None:
-        await self._evo.rotate(angle_deg, angular_speed_degps)
-
-    @as_sync
-    async def set_velocity(self, linear_mps: float, angular_degps: float, duration_s: float) -> None:
-        await self._evo.set_velocity(linear_mps, angular_degps, duration_s)
-
-    @as_sync
-    async def emit_tone(self, frequency_hz: int, duration_s: float, volume: int) -> None:
-        await self._evo.emit_tone(frequency_hz, duration_s, volume)
-
-    @as_sync
-    async def emit_note(self, note: _TNote, octave: int, duration_s: float, volume: int) -> None:
-        await self._evo.emit_note(note, octave, duration_s, volume)
-
-    @as_sync
-    async def set_led(self, mask: LEDMask, color: Color) -> None:
-        await self._evo.set_led(mask, color)
-
-    @as_sync
-    async def follow_line(self, direction: TDirection) -> None:
-        await self._evo.follow_line(direction)
-
-    @as_sync
-    async def align_with_line(self, direction: TDirection) -> None:
-        await self._evo.align_with_line(direction)
-
-    @as_sync
-    async def set_follow_line_speed(self, speed_mps: float) -> None:
-        await self._evo.set_follow_line_speed(speed_mps)
