@@ -112,7 +112,7 @@ class Client:
 class Characteristic:
     @property
     def packet_size_max(self) -> int:
-        return self._characteristic_handle.max_write_without_response_size
+        return self._client.mtu_size - 3
 
     def __init__(self, *, service: UUID, characteristic: UUID, client: bleak.BleakClient) -> None:
         self._notify_lock = asyncio.Lock()
