@@ -18,19 +18,20 @@ __all__ = ["AsyncControl", "Types"]
 
 
 class S8_24_impl(float):
+    data_width =  4
 
     def serialize(self) -> bytes:
         return s8_24_serialize(self)
 
     @classmethod
-    def deserialize(self, data: bytes) -> float:
-        return s8_24_deserialize(data)
+    def deserialize(cls, data: bytes) -> typing.Self:
+        return cls(s8_24_deserialize(data))
 
     def expected_length(self, source: typing.Any) -> int:
         return 4
 
 
-class _ProtocolType(typing.Protocol):
+class _PacketType(typing.Protocol):
 
     def serialize(self) -> bytes:
         ...
@@ -42,10 +43,24 @@ class _ProtocolType(typing.Protocol):
     def expected_length(self, source: typing.Any) -> int:
         ...
 
-    def is_response_to(self, request: _ProtocolType) -> bool:
+    def is_response_to(self, request: _PacketType) -> bool:
         ...
 
-    def is_event_of(self, request: _ProtocolType) -> bool:
+    def is_event_of(self, request: _PacketType) -> bool:
+        ...
+
+
+class _ProtocolType(typing.Protocol):
+
+    @classmethod
+    def get_data_width(cls) -> int:
+        ...
+
+    def serialize(self) -> bytes:
+        ...
+
+    @classmethod
+    def deserialize(cls, data: bytes) -> typing.Self:
         ...
 
 
@@ -53,8 +68,12 @@ class _ProtocolType(typing.Protocol):
 class PropertyMetadata[T: _ProtocolType]:
     is_readable: bool
     is_writable: bool
-    type: Type[T]
+    type: type[T]
     address: int
+
+    @property
+    def size(self) -> int:
+        return self.type.get_data_width()
 
 
 class _Channel(typing.Protocol):
@@ -3945,8 +3964,8 @@ class Types:
 class PacketTypes:
 
     @classmethod
-    def get_packet_type_by_message_id(cls, id: int) -> typing.Type[_ProtocolType] | None:
-        type_by_id: dict[int, typing.Type[_ProtocolType]] = {
+    def get_packet_type_by_message_id(cls, id: int) -> typing.Type[_PacketType] | None:
+        type_by_id: dict[int, typing.Type[_PacketType]] = {
             1: PacketTypes.PacketRequest_MemRead,
             2: PacketTypes.PacketResponse_MemRead,
             3: PacketTypes.PacketRequest_MemWrite,
@@ -4036,10 +4055,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 8
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4088,10 +4107,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 5 + getattr(source, 'length', 0)
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_MemRead)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_MemWrite:
@@ -4136,10 +4155,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 8 + getattr(source, 'length', 0)
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4180,10 +4199,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_MemWrite)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_MoveStraight:
@@ -4226,10 +4245,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 14
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4270,14 +4289,14 @@ class PacketTypes:
         def expected_length(cls, source):
             return 6
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, PacketTypes.PacketRequest_MoveStraight)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_Rotate:
@@ -4320,10 +4339,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 14
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4364,14 +4383,14 @@ class PacketTypes:
         def expected_length(cls, source):
             return 6
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, PacketTypes.PacketRequest_Rotate)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_Velocity:
@@ -4417,10 +4436,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 18
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4461,14 +4480,14 @@ class PacketTypes:
         def expected_length(cls, source):
             return 6
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, PacketTypes.PacketRequest_Velocity)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_LineNavigation:
@@ -4511,10 +4530,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 8
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4555,14 +4574,14 @@ class PacketTypes:
         def expected_length(cls, source):
             return 6
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, PacketTypes.PacketRequest_LineNavigation)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_StopExecution:
@@ -4599,10 +4618,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 6
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4643,14 +4662,14 @@ class PacketTypes:
         def expected_length(cls, source):
             return 6
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, PacketTypes.PacketRequest_StopExecution)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_WatcherSetup:
@@ -4696,10 +4715,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 8
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4740,10 +4759,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_WatcherSetup)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_WatcherRegionSetup:
@@ -4792,10 +4811,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 8
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4836,10 +4855,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_WatcherRegionSetup)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_ExecuteFile:
@@ -4880,10 +4899,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 6 + getattr(source, 'None', 0)
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -4927,14 +4946,14 @@ class PacketTypes:
         def expected_length(cls, source):
             return 7
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, PacketTypes.PacketRequest_ExecuteFile)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_SetLED:
@@ -4983,10 +5002,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 8
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -5027,10 +5046,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_SetLED)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_Calibrate:
@@ -5067,10 +5086,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -5111,10 +5130,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_Calibrate)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_TurnOff:
@@ -5149,10 +5168,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 2
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -5193,10 +5212,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_TurnOff)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_UpdateFirmware:
@@ -5236,10 +5255,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 4
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -5280,10 +5299,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_UpdateFirmware)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_PlayTone:
@@ -5329,10 +5348,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 11
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -5373,14 +5392,14 @@ class PacketTypes:
         def expected_length(cls, source):
             return 6
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
                 return False
             return isinstance(request, PacketTypes.PacketRequest_PlayTone)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_LongRPCExtensionExecute:
@@ -5420,10 +5439,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 8
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -5470,10 +5489,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 9
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_LongRPCExtensionExecute)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_SetRNGSeed:
@@ -5510,10 +5529,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 6
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -5554,10 +5573,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_SetRNGSeed)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_SensorsLogging:
@@ -5594,10 +5613,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -5638,10 +5657,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_SensorsLogging)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketRequest_MemoryTest:
@@ -5678,10 +5697,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
         @property
@@ -5722,10 +5741,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_MemoryTest)
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketEvent_PreciseMovementExecutionUpdate:
@@ -5774,10 +5793,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 19
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
@@ -5824,10 +5843,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 8
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
@@ -5871,10 +5890,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 7
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
@@ -5919,10 +5938,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3 + getattr(source, 'None', 0)
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             if not hasattr(request, 'watcherID'):
                 return False
             if request.watcherID != self.id:
@@ -5966,10 +5985,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 7
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketEvent_Shutdown:
@@ -6006,10 +6025,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return False
 
     class PacketEvent_AudioExecutionState:
@@ -6049,10 +6068,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 7
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
@@ -6093,10 +6112,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_Calibrate)
 
     class PacketEvent_MemoryTestStatus:
@@ -6145,10 +6164,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 10
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_MemoryTest)
 
     class PacketEvent_VirtualMachineExecutionState:
@@ -6188,10 +6207,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 7
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             if not hasattr(request, 'requestId'):
                 return False
             if request.requestId != self.requestId:
@@ -6232,10 +6251,10 @@ class PacketTypes:
         def expected_length(cls, source):
             return 3
 
-        def is_response_to(self, request: _ProtocolType) -> bool:
+        def is_response_to(self, request: _PacketType) -> bool:
             return False
 
-        def is_event_of(self, request: _ProtocolType) -> bool:
+        def is_event_of(self, request: _PacketType) -> bool:
             return isinstance(request, PacketTypes.PacketRequest_SensorsLogging)
 
 
@@ -6913,7 +6932,7 @@ class AsyncControl:
         return RpcCall[PacketTypes.PacketResponse_MemoryTest, PacketTypes.PacketEvent_MemoryTestStatus](self._rpc(request, PacketTypes.PacketResponse_MemoryTest))
 
     @contextlib.asynccontextmanager
-    async def _rpc[TResponse: _ProtocolType, TEvent: _ProtocolType](self, request: _ProtocolType, response_type: type[TResponse]) -> typing.AsyncIterator[tuple[TResponse, typing.AsyncIterator[TEvent]]]:
+    async def _rpc[TResponse: _PacketType, TEvent: _PacketType](self, request: _PacketType, response_type: type[TResponse]) -> typing.AsyncIterator[tuple[TResponse, typing.AsyncIterator[TEvent]]]:
         length = max(len(request.serialize()), response_type.expected_length(request))
         logger.debug('Executing RPC', request_len=length, request=request)
         async with self._channel.open_session() as events_session:
@@ -6942,7 +6961,7 @@ class AsyncControl:
             finally:
                 await event_generator.aclose()
 
-    async def _long_rpc[T: _ProtocolType](self, request: _ProtocolType, response_type: type[T]) -> T:
+    async def _long_rpc[T: _PacketType](self, request: _PacketType, response_type: type[T]) -> T:
         data = request.serialize()
         chunk_size = self._channel.packet_size_max - 8
         logger.debug('executing long RPC', chunk_size=chunk_size)
@@ -6963,7 +6982,7 @@ class AsyncControl:
         assert crc32(result_data) == result.dataCRC
         return response_type.deserialize(bytes(result_data))
 
-    async def _receive(self, session: _Session) -> typing.AsyncIterator[_ProtocolType]:
+    async def _receive(self, session: _Session) -> typing.AsyncIterator[_PacketType]:
         async for message_bytes in session.read():
             message_id = Types.u16.deserialize(message_bytes[:2])
             packet_type = PacketTypes.get_packet_type_by_message_id(message_id)

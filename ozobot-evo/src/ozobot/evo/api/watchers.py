@@ -37,13 +37,15 @@ class _WatcherAllocationSummary:
 
 class _SubscriptionInfo[T](typing.Protocol):
     address: int
-    size: int
     type: type[T]
+
+    @property
+    def size(self) -> int: ...
 
 
 class WatcherSubscription[T: _Deserializable]:
     @property
-    def last_value(self) -> T:
+    def last(self) -> T:
         return self._last_value
 
     def __init__(self, initial_value: T) -> None:
@@ -62,7 +64,12 @@ class WatcherSubscription[T: _Deserializable]:
 
     @classmethod
     @contextlib.asynccontextmanager
-    async def run(cls, events: typing.AsyncIterator[PacketTypes.PacketEvent_WatcherDirty], allocations: list[_WatcherAllocation], allocation: _WatcherAllocation[T]) -> typing.AsyncIterator[WatcherSubscription[T]]:
+    async def run(
+        cls,
+        events: typing.AsyncIterator[PacketTypes.PacketEvent_WatcherDirty],
+        allocations: list[_WatcherAllocation],
+        allocation: _WatcherAllocation[T],
+    ) -> typing.AsyncIterator[WatcherSubscription[T]]:
         async with asyncio.TaskGroup() as tg:
             parsed_events = cls._parse(events, allocations, allocation)
             initial_value = await anext(parsed_events)
@@ -76,7 +83,12 @@ class WatcherSubscription[T: _Deserializable]:
                 await process_task
 
     @classmethod
-    async def _parse(cls, events: typing.AsyncIterator[PacketTypes.PacketEvent_WatcherDirty], allocations: list[_WatcherAllocation], allocation: _WatcherAllocation[T]) -> typing.AsyncGenerator[T]:
+    async def _parse(
+        cls,
+        events: typing.AsyncIterator[PacketTypes.PacketEvent_WatcherDirty],
+        allocations: list[_WatcherAllocation],
+        allocation: _WatcherAllocation[T],
+    ) -> typing.AsyncGenerator[T]:
         logger.debug("finding offset", allocation=allocation, allocations=allocations)
         watcher_regions = list(filter(lambda e: e.watcher_id == allocation.watcher_id, allocations))
         preceding_regions = list(filter(lambda e: e.region_id < allocation.region_id, watcher_regions))
@@ -85,7 +97,7 @@ class WatcherSubscription[T: _Deserializable]:
         expected_len = sum(a.size for a in watcher_regions)
         offset = sum(r.size for r in preceding_regions)
         logger.debug("got offset", offset=offset, size=allocation.size)
-        
+
         async for event in events:
             data = bytes(event.data)
 
@@ -106,14 +118,16 @@ class WatcherAllocator:
         self._region_count = region_count
         self._packet_size_max = packet_size_max
         self._allocations: dict[int, list[_WatcherAllocation]] = {watcher_id: [] for watcher_id in range(watcher_count)}
-        
+
     def allocate[T](self, size: int, address: int, _type: type[T]) -> _WatcherAllocation[T]:
         watcher_id, region_id = self._find_free_gap(size)
-        allocation = _WatcherAllocation(watcher_id=watcher_id, region_id=region_id, size=size, address=address, type=_type)
+        allocation = _WatcherAllocation(
+            watcher_id=watcher_id, region_id=region_id, size=size, address=address, type=_type
+        )
         self._allocations[watcher_id].append(allocation)
 
         return allocation
-        
+
     def _find_free_gap(self, size: int) -> tuple[int, int]:
         max_size = self._packet_size_max - PacketTypes.PacketEvent_WatcherDirty.expected_length(None)
 
@@ -156,22 +170,29 @@ class EvoWatcher:
 
     # FIXME: the return type is not perfect, when/if https://github.com/python/typing/issues/1383 is resolved, fix this
     @contextlib.asynccontextmanager
-    async def watch[T: _Deserializable](self, subscription_configs: tuple[_SubscriptionInfo[T], ...]) -> typing.AsyncIterator[tuple[WatcherSubscription[T], ...]]:
+    async def watch[T: _Deserializable](
+        self, subscription_configs: tuple[_SubscriptionInfo[T], ...]
+    ) -> typing.AsyncIterator[tuple[WatcherSubscription[T], ...]]:
         if self._watcher_enabled:
             raise Exception("Watcher already enabled")
 
         self._watcher_enabled = True
 
-        async with contextlib.AsyncExitStack() as exit_stack:        
+        async with contextlib.AsyncExitStack() as exit_stack:
             watcher_info = await self._read_watcher_info()
-            allocator = WatcherAllocator(watcher_info.watcherCount,watcher_info.watcherRegionCount, self._control.packet_size_max)
+            allocator = WatcherAllocator(
+                watcher_info.watcherCount, watcher_info.watcherRegionCount, self._control.packet_size_max
+            )
 
             allocations = [allocator.allocate(sub.size, sub.address, sub.type) for sub in subscription_configs]
             watchers = [await exit_stack.enter_async_context(self._subscribe(allocation)) for allocation in allocations]
             watcher_ids = [allocation.watcher_id for allocation in allocations]
 
             async with self._enable_watchers(watcher_ids):
-                subscriptions = [await exit_stack.enter_async_context(WatcherSubscription.run(watcher, allocations, allocation)) for watcher, allocation in zip(watchers, allocations)]
+                subscriptions = [
+                    await exit_stack.enter_async_context(WatcherSubscription.run(watcher, allocations, allocation))
+                    for watcher, allocation in zip(watchers, allocations)
+                ]
                 yield tuple(subscriptions)
 
             self._watcher_enabled = False
@@ -179,7 +200,11 @@ class EvoWatcher:
     @contextlib.asynccontextmanager
     async def _enable_watchers(self, watcher_ids: list[int]) -> typing.AsyncIterator[None]:
         logger.debug("Initializing watchers", watcher_ids=watcher_ids)
-        flags = Types.WatcherFlags.Enabled | Types.WatcherFlags.DisableWhenDisconnected | Types.WatcherFlags.SendInitialValue
+        flags = (
+            Types.WatcherFlags.Enabled
+            | Types.WatcherFlags.DisableWhenDisconnected
+            | Types.WatcherFlags.SendInitialValue
+        )
         for watcher_id in watcher_ids:
             await self._control.WatcherSetup(watcher_id, flags, 40, 200)
 
@@ -201,7 +226,9 @@ class EvoWatcher:
             logger.debug("Found watcher", watcher_id=watcher_id, region_id=region_id)
             try:
                 flags = Types.WatcherRegionFlags(0)
-                region_setup_rpc = self._control.WatcherRegionSetup(watcher_id, region_id, allocation.address, allocation.size, flags=flags)
+                region_setup_rpc = self._control.WatcherRegionSetup(
+                    watcher_id, region_id, allocation.address, allocation.size, flags=flags
+                )
                 async with region_setup_rpc as (reply, events):
                     yield events
             finally:

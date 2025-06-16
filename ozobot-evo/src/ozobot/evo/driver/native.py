@@ -5,7 +5,8 @@ import typing
 from uuid import UUID
 
 from ozobot.ble.connection import Characteristic, open_client
-from ozobot.evo.protocol import AsyncControl, Types, PropertyMetadata
+from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
+from ozobot.evo.driver.driver import Serializable, Deserializable, MemoryProperty
 from ozobot.evo.api.watchers import EvoWatcher, WatcherSubscription
 from ozobot.common.exceptions import OzobotProtocolCommandError
 
@@ -121,13 +122,8 @@ class NativeDriver:
             await self._handle_events("LineNavigation", evts)
 
     async def follow_speed(self, speed_mps: float) -> None:
-        speed_vmem_properties = self._control.property_metadata["lineNavigationSpeed"]
-        response = await self._control.MemWrite(
-            speed_vmem_properties["address"],
-            speed_vmem_properties["type"].get_data_width(),
-            Types.S8_24(speed_mps).serialize(),
-        )
-        self._handle_response("MemWrite(lineNavigationSpeed)", response)
+        config = VirtualMemory.lineNavigationSpeed
+        await self.mem_write(config, Types.S8_24(speed_mps))
 
     async def stop_all(self) -> None:
         await self._control.StopExecution(0)
@@ -152,7 +148,20 @@ class NativeDriver:
                     description="failure execution state",
                 )
 
-    async def watch[T](self, config: tuple[PropertyMetadata, ...]) -> tuple[WatcherSubscription[T], ...]:
+    @contextlib.asynccontextmanager
+    async def watch[T: Deserializable](
+        self, config: tuple[MemoryProperty[T], ...]
+    ) -> typing.AsyncIterator[tuple[WatcherSubscription[T], ...]]:
         watcher = EvoWatcher(self._control)
         async with watcher.watch(config) as subscriptions:
             yield subscriptions
+
+    async def mem_read[T: Deserializable](self, config: MemoryProperty[T]) -> T:
+        response = await self._control.MemRead(config.address, config.size)
+        self._handle_response("MemRead", response)
+        return config.type.deserialize(bytes(response.data))
+
+    async def mem_write[T: Serializable](self, config: MemoryProperty[T], value: T) -> None:
+        raw_value = value.serialize()
+        response = await self._control.MemWrite(config.address, config.size, raw_value)
+        self._handle_response("MemWrite", response)

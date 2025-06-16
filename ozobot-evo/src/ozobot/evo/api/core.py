@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import contextlib
 import math
 import typing
 
 from loguru import logger
+from ozobot.evo.api.watchers import WatcherSubscription
 from ozobot.evo.datatypes import Color, LEDMask, TDirection
-from ozobot.evo.driver import Driver
+from ozobot.evo.driver.driver import Deserializable, Driver, MemoryProperty, SerializableAndDeserializable
 from ozobot.evo.exceptions import EvoError
+from ozobot.evo.protocol import Types, VirtualMemory
 
 _map_audioname_filename = {
     "happy": "01010100",
@@ -39,9 +42,89 @@ class AudioFileNotFoundError(EvoError):
         super().__init__(f"Audio file not found: {audio_name}")
 
 
-class Evo:
-    def __init__(self, driver: Driver) -> None:
+class DataAccessRead[T: Deserializable]:
+    def __init__(self, driver: Driver, property: MemoryProperty[T]) -> None:
         self._driver = driver
+        self._property = property
+
+    async def read(self) -> T:
+        return await self._driver.mem_read(self._property)
+
+
+class DataAccessReadWrite[T: SerializableAndDeserializable](DataAccessRead[T]):
+    async def write(self, value: T) -> None:
+        await self._driver.mem_write(self._property, value)
+
+
+class DataWatcher[T: Deserializable]:
+    def __init__(self, watcher: WatcherSubscription[T]) -> None:
+        self._watcher = watcher
+
+    @property
+    def last(self) -> T:
+        return self._watcher.last
+
+    @contextlib.asynccontextmanager
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
+        async with self._watcher.read() as reader:
+            yield reader
+
+
+class Evo:
+    @property
+    def battery(self) -> DataAccessRead[Types.Battery]:
+        return self._property_battery
+
+    @property
+    def color_codes(self) -> DataWatcher[Types.ColorCode]:
+        return self._watcher_color_codes
+
+    @property
+    def line_color(self) -> DataWatcher[Types.LineColor]:
+        return self._watcher_line_color
+
+    @property
+    def surface_color(self) -> DataWatcher[Types.SurfaceColor]:
+        return self._watcher_surface_color
+
+    def __init__(
+        self,
+        driver: Driver,
+        watchers: tuple[
+            WatcherSubscription[Types.ColorCode],
+            WatcherSubscription[Types.LineColor],
+            WatcherSubscription[Types.SurfaceColor],
+        ],
+    ) -> None:
+        self._driver = driver
+        self._watcher_color_codes = DataWatcher(watchers[0])
+        self._watcher_line_color = DataWatcher(watchers[1])
+        self._watcher_surface_color = DataWatcher(watchers[2])
+        self._property_battery = DataAccessRead[Types.Battery](driver, VirtualMemory.batteryState)
+
+    @classmethod
+    @contextlib.asynccontextmanager
+    async def open(cls, driver: Driver) -> typing.AsyncIterator[Evo]:
+        config = (
+            VirtualMemory.colorCode,
+            VirtualMemory.lineColor,
+            VirtualMemory.surfaceColor,
+        )
+
+        async with driver.watch(
+            typing.cast(tuple[MemoryProperty[Types.ColorCode | Types.LineColor | Types.SurfaceColor], ...], config)
+        ) as watchers:
+            yield Evo(
+                driver,
+                typing.cast(
+                    tuple[
+                        WatcherSubscription[Types.ColorCode],
+                        WatcherSubscription[Types.LineColor],
+                        WatcherSubscription[Types.SurfaceColor],
+                    ],
+                    watchers,
+                ),
+            )
 
     async def move(self, distance_m: float, speed_mps: float) -> None:
         logger.debug("Moving", distance=distance_m, speed=speed_mps)

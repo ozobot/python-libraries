@@ -1,6 +1,6 @@
 import sys
 
-from .driver import Driver as Driver, LEDMask
+from .driver import Driver, LEDMask
 from .native import NativeDriver
 from .web import WebDriver
 

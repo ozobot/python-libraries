@@ -7,8 +7,6 @@ from ozobot.evo.driver import get_driver
 from .core import Evo
 from .sync import EvoSync, as_sync_context_manager
 
-__all__ = ["EvoHandle", "EvoSync", "Evo"]
-
 
 @dataclass(frozen=True, kw_only=True)
 class EvoHandle:
@@ -28,7 +26,8 @@ class EvoHandle:
             Driver = get_driver()
             async with Driver.open(address=self.address, id_prefix=self.id_prefix, name=self.name) as driver:
                 await driver.stop_all()
-                yield Evo(driver)
+                async with Evo.open(driver) as evo:
+                    yield evo
 
         if get_async:
             return connect_async()
