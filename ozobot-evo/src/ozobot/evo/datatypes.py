@@ -33,3 +33,9 @@ class LEDMask(enum.Flag):
     FRONT_RIGHT = enum.auto()
     FRONT_RIGHT_CENTER = enum.auto()
     TOP = enum.auto()
+
+class Intersection(enum.Flag):
+    BACKWARD = enum.auto()
+    LEFT = enum.auto()
+    RIGHT = enum.auto()
+    STRAIGHT = enum.auto()

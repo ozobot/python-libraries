@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import AsyncContextManager, Protocol, Self
 
 from ozobot.evo.api.watchers import WatcherSubscription
-from ozobot.evo.datatypes import LEDMask, TDirection
+from ozobot.evo.datatypes import Intersection, LEDMask, TDirection
 
 
 class Deserializable(Protocol):
@@ -48,7 +48,7 @@ class Driver(Protocol):
 
     async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None: ...
 
-    async def line_navigation(self, direction: TDirection, follow: bool) -> None: ...
+    async def line_navigation(self, direction: TDirection, follow: bool) -> Intersection: ...
 
     async def follow_speed(self, speed_mps: float) -> None: ...
 

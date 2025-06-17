@@ -3,7 +3,7 @@ import typing
 from unittest.mock import ANY, Mock, patch, sentinel
 
 import pytest
-from ozobot.evo.driver import LEDMask
+from ozobot.evo.datatypes import LEDMask, Intersection
 from ozobot.evo.driver.native import NativeDriver
 from ozobot.evo.protocol import Types
 
@@ -58,12 +58,6 @@ async def test_open() -> None:
         ("velocity", "Velocity", [0.1, 0.2, 3], [0.1, 0.2, 3]),
         ("play_tone", "PlayTone", [1, 2, 3], [1, 2, 3]),
         ("execute_file", "ExecuteFile", ["/path/to/file"], ["/path/to/file"]),
-        (
-            "line_navigation",
-            "LineNavigation",
-            ["left", False],
-            [Types.IntersectionDirection.Left, Types.LineNavigationAction.DoNotFollow],
-        ),
     ],
 )
 @patch("ozobot.evo.protocol.AsyncControl.get_next_request_id", lambda _: sentinel.request_id)
@@ -84,6 +78,24 @@ async def test_command_with_events(
         function = getattr(driver, function_name)
         await function(*command_parameters)
         cmd_mock.assert_called_once_with(sentinel.request_id, *rpc_parameters)
+
+
+@patch("ozobot.evo.protocol.AsyncControl.get_next_request_id", lambda _: sentinel.request_id)
+async def test_line_navigation() -> None:
+    with patch("ozobot.evo.protocol.AsyncControl.LineNavigation") as cmd_mock:
+        driver = NativeDriver(Mock())
+
+        cmd_mock.return_value = _create_command(
+            response={"callStatus": Types.CallStatus.CallSuccess},
+            events=[
+                {"executionState": Types.ExecutionStateEnum.Running},
+                {"executionState": Types.ExecutionStateEnum.FinishedNormal, "intersection": Types.IntersectionBitmap.Straight | Types.IntersectionBitmap.Left},
+            ],
+        )
+
+        result = await driver.line_navigation("left", False)
+        cmd_mock.assert_called_once_with(sentinel.request_id, Types.IntersectionDirection.Left, Types.LineNavigationAction.DoNotFollow)
+        assert result == Intersection.LEFT | Intersection.STRAIGHT
 
 
 @pytest.mark.parametrize(

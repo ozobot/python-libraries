@@ -5,13 +5,12 @@ import typing
 from uuid import UUID
 
 from ozobot.ble.connection import Characteristic, open_client
-from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
-from ozobot.evo.driver.driver import Serializable, Deserializable, MemoryProperty
-from ozobot.evo.api.watchers import EvoWatcher, WatcherSubscription
 from ozobot.common.exceptions import OzobotProtocolCommandError
+from ozobot.evo.api.watchers import EvoWatcher, WatcherSubscription
+from ozobot.evo.driver.driver import Deserializable, MemoryProperty, Serializable
+from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 
-from .driver import LEDMask, TDirection
-
+from .driver import Intersection, LEDMask, TDirection
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
 _CHARACTERISTIC_UUID = UUID("8903136c-5f13-4548-a885-c58779136802")
@@ -101,7 +100,7 @@ class NativeDriver:
         response = await self._control.SetLED(protocol_mask, red, green, blue, 255)
         self._handle_response("SetLED", response)
 
-    async def line_navigation(self, direction: TDirection, follow: bool) -> None:
+    async def line_navigation(self, direction: TDirection, follow: bool) -> Intersection:
         match direction:
             case "left":
                 direction_protocol = Types.IntersectionDirection.Left
@@ -119,7 +118,24 @@ class NativeDriver:
             resp,
             evts,
         ):
-            await self._handle_events("LineNavigation", evts)
+            event = await self._handle_events("LineNavigation", evts)
+
+        intersection_mask = event.intersection
+        intersection = Intersection(0)
+        for dir in intersection_mask:
+            match dir:
+                case Types.IntersectionBitmap.Backward:
+                    intersection |= Intersection.BACKWARD
+                case Types.IntersectionBitmap.Straight:
+                    intersection |= Intersection.STRAIGHT
+                case Types.IntersectionBitmap.Left:
+                    intersection |= Intersection.LEFT
+                case Types.IntersectionBitmap.Right:
+                    intersection |= Intersection.RIGHT
+                case _:
+                    typing.assert_never(dir)
+
+        return intersection
 
     async def follow_speed(self, speed_mps: float) -> None:
         config = VirtualMemory.lineNavigationSpeed
@@ -136,10 +152,11 @@ class NativeDriver:
             if response.result != Types.IOResult.Success:
                 raise OzobotProtocolCommandError(function_name, response.result.name, description="call failed")
 
-    async def _handle_events(self, function_name: str, events: typing.AsyncIterator[_HasExecutionState]) -> None:
+    async def _handle_events[T: _HasExecutionState](self, function_name: str, events: typing.AsyncIterator[T]) -> T:
+        """Checks event execution state and returns an event confirming event success. Raises exception otherwise."""
         async for event in events:
             if event.executionState == Types.ExecutionStateEnum.FinishedNormal:
-                return
+                return event
 
             if event.executionState != Types.ExecutionStateEnum.Running:
                 raise OzobotProtocolCommandError(
@@ -147,6 +164,8 @@ class NativeDriver:
                     event.executionState.name,
                     description="failure execution state",
                 )
+
+        raise OzobotProtocolCommandError(function_name, "empty", description="no command end state received")
 
     @contextlib.asynccontextmanager
     async def watch[T: Deserializable](
