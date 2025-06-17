@@ -1,7 +1,7 @@
 import typing
 
+from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Colors, Intersection, LEDMask, TDirection
 from ozobot.evo.protocol import Types
-from ozobot.evo.datatypes import BatteryState, ColorCode, Color, Colors
 
 
 def battery_state_from_protocol(state: Types.Battery) -> BatteryState:
@@ -50,3 +50,57 @@ def line_color_from_protocol(line_color: Types.LineColor) -> Color:
             return Colors.UNKNOWN
         case _:
             typing.assert_never(line_color.color)
+
+
+def led_to_protocol(mask: LEDMask) -> Types.LEDsMask:
+    protocol_mask: Types.LEDsMask = Types.LEDsMask(0)
+    for led in mask:
+        match led:
+            case LEDMask.FRONT_LEFT:
+                protocol_mask |= Types.LEDsMask.front_left
+            case LEDMask.FRONT_LEFT_CENTER:
+                protocol_mask |= Types.LEDsMask.front_left_center
+            case LEDMask.FRONT_CENTER:
+                protocol_mask |= Types.LEDsMask.front_center
+            case LEDMask.FRONT_RIGHT_CENTER:
+                protocol_mask |= Types.LEDsMask.front_right_center
+            case LEDMask.FRONT_RIGHT:
+                protocol_mask |= Types.LEDsMask.front_right
+            case LEDMask.TOP:
+                protocol_mask |= Types.LEDsMask.top
+            case _:
+                typing.assert_never(led)
+
+    return protocol_mask
+
+
+def direction_to_protocol(direction: TDirection) -> Types.IntersectionDirection:
+    match direction:
+        case "left":
+            return Types.IntersectionDirection.Left
+        case "right":
+            return Types.IntersectionDirection.Right
+        case "straight":
+            return Types.IntersectionDirection.Straight
+        case "backward":
+            return Types.IntersectionDirection.Backward
+        case _:
+            typing.assert_never(direction)
+
+
+def intersection_from_protocol(intersection_mask: Types.IntersectionBitmap) -> Intersection:
+    intersection = Intersection(0)
+    for dir in intersection_mask:
+        match dir:
+            case Types.IntersectionBitmap.Backward:
+                intersection |= Intersection.BACKWARD
+            case Types.IntersectionBitmap.Straight:
+                intersection |= Intersection.STRAIGHT
+            case Types.IntersectionBitmap.Left:
+                intersection |= Intersection.LEFT
+            case Types.IntersectionBitmap.Right:
+                intersection |= Intersection.RIGHT
+            case _:
+                typing.assert_never(dir)
+
+    return intersection

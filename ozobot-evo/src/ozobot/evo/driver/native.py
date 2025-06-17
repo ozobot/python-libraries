@@ -7,6 +7,7 @@ from uuid import UUID
 from ozobot.ble.connection import Characteristic, open_client
 from ozobot.common.exceptions import OzobotProtocolCommandError
 from ozobot.evo.api.watchers import EvoWatcher, WatcherSubscription
+from ozobot.evo.conversions import direction_to_protocol, intersection_from_protocol, led_to_protocol
 from ozobot.evo.driver.driver import Deserializable, MemoryProperty, Serializable
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 
@@ -79,39 +80,12 @@ class NativeDriver:
             await self._handle_events("ExecuteFile", evts)
 
     async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None:
-        protocol_mask: Types.LEDsMask = Types.LEDsMask(0)
-        for led in mask:
-            match led:
-                case LEDMask.FRONT_LEFT:
-                    protocol_mask |= Types.LEDsMask.front_left
-                case LEDMask.FRONT_LEFT_CENTER:
-                    protocol_mask |= Types.LEDsMask.front_left_center
-                case LEDMask.FRONT_CENTER:
-                    protocol_mask |= Types.LEDsMask.front_center
-                case LEDMask.FRONT_RIGHT_CENTER:
-                    protocol_mask |= Types.LEDsMask.front_right_center
-                case LEDMask.FRONT_RIGHT:
-                    protocol_mask |= Types.LEDsMask.front_right
-                case LEDMask.TOP:
-                    protocol_mask |= Types.LEDsMask.top
-                case _:
-                    typing.assert_never(led)
-
+        protocol_mask = led_to_protocol(mask)
         response = await self._control.SetLED(protocol_mask, red, green, blue, 255)
         self._handle_response("SetLED", response)
 
     async def line_navigation(self, direction: TDirection, follow: bool) -> Intersection:
-        match direction:
-            case "left":
-                direction_protocol = Types.IntersectionDirection.Left
-            case "right":
-                direction_protocol = Types.IntersectionDirection.Right
-            case "straight":
-                direction_protocol = Types.IntersectionDirection.Straight
-            case "backward":
-                direction_protocol = Types.IntersectionDirection.Backward
-            case _:
-                typing.assert_never(direction)
+        direction_protocol = direction_to_protocol(direction)
 
         action = Types.LineNavigationAction.Follow if follow else Types.LineNavigationAction.DoNotFollow
         async with self._control.LineNavigation(self._control.get_next_request_id(), direction_protocol, action) as (
@@ -120,22 +94,7 @@ class NativeDriver:
         ):
             event = await self._handle_events("LineNavigation", evts)
 
-        intersection_mask = event.intersection
-        intersection = Intersection(0)
-        for dir in intersection_mask:
-            match dir:
-                case Types.IntersectionBitmap.Backward:
-                    intersection |= Intersection.BACKWARD
-                case Types.IntersectionBitmap.Straight:
-                    intersection |= Intersection.STRAIGHT
-                case Types.IntersectionBitmap.Left:
-                    intersection |= Intersection.LEFT
-                case Types.IntersectionBitmap.Right:
-                    intersection |= Intersection.RIGHT
-                case _:
-                    typing.assert_never(dir)
-
-        return intersection
+        return intersection_from_protocol(event.intersection)
 
     async def follow_speed(self, speed_mps: float) -> None:
         config = VirtualMemory.lineNavigationSpeed
