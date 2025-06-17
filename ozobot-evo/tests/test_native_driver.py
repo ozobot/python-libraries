@@ -89,12 +89,17 @@ async def test_line_navigation() -> None:
             response={"callStatus": Types.CallStatus.CallSuccess},
             events=[
                 {"executionState": Types.ExecutionStateEnum.Running},
-                {"executionState": Types.ExecutionStateEnum.FinishedNormal, "intersection": Types.IntersectionBitmap.Straight | Types.IntersectionBitmap.Left},
+                {
+                    "executionState": Types.ExecutionStateEnum.FinishedNormal,
+                    "intersection": Types.IntersectionBitmap.Straight | Types.IntersectionBitmap.Left,
+                },
             ],
         )
 
         result = await driver.line_navigation("left", False)
-        cmd_mock.assert_called_once_with(sentinel.request_id, Types.IntersectionDirection.Left, Types.LineNavigationAction.DoNotFollow)
+        cmd_mock.assert_called_once_with(
+            sentinel.request_id, Types.IntersectionDirection.Left, Types.LineNavigationAction.DoNotFollow
+        )
         assert result == Intersection.LEFT | Intersection.STRAIGHT
 
 

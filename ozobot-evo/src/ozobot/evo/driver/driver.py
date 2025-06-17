@@ -15,10 +15,6 @@ class Serializable(Protocol):
     def serialize(self) -> bytes: ...
 
 
-class SerializableAndDeserializable(Deserializable, Serializable, Protocol):
-    ...
-
-
 class MemoryProperty[T](Protocol):
     address: int
     type: type[T]

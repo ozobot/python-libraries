@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import math
 from dataclasses import dataclass
 from typing import Literal, TypeAlias
 
@@ -10,6 +11,10 @@ class Color:
     red: float
     green: float
     blue: float
+
+    @property
+    def is_unknown(self) -> bool:
+        return math.isnan(self.red) or math.isnan(self.green) or math.isnan(self.blue)
 
 
 class Colors:
@@ -21,6 +26,7 @@ class Colors:
     CYAN = Color(0, 1, 1)
     MAGENTA = Color(1, 0, 1)
     YELLOW = Color(1, 1, 0)
+    UNKNOWN = Color(float("nan"), float("nan"), float("nan"))
 
 
 TDirection: TypeAlias = Literal["backward", "left", "right", "straight"]
@@ -34,8 +40,21 @@ class LEDMask(enum.Flag):
     FRONT_RIGHT_CENTER = enum.auto()
     TOP = enum.auto()
 
+
 class Intersection(enum.Flag):
     BACKWARD = enum.auto()
     LEFT = enum.auto()
     RIGHT = enum.auto()
     STRAIGHT = enum.auto()
+
+
+@dataclass(frozen=True)
+class ColorCode:
+    numerical_value: int
+
+
+@dataclass(frozen=True)
+class BatteryState:
+    voltage: float
+    remaining_power: int
+    charging: bool

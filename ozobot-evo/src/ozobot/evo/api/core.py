@@ -5,12 +5,18 @@ import math
 import typing
 
 from loguru import logger
+from ozobot.common.broadcast import BroadcastManager
 from ozobot.evo.api.watchers import WatcherSubscription
-from ozobot.evo.datatypes import Color, LEDMask, TDirection, Intersection
-from ozobot.evo.driver.driver import Deserializable, Driver, MemoryProperty, SerializableAndDeserializable
+from ozobot.evo.conversions import (
+    battery_state_from_protocol,
+    color_code_from_protocol,
+    line_color_from_protocol,
+    surface_color_from_protocol,
+)
+from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Intersection, LEDMask, TDirection
+from ozobot.evo.driver.driver import Deserializable, Driver, MemoryProperty
 from ozobot.evo.exceptions import EvoError
 from ozobot.evo.protocol import Types, VirtualMemory
-from ozobot.common.broadcast import BroadcastManager
 
 _map_audioname_filename = {
     "happy": "01010100",
@@ -43,18 +49,15 @@ class AudioFileNotFoundError(EvoError):
         super().__init__(f"Audio file not found: {audio_name}")
 
 
-class DataAccessRead[T: Deserializable]:
-    def __init__(self, driver: Driver, property: MemoryProperty[T]) -> None:
+class DataAccessRead[T: Deserializable, U]:
+    def __init__(self, driver: Driver, property: MemoryProperty[T], from_protocol: typing.Callable[[T], U]) -> None:
         self._driver = driver
         self._property = property
+        self._from_protocol = from_protocol
 
-    async def read(self) -> T:
-        return await self._driver.mem_read(self._property)
-
-
-class DataAccessReadWrite[T: SerializableAndDeserializable](DataAccessRead[T]):
-    async def write(self, value: T) -> None:
-        await self._driver.mem_write(self._property, value)
+    async def read(self) -> U:
+        val = await self._driver.mem_read(self._property)
+        return self._from_protocol(val)
 
 
 class FakeDataWatcher[T]:
@@ -69,6 +72,7 @@ class FakeDataWatcher[T]:
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
         with self._broadcast.output() as events:
+
             async def _reader() -> typing.AsyncIterator[T]:
                 while True:
                     yield await events.get()
@@ -76,35 +80,41 @@ class FakeDataWatcher[T]:
             yield _reader()
 
 
-class DataWatcher[T: Deserializable]:
-    def __init__(self, watcher: WatcherSubscription[T]) -> None:
+class DataWatcher[T: Deserializable, U]:
+    def __init__(self, watcher: WatcherSubscription[T], from_protocol: typing.Callable[[T], U]) -> None:
         self._watcher = watcher
+        self._from_protocol = from_protocol
 
     @property
-    def last(self) -> T:
-        return self._watcher.last
+    def last(self) -> U:
+        return self._from_protocol(self._watcher.last)
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[U]]:
         async with self._watcher.read() as reader:
-            yield reader
+
+            async def _reader_converted() -> typing.AsyncIterator[U]:
+                async for r in reader:
+                    yield self._from_protocol(r)
+
+            yield _reader_converted()
 
 
 class Evo:
     @property
-    def battery(self) -> DataAccessRead[Types.Battery]:
+    def battery(self) -> DataAccessRead[Types.Battery, BatteryState]:
         return self._property_battery
 
     @property
-    def color_codes(self) -> DataWatcher[Types.ColorCode]:
+    def color_codes(self) -> DataWatcher[Types.ColorCode, ColorCode]:
         return self._watcher_color_codes
 
     @property
-    def line_color(self) -> DataWatcher[Types.LineColor]:
+    def line_color(self) -> DataWatcher[Types.LineColor, Color]:
         return self._watcher_line_color
 
     @property
-    def surface_color(self) -> DataWatcher[Types.SurfaceColor]:
+    def surface_color(self) -> DataWatcher[Types.SurfaceColor, Color]:
         return self._watcher_surface_color
 
     @property
@@ -121,10 +131,12 @@ class Evo:
         ],
     ) -> None:
         self._driver = driver
-        self._watcher_color_codes = DataWatcher(watchers[0])
-        self._watcher_line_color = DataWatcher(watchers[1])
-        self._watcher_surface_color = DataWatcher(watchers[2])
-        self._property_battery = DataAccessRead[Types.Battery](driver, VirtualMemory.batteryState)
+        self._watcher_color_codes = DataWatcher(watchers[0], color_code_from_protocol)
+        self._watcher_line_color = DataWatcher(watchers[1], line_color_from_protocol)
+        self._watcher_surface_color = DataWatcher(watchers[2], surface_color_from_protocol)
+        self._property_battery = DataAccessRead[Types.Battery, BatteryState](
+            driver, VirtualMemory.batteryState, battery_state_from_protocol
+        )
         self._intersection_broadcast = BroadcastManager[Intersection]()
         self._intersection = FakeDataWatcher(Intersection(0), self._intersection_broadcast)
 
