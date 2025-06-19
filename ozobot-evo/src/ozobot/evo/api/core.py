@@ -5,7 +5,7 @@ import math
 import typing
 
 from loguru import logger
-from ozobot.common.broadcast import BroadcastManager
+from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, FakeDataWatcher, FakeDataWatcherQueue
 from ozobot.evo.api.watchers import WatcherSubscription
 from ozobot.evo.conversions import (
     battery_state_from_protocol,
@@ -13,8 +13,8 @@ from ozobot.evo.conversions import (
     line_color_from_protocol,
     surface_color_from_protocol,
 )
-from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Intersection, LEDMask, TDirection
-from ozobot.evo.driver.driver import Deserializable, Driver, MemoryProperty
+from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask
+from ozobot.evo.driver.driver import Driver, MemoryProperty
 from ozobot.evo.exceptions import EvoError
 from ozobot.evo.protocol import Types, VirtualMemory
 
@@ -49,57 +49,6 @@ class AudioFileNotFoundError(EvoError):
         super().__init__(f"Audio file not found: {audio_name}")
 
 
-class DataAccessRead[T: Deserializable, U]:
-    def __init__(self, driver: Driver, property: MemoryProperty[T], from_protocol: typing.Callable[[T], U]) -> None:
-        self._driver = driver
-        self._property = property
-        self._from_protocol = from_protocol
-
-    async def read(self) -> U:
-        val = await self._driver.mem_read(self._property)
-        return self._from_protocol(val)
-
-
-class FakeDataWatcher[T]:
-    def __init__(self, initial_value: T, broadcast: BroadcastManager[T]):
-        self._broadcast = broadcast
-        self._last = initial_value
-
-    @property
-    def last(self) -> T:
-        return self._last
-
-    @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
-        with self._broadcast.output() as events:
-
-            async def _reader() -> typing.AsyncIterator[T]:
-                while True:
-                    yield await events.get()
-
-            yield _reader()
-
-
-class DataWatcher[T: Deserializable, U]:
-    def __init__(self, watcher: WatcherSubscription[T], from_protocol: typing.Callable[[T], U]) -> None:
-        self._watcher = watcher
-        self._from_protocol = from_protocol
-
-    @property
-    def last(self) -> U:
-        return self._from_protocol(self._watcher.last)
-
-    @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[U]]:
-        async with self._watcher.read() as reader:
-
-            async def _reader_converted() -> typing.AsyncIterator[U]:
-                async for r in reader:
-                    yield self._from_protocol(r)
-
-            yield _reader_converted()
-
-
 class Evo:
     @property
     def battery(self) -> DataAccessRead[Types.Battery, BatteryState]:
@@ -118,7 +67,7 @@ class Evo:
         return self._watcher_surface_color
 
     @property
-    def intersection(self) -> FakeDataWatcher[Intersection]:
+    def intersection(self) -> FakeDataWatcher[Direction]:
         return self._intersection
 
     def __init__(
@@ -137,8 +86,8 @@ class Evo:
         self._property_battery = DataAccessRead[Types.Battery, BatteryState](
             driver, VirtualMemory.batteryState, battery_state_from_protocol
         )
-        self._intersection_broadcast = BroadcastManager[Intersection]()
-        self._intersection = FakeDataWatcher(Intersection(0), self._intersection_broadcast)
+        self._intersection_queue = FakeDataWatcherQueue[Direction](Direction(0))
+        self._intersection = FakeDataWatcher(self._intersection_queue)
 
     @classmethod
     @contextlib.asynccontextmanager
@@ -234,13 +183,13 @@ class Evo:
         blue = int(color.blue * 255)
         await self._driver.set_led(mask, red, green, blue)
 
-    async def follow_line(self, direction: TDirection) -> None:
+    async def follow_line(self, direction: Direction) -> None:
         logger.debug("Following line", direction=direction)
         intersection = await self._driver.line_navigation(direction, follow=True)
-        await self._intersection_broadcast.broadcast(intersection)
+        await self._intersection_queue.write(intersection)
 
-    async def align_with_line(self, direction: TDirection) -> None:
-        logger.debug("Aligning with line", direction=direction)
+    async def align_with_line(self, direction: Direction) -> None:
+        logger.debug("Aligning with line", direTction=direction)
         await self._driver.line_navigation(direction, follow=False)
 
     async def set_follow_line_speed(self, speed_mps: float) -> None:
