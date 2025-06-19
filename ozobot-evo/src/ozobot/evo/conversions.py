@@ -1,18 +1,31 @@
 import typing
 
-from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Colors, Intersection, LEDMask, TDirection
+from ozobot.common.exceptions import OzobotDataTypeError
+from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask, Sample
 from ozobot.evo.protocol import Types
 
 
+class _HasTimestamp(typing.Protocol):
+    timestamp: int
+
+
 def battery_state_from_protocol(state: Types.Battery) -> BatteryState:
+    if not isinstance(state, Types.Battery):
+        raise OzobotDataTypeError(Types.Battery, type(state))
+
     return BatteryState(state.voltage, state.remainingPower, state.fields & Types.BatteryFieldsEnum.Charging)
 
 
 def color_code_from_protocol(color_code: Types.ColorCode) -> ColorCode:
+    if not isinstance(color_code, Types.ColorCode):
+        raise OzobotDataTypeError(Types.ColorCode, type(color_code))
     return ColorCode(color_code.code)
 
 
 def surface_color_from_protocol(surface_color: Types.SurfaceColor) -> Color:
+    if not isinstance(surface_color, Types.SurfaceColor):
+        raise OzobotDataTypeError(Types.SurfaceColor, type(surface_color))
+
     match surface_color.color:
         case Types.SurfaceColorEnum.Black:
             return Colors.BLACK
@@ -37,6 +50,9 @@ def surface_color_from_protocol(surface_color: Types.SurfaceColor) -> Color:
 
 
 def line_color_from_protocol(line_color: Types.LineColor) -> Color:
+    if not isinstance(line_color, Types.LineColor):
+        raise OzobotDataTypeError(Types.LineColor, type(line_color))
+
     match line_color.color:
         case Types.LineColorEnum.Black:
             return Colors.BLACK
@@ -53,6 +69,9 @@ def line_color_from_protocol(line_color: Types.LineColor) -> Color:
 
 
 def led_to_protocol(mask: LEDMask) -> Types.LEDsMask:
+    if not isinstance(mask, LEDMask):
+        raise OzobotDataTypeError(LEDMask, type(mask))
+
     protocol_mask: Types.LEDsMask = Types.LEDsMask(0)
     for led in mask:
         match led:
@@ -74,33 +93,49 @@ def led_to_protocol(mask: LEDMask) -> Types.LEDsMask:
     return protocol_mask
 
 
-def direction_to_protocol(direction: TDirection) -> Types.IntersectionDirection:
+def intersection_direction_to_protocol(direction: Direction) -> Types.IntersectionDirection:
+    if not isinstance(direction, Direction):
+        raise OzobotDataTypeError(Direction, type(direction))
+
+    if not len(direction) == 1:
+        raise ValueError("Direction attribute needs to define exactly one direction")
+
     match direction:
-        case "left":
+        case Direction.LEFT:
             return Types.IntersectionDirection.Left
-        case "right":
+        case Direction.RIGHT:
             return Types.IntersectionDirection.Right
-        case "straight":
+        case Direction.STRAIGHT:
             return Types.IntersectionDirection.Straight
-        case "backward":
+        case Direction.BACKWARD:
             return Types.IntersectionDirection.Backward
         case _:
             typing.assert_never(direction)
 
 
-def intersection_from_protocol(intersection_mask: Types.IntersectionBitmap) -> Intersection:
-    intersection = Intersection(0)
+def intersection_bitmap_from_protocol(intersection_mask: Types.IntersectionBitmap) -> Direction:
+    if not isinstance(intersection_mask, Types.IntersectionBitmap):
+        raise OzobotDataTypeError(Types.IntersectionBitmap, type(intersection_mask))
+
+    intersection = Direction(0)
     for dir in intersection_mask:
         match dir:
             case Types.IntersectionBitmap.Backward:
-                intersection |= Intersection.BACKWARD
+                intersection |= Direction.BACKWARD
             case Types.IntersectionBitmap.Straight:
-                intersection |= Intersection.STRAIGHT
+                intersection |= Direction.STRAIGHT
             case Types.IntersectionBitmap.Left:
-                intersection |= Intersection.LEFT
+                intersection |= Direction.LEFT
             case Types.IntersectionBitmap.Right:
-                intersection |= Intersection.RIGHT
+                intersection |= Direction.RIGHT
             case _:
                 typing.assert_never(dir)
 
     return intersection
+
+
+def sample_from_protocol[T: _HasTimestamp, U](protocol_data: T, convertor: typing.Callable[[T], U]) -> Sample[U]:
+    return Sample(
+        convertor(protocol_data),
+        protocol_data.timestamp,
+    )

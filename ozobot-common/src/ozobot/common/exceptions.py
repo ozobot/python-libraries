@@ -6,3 +6,8 @@ class OzobotProtocolCommandError(Exception):
             details = f"({return_value})"
 
         super().__init__(f"Protocol command failed: {command} {details}")
+
+
+class OzobotDataTypeError(Exception):
+    def __init__(self, expected_type: type, received_type: type) -> None:
+        super().__init__(f"Unexpected type: expected '{expected_type}' but got '{received_type}'")

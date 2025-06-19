@@ -5,7 +5,8 @@ import contextlib
 import functools
 import typing
 
-from ozobot.evo.datatypes import Color, LEDMask, TDirection
+from ozobot.evo.datatypes import Color, Direction, LEDMask
+
 from .core import Evo, TNote
 
 _loop = asyncio.get_event_loop()
@@ -60,11 +61,11 @@ class EvoSync:
         await self._evo.set_led(mask, color)
 
     @as_sync
-    async def follow_line(self, direction: TDirection) -> None:
+    async def follow_line(self, direction: Direction) -> None:
         await self._evo.follow_line(direction)
 
     @as_sync
-    async def align_with_line(self, direction: TDirection) -> None:
+    async def align_with_line(self, direction: Direction) -> None:
         await self._evo.align_with_line(direction)
 
     @as_sync

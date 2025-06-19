@@ -3,7 +3,7 @@ import typing
 from unittest.mock import ANY, Mock, patch, sentinel
 
 import pytest
-from ozobot.evo.datatypes import LEDMask, Intersection
+from ozobot.evo.datatypes import LEDMask, Direction
 from ozobot.evo.driver.native import NativeDriver
 from ozobot.evo.protocol import Types
 
@@ -96,11 +96,11 @@ async def test_line_navigation() -> None:
             ],
         )
 
-        result = await driver.line_navigation("left", False)
+        result = await driver.line_navigation(Direction.LEFT, False)
         cmd_mock.assert_called_once_with(
             sentinel.request_id, Types.IntersectionDirection.Left, Types.LineNavigationAction.DoNotFollow
         )
-        assert result == Intersection.LEFT | Intersection.STRAIGHT
+        assert result == Direction.LEFT | Direction.STRAIGHT
 
 
 @pytest.mark.parametrize(

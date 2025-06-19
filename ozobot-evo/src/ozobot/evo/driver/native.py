@@ -7,11 +7,15 @@ from uuid import UUID
 from ozobot.ble.connection import Characteristic, open_client
 from ozobot.common.exceptions import OzobotProtocolCommandError
 from ozobot.evo.api.watchers import EvoWatcher, WatcherSubscription
-from ozobot.evo.conversions import direction_to_protocol, intersection_from_protocol, led_to_protocol
+from ozobot.evo.conversions import (
+    intersection_direction_to_protocol,
+    intersection_bitmap_from_protocol,
+    led_to_protocol,
+)
 from ozobot.evo.driver.driver import Deserializable, MemoryProperty, Serializable
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 
-from .driver import Intersection, LEDMask, TDirection
+from .driver import Direction, LEDMask
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
 _CHARACTERISTIC_UUID = UUID("8903136c-5f13-4548-a885-c58779136802")
@@ -84,8 +88,8 @@ class NativeDriver:
         response = await self._control.SetLED(protocol_mask, red, green, blue, 255)
         self._handle_response("SetLED", response)
 
-    async def line_navigation(self, direction: TDirection, follow: bool) -> Intersection:
-        direction_protocol = direction_to_protocol(direction)
+    async def line_navigation(self, direction: Direction, follow: bool) -> Direction:
+        direction_protocol = intersection_direction_to_protocol(direction)
 
         action = Types.LineNavigationAction.Follow if follow else Types.LineNavigationAction.DoNotFollow
         async with self._control.LineNavigation(self._control.get_next_request_id(), direction_protocol, action) as (
@@ -94,7 +98,7 @@ class NativeDriver:
         ):
             event = await self._handle_events("LineNavigation", evts)
 
-        return intersection_from_protocol(event.intersection)
+        return intersection_bitmap_from_protocol(event.intersection)
 
     async def follow_speed(self, speed_mps: float) -> None:
         config = VirtualMemory.lineNavigationSpeed

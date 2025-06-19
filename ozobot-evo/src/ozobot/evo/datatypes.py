@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import datetime
 import enum
 import math
 from dataclasses import dataclass
-from typing import Literal, TypeAlias
 
 
 @dataclass(frozen=True)
@@ -29,9 +29,6 @@ class Colors:
     UNKNOWN = Color(float("nan"), float("nan"), float("nan"))
 
 
-TDirection: TypeAlias = Literal["backward", "left", "right", "straight"]
-
-
 class LEDMask(enum.Flag):
     FRONT_CENTER = enum.auto()
     FRONT_LEFT = enum.auto()
@@ -41,7 +38,7 @@ class LEDMask(enum.Flag):
     TOP = enum.auto()
 
 
-class Intersection(enum.Flag):
+class Direction(enum.Flag):
     BACKWARD = enum.auto()
     LEFT = enum.auto()
     RIGHT = enum.auto()
@@ -58,3 +55,20 @@ class BatteryState:
     voltage: float
     remaining_power: int
     charging: bool
+
+
+class Sample[T]:
+    def __init__(self, data: T, timestamp: datetime.datetime | float) -> None:
+        self.data = data
+        self.timestamp = (
+            timestamp if isinstance(timestamp, datetime.datetime) else datetime.datetime.fromtimestamp(timestamp)
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Sample):
+            return False
+
+        if other.data != self.data:
+            return False
+
+        return other.timestamp == self.timestamp
