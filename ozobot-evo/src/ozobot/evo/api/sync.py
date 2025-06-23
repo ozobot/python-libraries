@@ -5,9 +5,10 @@ import contextlib
 import functools
 import typing
 
-from ozobot.evo.datatypes import Color, Direction, LEDMask
+from ozobot.evo.datatypes import Color, Direction, LEDMask, Sample
 
 from .core import Evo, TNote
+from .data_access import DataWatcher, FakeDataWatcher, DataAccessRead
 
 _loop = asyncio.get_event_loop()
 
@@ -32,9 +33,32 @@ def as_sync_context_manager[T](async_context_manager: typing.AsyncContextManager
         _loop.run_until_complete(exit_stack.aclose())
 
 
+class SyncWatcher[T]:
+    @property
+    def last(self) -> Sample[T]:
+        return self._watcher.last
+
+    def __init__(self, watcher: DataWatcher[typing.Any, T] | FakeDataWatcher[T]) -> None:
+        self._watcher = watcher
+
+
+class SyncDataAccessRead[T]:
+    def __init__(self, reader: DataAccessRead[typing.Any, T]) -> None:
+        self._reader = reader
+
+    @as_sync
+    async def read(self) -> Sample[T]:
+        return await self._reader.read()
+
+
 class EvoSync:
     def __init__(self, evo_async: Evo) -> None:
         self._evo = evo_async
+        self.intersection = SyncWatcher(self._evo.intersection)
+        self.color_codes = SyncWatcher(self._evo.color_codes)
+        self.surface_color = SyncWatcher(self._evo.surface_color)
+        self.line_color = SyncWatcher(self._evo.line_color)
+        self.battery = SyncDataAccessRead(self._evo.battery)
 
     @as_sync
     async def move(self, distance_m: float, speed_mps: float) -> None:
