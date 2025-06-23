@@ -33,17 +33,17 @@ async def test_access_read() -> None:
 
 
 async def test_fake_data_watcher() -> None:
-    q = FakeDataWatcherQueue[int](0)
+    q = FakeDataWatcherQueue[int](Sample(0, 0))
     w = FakeDataWatcher[int](q)
 
-    assert w.last == 0
-    await q.write(1)
-    assert w.last == 1
+    assert w.last.data == 0
+    await q.write(Sample(1, 0))
+    assert w.last.data == 1
 
     async with w.watch() as reader:
-        await q.write(2)
-        async for data in reader:
-            assert data == 2
+        await q.write(Sample(2, 0))
+        async for sample in reader:
+            assert sample.data == 2
             break
 
 

@@ -29,16 +29,16 @@ class DataAccessRead[T: _TimestampAndDeserializable, U]:
 
 
 class FakeDataWatcherQueue[T]:
-    def __init__(self, initial_value: T) -> None:
+    def __init__(self, initial_value: Sample[T]) -> None:
         self.last = initial_value
-        self._broadcast = BroadcastManager[T]()
+        self._broadcast = BroadcastManager[Sample[T]]()
 
-    async def write(self, value: T) -> None:
+    async def write(self, value: Sample[T]) -> None:
         self.last = value
         await self._broadcast.broadcast(value)
 
     @contextlib.contextmanager
-    def output(self) -> typing.Iterator[asyncio.Queue[T]]:
+    def output(self) -> typing.Iterator[asyncio.Queue[Sample[T]]]:
         with self._broadcast.output() as out:
             yield out
 
@@ -48,14 +48,14 @@ class FakeDataWatcher[T]:
         self._queue = queue
 
     @property
-    def last(self) -> T:
+    def last(self) -> Sample[T]:
         return self._queue.last
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[T]]]:
         with self._queue.output() as events:
 
-            async def _reader() -> typing.AsyncIterator[T]:
+            async def _reader() -> typing.AsyncIterator[Sample[T]]:
                 while True:
                     yield await events.get()
 

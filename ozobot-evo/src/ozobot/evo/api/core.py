@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import datetime
 import math
 import typing
 
@@ -13,7 +14,7 @@ from ozobot.evo.conversions import (
     line_color_from_protocol,
     surface_color_from_protocol,
 )
-from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask
+from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample
 from ozobot.evo.driver.driver import Driver, MemoryProperty
 from ozobot.evo.exceptions import EvoError
 from ozobot.evo.protocol import Types, VirtualMemory
@@ -86,7 +87,7 @@ class Evo:
         self._property_battery = DataAccessRead[Types.Battery, BatteryState](
             driver, VirtualMemory.batteryState, battery_state_from_protocol
         )
-        self._intersection_queue = FakeDataWatcherQueue[Direction](Direction(0))
+        self._intersection_queue = FakeDataWatcherQueue[Direction](Sample(Direction(0), 0))
         self._intersection = FakeDataWatcher(self._intersection_queue)
 
     @classmethod
@@ -186,11 +187,16 @@ class Evo:
     async def follow_line(self, direction: Direction) -> None:
         logger.debug("Following line", direction=direction)
         intersection = await self._driver.line_navigation(direction, follow=True)
-        await self._intersection_queue.write(intersection)
+        timestamp = datetime.datetime.now()
+        sample = Sample(intersection, timestamp)
+        await self._intersection_queue.write(sample)
 
     async def align_with_line(self, direction: Direction) -> None:
         logger.debug("Aligning with line", direTction=direction)
-        await self._driver.line_navigation(direction, follow=False)
+        intersection = await self._driver.line_navigation(direction, follow=False)
+        timestamp = datetime.datetime.now()
+        sample = Sample(intersection, timestamp)
+        await self._intersection_queue.write(sample)
 
     async def set_follow_line_speed(self, speed_mps: float) -> None:
         logger.debug("Setting line following speed", speed=speed_mps)
