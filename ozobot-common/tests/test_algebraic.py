@@ -132,3 +132,40 @@ def test_dispatcher_protocol():
             with dispatcher.actor("three"):
                 assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
                 assert dispatcher.call(_DummyClass, _DummyClass.get_field_reverse) == "ymmud"
+
+
+import asyncio
+from ozobot.common.exceptions import CorruptedStateError
+
+@pytest.mark.asyncio
+async def test_dispatcher_state_consistency_concurrent():
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    dispatcher.add("two", _ValueStore2("b"))
+
+    # This task enters and exits the context for "one" repeatedly
+    async def task_one():
+        for _ in range(10):
+            with dispatcher.actor("one"):
+                # Simulate some async work
+                await asyncio.sleep(0.01)
+                assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+
+    # This task enters and exits the context for "two" repeatedly
+    async def task_two():
+        for _ in range(10):
+            with dispatcher.actor("two"):
+                await asyncio.sleep(0.01)
+                assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+
+    # Run both tasks concurrently and ensure no stack corruption
+    await asyncio.gather(task_one(), task_two())
+
+    # Now, forcibly corrupt the stack to check error detection
+    with dispatcher.actor("one"):
+        dispatcher._stack.insert(0, _ValueStore2("corrupt"))
+        with pytest.raises(CorruptedStateError):
+            # Exiting the context should now raise CorruptedStateError
+            pass  # __exit__ will be called here
+        # Clean up the stack for other tests
+        dispatcher._stack.pop(0)
