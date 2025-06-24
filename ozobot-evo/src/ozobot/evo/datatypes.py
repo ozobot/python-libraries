@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import enum
 import math
+import typing
 from dataclasses import dataclass
 
 
@@ -43,6 +44,9 @@ class Direction(enum.Flag):
     LEFT = enum.auto()
     RIGHT = enum.auto()
     STRAIGHT = enum.auto()
+
+
+TNote: typing.TypeAlias = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
 
 
 @dataclass(frozen=True)

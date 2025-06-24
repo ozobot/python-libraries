@@ -14,7 +14,7 @@ from ozobot.evo.conversions import (
     line_color_from_protocol,
     surface_color_from_protocol,
 )
-from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample
+from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample, TNote
 from ozobot.evo.driver.driver import Driver, MemoryProperty
 from ozobot.evo.exceptions import EvoError
 from ozobot.evo.protocol import Types, VirtualMemory
@@ -41,8 +41,6 @@ _map_audioname_filename = {
     # numbers
     **{f"num{i}": f"010400{format(i, 'x').rjust(2, '0').upper()}" for i in range(99)},
 }
-
-TNote: typing.TypeAlias = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
 
 
 class FileNotFoundError(EvoError):
