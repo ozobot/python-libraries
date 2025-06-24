@@ -45,7 +45,7 @@ _map_audioname_filename = {
 TNote: typing.TypeAlias = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
 
 
-class AudioFileNotFoundError(EvoError):
+class FileNotFoundError(EvoError):
     def __init__(self, audio_name: str) -> None:
         super().__init__(f"Audio file not found: {audio_name}")
 
@@ -174,7 +174,7 @@ class Evo:
     def _map_audio_name_to_filename(audio_name: str) -> str:
         filename = _map_audioname_filename.get(audio_name, None)
         if not filename:
-            raise
+            raise FileNotFoundError(audio_name)
         return filename
 
     async def set_led(self, mask: LEDMask, color: Color) -> None:
