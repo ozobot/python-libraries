@@ -35,7 +35,11 @@ class ActorDispatcher[T]:
         return property
 
     def call[U, **P](
-        self, actor_type: type[T], template: typing.Callable[P, U], *args: P.args, **kwargs: P.kwargs
+        self,
+        actor_type: type[T],
+        template: typing.Callable[typing.Concatenate[T, P], U],
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> U:
         actor = self._find_in_stack(actor_type)
         method: typing.Callable[P, U] = getattr(actor, template.__name__)
@@ -44,7 +48,7 @@ class ActorDispatcher[T]:
     async def acall[U, **P](
         self,
         actor_type: type[T],
-        template: typing.Callable[P, typing.Coroutine[None, None, U]],
+        template: typing.Callable[typing.Concatenate[T, P], typing.Coroutine[None, None, U]],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> U:
