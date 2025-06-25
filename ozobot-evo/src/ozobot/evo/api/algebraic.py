@@ -1,56 +1,72 @@
 from __future__ import annotations
 
+import typing
+
 from ozobot.common.algebraic import ActorDispatcher
 from ozobot.evo.api.core import Evo
 from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, FakeDataWatcher
-from ozobot.evo.datatypes import Color, Direction, LEDMask, TNote
+from ozobot.evo.datatypes import Color, Direction, LEDMask, TNote, Sample
 
 _evo_dispatcher = ActorDispatcher[Evo]()
 
 
-class _ProxyDataAccessRead:
-    def __init__(self, dispatcher, actor_type, value_type, name):
+class _ProxyDataAccessRead[T, U]:
+    def __init__(
+        self,
+        dispatcher: ActorDispatcher[T],
+        actor_type: type[T],
+        value_type: type[DataAccessRead[typing.Any, U]],
+        name: str,
+    ) -> None:
         self._dispatcher = dispatcher
         self._actor_type = actor_type
         self._value_type = value_type
         self._name = name
 
-    async def read(self):
+    async def read(self) -> Sample[U]:
         obj = self._dispatcher.get_property(self._actor_type, self._value_type, self._name)
         return await obj.read()
 
 
-class _ProxyDataWatcher:
-    def __init__(self, dispatcher, actor_type, value_type, name):
+class _ProxyDataWatcher[T, U]:
+    def __init__(
+        self,
+        dispatcher: ActorDispatcher[T],
+        actor_type: type[T],
+        value_type: type[DataWatcher[typing.Any, U]],
+        name: str,
+    ) -> None:
         self._dispatcher = dispatcher
         self._actor_type = actor_type
         self._value_type = value_type
         self._name = name
 
     @property
-    def last(self):
+    def last(self) -> Sample[U]:
         obj = self._dispatcher.get_property(self._actor_type, self._value_type, self._name)
         return obj.last
 
-    async def watch(self):
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
         obj = self._dispatcher.get_property(self._actor_type, self._value_type, self._name)
         async with obj.watch() as reader:
             yield reader
 
 
-class _ProxyFakeDataWatcher:
-    def __init__(self, dispatcher, actor_type, value_type, name):
+class _ProxyFakeDataWatcher[T]:
+    def __init__(
+        self, dispatcher: ActorDispatcher[T], actor_type: type[T], value_type: type[FakeDataWatcher[T]], name: str
+    ) -> None:
         self._dispatcher = dispatcher
         self._actor_type = actor_type
         self._value_type = value_type
         self._name = name
 
     @property
-    def last(self):
+    def last(self) -> Sample[T]:
         obj = self._dispatcher.get_property(self._actor_type, self._value_type, self._name)
         return obj.last
 
-    async def watch(self):
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[T]]]:
         obj = self._dispatcher.get_property(self._actor_type, self._value_type, self._name)
         async with obj.watch() as reader:
             yield reader
