@@ -36,9 +36,9 @@ async def test_fake_data_watcher() -> None:
     q = FakeDataWatcherQueue[int](Sample(0, 0))
     w = FakeDataWatcher[int](q)
 
-    assert w.last.data == 0
+    assert (await w.read()).data == 0
     await q.write(Sample(1, 0))
-    assert w.last.data == 1
+    assert (await w.read()).data == 1
 
     async with w.watch() as reader:
         await q.write(Sample(2, 0))
@@ -48,19 +48,23 @@ async def test_fake_data_watcher() -> None:
 
 
 async def test_data_watcher() -> None:
-    async def _reader():
+    async def _reader(_):
+        return Types.Battery(4, 0, 0, 300)
+
+    async def _iter():
         yield Types.Battery(1, 0, 0, 0)
         yield Types.Battery(2, 0, 0, 100)
         yield Types.Battery(3, 0, 0, 200)
 
     @contextlib.asynccontextmanager
     async def _watcher() -> typing.AsyncIterator[typing.AsyncIterator[int]]:
-        yield _reader()
+        yield _iter()
 
-    subs = Mock(spec=WatcherSubscription, last=Types.Battery(10, 0, 0, 1000), read=lambda: _watcher())
-    w = DataWatcher[Types.Battery, int](subs, lambda b: b.voltage)
+    subs = Mock(spec=WatcherSubscription, watch=lambda: _watcher())
+    driver = Mock(mem_read=_reader)
+    w = DataWatcher[Types.Battery, int](driver, sentinel.property, subs, lambda b: b.voltage)
 
-    assert w.last == Sample(10, 1000)
+    assert (await w.read()) == Sample(4, 300)
 
     async with w.watch() as reader:
         data = [await anext(reader) for _ in range(3)]

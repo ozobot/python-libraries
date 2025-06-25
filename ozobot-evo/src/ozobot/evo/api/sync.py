@@ -8,9 +8,9 @@ import typing
 from ozobot.evo.datatypes import Color, Direction, LEDMask, Sample
 
 from .core import Evo, TNote
-from .data_access import DataWatcher, FakeDataWatcher, DataAccessRead
+from .data_access import DataAccessRead, DataWatcher, FakeDataWatcher
 
-_loop = asyncio.get_event_loop()
+_loop = asyncio.new_event_loop()
 
 
 def as_sync[**P, T](func: typing.Callable[P, typing.Awaitable[T]]) -> typing.Callable[P, T]:
@@ -33,17 +33,8 @@ def as_sync_context_manager[T](async_context_manager: typing.AsyncContextManager
         _loop.run_until_complete(exit_stack.aclose())
 
 
-class SyncWatcher[T]:
-    @property
-    def last(self) -> Sample[T]:
-        return self._watcher.last
-
-    def __init__(self, watcher: DataWatcher[typing.Any, T] | FakeDataWatcher[T]) -> None:
-        self._watcher = watcher
-
-
 class SyncDataAccessRead[T]:
-    def __init__(self, reader: DataAccessRead[typing.Any, T]) -> None:
+    def __init__(self, reader: DataAccessRead[typing.Any, T] | DataWatcher[typing.Any, T] | FakeDataWatcher[T]) -> None:
         self._reader = reader
 
     @as_sync
@@ -54,10 +45,10 @@ class SyncDataAccessRead[T]:
 class EvoSync:
     def __init__(self, evo_async: Evo) -> None:
         self._evo = evo_async
-        self.intersection = SyncWatcher(self._evo.intersection)
-        self.color_codes = SyncWatcher(self._evo.color_codes)
-        self.surface_color = SyncWatcher(self._evo.surface_color)
-        self.line_color = SyncWatcher(self._evo.line_color)
+        self.intersection = SyncDataAccessRead(self._evo.intersection)
+        self.color_codes = SyncDataAccessRead(self._evo.color_codes)
+        self.surface_color = SyncDataAccessRead(self._evo.surface_color)
+        self.line_color = SyncDataAccessRead(self._evo.line_color)
         self.battery = SyncDataAccessRead(self._evo.battery)
 
     @as_sync

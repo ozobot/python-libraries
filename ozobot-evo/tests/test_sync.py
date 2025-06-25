@@ -1,34 +1,36 @@
-import contextlib
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock, sentinel
 
-from ozobot.evo.api.data_access import DataWatcher, FakeDataWatcher, FakeDataWatcherQueue
-from ozobot.evo.api.sync import SyncWatcher
+from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, FakeDataWatcher, FakeDataWatcherQueue
+from ozobot.evo.api.sync import SyncDataAccessRead
 from ozobot.evo.datatypes import Sample
 from ozobot.evo.protocol import Types
 
 
-@contextlib.asynccontextmanager
-async def _watcher_subs_iter():
-    async def _iter():
-        yield Types.Battery(1, 2, 3, 100)
-        yield Types.Battery(10, 20, 30, 1000)
+def test_data_reader_read() -> None:
+    subs_mock = Mock(mem_read=AsyncMock(return_value=Types.Battery(1, 2, 3, 100)))
+    watcher = DataAccessRead[Types.Battery, int](subs_mock, sentinel.watcher, lambda b: b.voltage)
+    sync_watcher = SyncDataAccessRead(watcher)
 
-    yield _iter()
-
-
-def test_sync_watcher_last() -> None:
-    subs_mock = Mock(last=Types.Battery(1, 2, 3, 100))
-    watcher = DataWatcher[Types.Battery, int](subs_mock, lambda b: b.voltage)
-    sync_watcher = SyncWatcher(watcher)
-
-    assert isinstance(sync_watcher.last, Sample)
-    assert sync_watcher.last.data == 1
+    sample = sync_watcher.read()
+    assert isinstance(sample, Sample)
+    assert sample.data == 1
 
 
-def test_fake_watcher_sync_watcher_last() -> None:
+def test_sync_watcher_read() -> None:
+    driver_mock = Mock(mem_read=AsyncMock(return_value=Types.Battery(1, 2, 3, 100)))
+    watcher = DataWatcher[Types.Battery, int](driver_mock, sentinel.property, sentinel.watcher, lambda b: b.voltage)
+    sync_watcher = SyncDataAccessRead(watcher)
+
+    sample = sync_watcher.read()
+    assert isinstance(sample, Sample)
+    assert sample.data == 1
+
+
+def test_fake_watcher_read() -> None:
     q = FakeDataWatcherQueue(Sample(1, 0))
     watcher = FakeDataWatcher[int](q)
-    sync_watcher = SyncWatcher(watcher)
+    sync_watcher = SyncDataAccessRead(watcher)
 
-    assert isinstance(sync_watcher.last, Sample)
-    assert sync_watcher.last.data == 1
+    sample = sync_watcher.read()
+    assert isinstance(sample, Sample)
+    assert sample.data == 1

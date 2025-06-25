@@ -47,8 +47,7 @@ class FakeDataWatcher[T]:
     def __init__(self, queue: FakeDataWatcherQueue[T]):
         self._queue = queue
 
-    @property
-    def last(self) -> Sample[T]:
+    async def read(self) -> Sample[T]:
         return self._queue.last
 
     @contextlib.asynccontextmanager
@@ -63,17 +62,23 @@ class FakeDataWatcher[T]:
 
 
 class DataWatcher[T: _TimestampAndDeserializable, U]:
-    def __init__(self, watcher: WatcherSubscription[T], from_protocol: typing.Callable[[T], U]) -> None:
+    def __init__(
+        self,
+        driver: Driver,
+        property: MemoryProperty[T],
+        watcher: WatcherSubscription[T],
+        from_protocol: typing.Callable[[T], U],
+    ) -> None:
         self._watcher = watcher
+        self._reader = DataAccessRead(driver, property, from_protocol)
         self._from_protocol = from_protocol
 
-    @property
-    def last(self) -> Sample[U]:
-        return sample_from_protocol(self._watcher.last, self._from_protocol)
+    async def read(self) -> Sample[U]:
+        return await self._reader.read()
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
-        async with self._watcher.read() as reader:
+        async with self._watcher.watch() as reader:
 
             async def _reader_converted() -> typing.AsyncIterator[Sample[U]]:
                 async for r in reader:

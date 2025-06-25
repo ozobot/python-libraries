@@ -53,7 +53,7 @@ class WatcherSubscription[T: _Deserializable]:
         self._last_value = initial_value
 
     @contextlib.asynccontextmanager
-    async def read(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
         with self._broadcast.output() as output:
 
             async def _read() -> typing.AsyncIterator[T]:

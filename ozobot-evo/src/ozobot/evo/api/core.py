@@ -79,9 +79,15 @@ class Evo:
         ],
     ) -> None:
         self._driver = driver
-        self._watcher_color_codes = DataWatcher(watchers[0], color_code_from_protocol)
-        self._watcher_line_color = DataWatcher(watchers[1], line_color_from_protocol)
-        self._watcher_surface_color = DataWatcher(watchers[2], surface_color_from_protocol)
+        self._watcher_color_codes = DataWatcher(
+            self._driver, VirtualMemory.colorCode, watchers[0], color_code_from_protocol
+        )
+        self._watcher_line_color = DataWatcher(
+            self._driver, VirtualMemory.lineColor, watchers[1], line_color_from_protocol
+        )
+        self._watcher_surface_color = DataWatcher(
+            self._driver, VirtualMemory.surfaceColor, watchers[2], surface_color_from_protocol
+        )
         self._property_battery = DataAccessRead[Types.Battery, BatteryState](
             driver, VirtualMemory.batteryState, battery_state_from_protocol
         )

@@ -41,10 +41,9 @@ class _ProxyDataWatcher[T, U]:
         self._value_type = value_type
         self._name = name
 
-    @property
-    def last(self) -> Sample[U]:
+    async def read(self) -> Sample[U]:
         obj = self._dispatcher.get_property(self._actor_type, self._value_type, self._name)
-        return obj.last
+        return await obj.read()
 
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
         obj = self._dispatcher.get_property(self._actor_type, self._value_type, self._name)
@@ -61,10 +60,9 @@ class _ProxyFakeDataWatcher[T]:
         self._value_type = value_type
         self._name = name
 
-    @property
-    def last(self) -> Sample[T]:
+    async def read(self) -> Sample[T]:
         obj = self._dispatcher.get_property(self._actor_type, self._value_type, self._name)
-        return obj.last
+        return await obj.read()
 
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[T]]]:
         obj = self._dispatcher.get_property(self._actor_type, self._value_type, self._name)

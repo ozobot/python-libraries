@@ -48,13 +48,13 @@ async def test_subscription() -> None:
         yield PacketTypes.PacketEvent_WatcherDirty(0, [20, 20, 20, 20, 20, 21, 21, 21])
 
     async with WatcherSubscription.run(_iter(), [allocation1, allocation2], allocation1) as subs1:
-        async with subs1.read() as read1:
+        async with subs1.watch() as read1:
             assert subs1.last == bytes([0, 0, 0, 0, 0])
             data1 = [await anext(read1) for _ in range(2)]
 
     async with WatcherSubscription.run(_iter(), [allocation1, allocation2], allocation2) as subs2:
         assert subs2.last == bytes([1, 1, 1])
-        async with subs2.read() as read2:
+        async with subs2.watch() as read2:
             data2 = [await anext(read2) for _ in range(2)]
 
     assert data1 == [
