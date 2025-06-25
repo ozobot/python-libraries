@@ -1,15 +1,16 @@
 import contextlib
+import contextvars
 import typing
+
 from ozobot.common.exceptions import (
-    ActorNotFoundError,
     ActorAlreadyExistsError,
-    CorruptedStateError,
+    ActorNotFoundError,
 )
 
 
 class ActorDispatcher[T]:
     def __init__(self) -> None:
-        self._stack: list[T] = []
+        self._stack = contextvars.ContextVar[list[T]]("stack", default=[])
         self._actors: dict[str, T] = {}
 
     def add(self, name: str, actor: T) -> None:
@@ -19,15 +20,14 @@ class ActorDispatcher[T]:
 
     @contextlib.contextmanager
     def actor(self, name: str) -> typing.Iterator[None]:
+        new_context = [*self._stack.get()]
+        context_token = self._stack.set(new_context)
         if name not in self._actors:
             raise ActorNotFoundError(name)
         actor = self._actors[name]
-        self._stack.insert(0, actor)
+        self._stack.get().insert(0, actor)
         yield
-        a = self._stack.pop(0)
-
-        if a != actor:
-            raise CorruptedStateError()
+        self._stack.reset(context_token)
 
     def get_property[U](self, actor_type: type[T], value_type: type[U], name: str) -> U:
         actor = self._find_in_stack(actor_type)
@@ -57,7 +57,7 @@ class ActorDispatcher[T]:
         return await method(*args, **kwargs)
 
     def _find_in_stack[U](self, _type: type[U]) -> U:
-        for actor in self._stack:
+        for actor in self._stack.get():
             if isinstance(actor, _type):
                 return actor
 
