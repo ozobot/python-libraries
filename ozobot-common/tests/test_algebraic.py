@@ -36,6 +36,9 @@ class _ValueStore2:
     async def aget_val(self) -> str:
         return self.val.upper()
 
+    def get_val_with_suffix(self) -> str:
+        return self.val + "_suffix"
+
 
 class _DummyClass:
     def __init__(self, field: str) -> None:
@@ -118,7 +121,7 @@ def test_dispatcher_nested():
         assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
 
 
-def test_dispatcher_protocol():
+def test_dispatcher_protocol_nested():
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -133,6 +136,15 @@ def test_dispatcher_protocol():
             with dispatcher.actor("three"):
                 assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
                 assert dispatcher.call(_DummyClass, _DummyClass.get_field_reverse) == "ymmud"
+
+
+def test_dispatcher_protocol_multiple_names():
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    dispatcher.add("two", _ValueStore2("b"))
+    with dispatcher.actor("one", "two"):
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore2, _ValueStore2.get_val_with_suffix) == "b_suffix"
 
 
 async def test_dispatcher_state_consistency_concurrent():

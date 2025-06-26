@@ -19,15 +19,19 @@ class ActorDispatcher[T]:
         self._actors[name] = actor
 
     @contextlib.contextmanager
-    def actor(self, name: str) -> typing.Iterator[None]:
-        new_context = [*self._stack.get()]
-        context_token = self._stack.set(new_context)
-        if name not in self._actors:
-            raise ActorNotFoundError(name)
-        actor = self._actors[name]
-        self._stack.get().insert(0, actor)
-        yield
-        self._stack.reset(context_token)
+    def actor(self, *names: str) -> typing.Iterator[None]:
+        for name in names:
+            if name not in self._actors:
+                raise ActorNotFoundError(name)
+
+        actor_objects = [self._actors[name] for name in names]
+        new_stack = actor_objects + self._stack.get()
+        context_token = self._stack.set(new_stack)
+
+        try:
+            yield
+        finally:
+            self._stack.reset(context_token)
 
     def get_property[U](self, actor_type: type[T], value_type: type[U], name: str) -> U:
         actor = self._find_in_stack(actor_type)
