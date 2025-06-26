@@ -123,6 +123,9 @@ class Characteristic:
             client, service=service, characteristic=characteristic
         )
 
+    async def read(self) -> bytearray:
+        return await self._client.read_gatt_char(self._characteristic_handle)
+
     @contextlib.asynccontextmanager
     async def open_session(self) -> typing.AsyncIterator[Session]:
         with logger.contextualize(session=str(uuid4())):
