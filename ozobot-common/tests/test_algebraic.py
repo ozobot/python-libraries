@@ -45,7 +45,7 @@ class _DummyClass:
         return self.field[::-1]
 
 
-def test_dispatcher_get_property():
+def test_dispatcher_get_property() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -61,7 +61,7 @@ def test_dispatcher_get_property():
         dispatcher2.get_property(str, "val")
 
 
-def test_dispatcher_call():
+def test_dispatcher_call() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -73,7 +73,7 @@ def test_dispatcher_call():
         assert dispatcher.call(_ValueStore.get_val) == "B"
 
 
-async def test_dispatcher_acall():
+async def test_dispatcher_acall() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -85,21 +85,21 @@ async def test_dispatcher_acall():
         assert (await dispatcher.acall(_ValueStore.aget_val)) == "B"
 
 
-def test_dispatcher_actor_not_found():
+def test_dispatcher_actor_not_found() -> None:
     dispatcher = ActorDispatcher()
     with pytest.raises(ActorNotFoundError):
         with dispatcher.actor("missing"):
             pass
 
 
-def test_dispatcher_actor_already_exists():
+def test_dispatcher_actor_already_exists() -> None:
     dispatcher = ActorDispatcher()
     with pytest.raises(ActorAlreadyExistsError):
         dispatcher.add("one", _ValueStore1(""))
         dispatcher.add("one", _ValueStore1(""))
 
 
-def test_dispatcher_nested():
+def test_dispatcher_nested() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -118,7 +118,7 @@ def test_dispatcher_nested():
         assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
-def test_dispatcher_protocol_nested():
+def test_dispatcher_protocol_nested() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -135,7 +135,7 @@ def test_dispatcher_protocol_nested():
                 assert dispatcher.call(_DummyClass.get_field_reverse) == "ymmud"
 
 
-def test_dispatcher_protocol_multiple_names():
+def test_dispatcher_protocol_multiple_names() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -144,7 +144,7 @@ def test_dispatcher_protocol_multiple_names():
         assert dispatcher.call(_ValueStore2.get_val_with_suffix) == "b_suffix"
 
 
-async def test_dispatcher_state_consistency_concurrent():
+async def test_dispatcher_state_consistency_concurrent() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -164,7 +164,7 @@ async def test_dispatcher_state_consistency_concurrent():
     await asyncio.gather(task_one(), task_two())
 
 
-def test_dispatcher_mask_single_actor():
+def test_dispatcher_mask_single_actor() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -181,7 +181,7 @@ def test_dispatcher_mask_single_actor():
         assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
-def test_dispatcher_mask_multiple_actors():
+def test_dispatcher_mask_multiple_actors() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -195,7 +195,7 @@ def test_dispatcher_mask_multiple_actors():
         assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
-def test_dispatcher_mask_multiple_actors_nested():
+def test_dispatcher_mask_multiple_actors_nested() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -213,7 +213,7 @@ def test_dispatcher_mask_multiple_actors_nested():
         assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
-def test_dispatcher_mask_invalid_actor():
+def test_dispatcher_mask_invalid_actor() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     with pytest.raises(ActorNotFoundError):
@@ -221,7 +221,7 @@ def test_dispatcher_mask_invalid_actor():
             pass
 
 
-def test_dispatcher_mask_not_activated_actor():
+def test_dispatcher_mask_not_activated_actor() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -231,7 +231,7 @@ def test_dispatcher_mask_not_activated_actor():
             assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
-def test_dispatcher_mask_all_actors_explicit():
+def test_dispatcher_mask_all_actors_explicit() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
@@ -245,7 +245,7 @@ def test_dispatcher_mask_all_actors_explicit():
         assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
-def test_dispatcher_mask_all_actors():
+def test_dispatcher_mask_all_actors() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))

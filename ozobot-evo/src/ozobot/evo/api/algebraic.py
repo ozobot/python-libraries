@@ -5,15 +5,13 @@ import typing
 from ozobot.common.algebraic import ActorDispatcher
 from ozobot.evo.api.core import Evo
 from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, FakeDataWatcher
-from ozobot.evo.datatypes import Color, Direction, LEDMask, TNote, Sample
+from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample, TNote
 
-_evo_dispatcher = ActorDispatcher[Evo]()
+_evo_dispatcher = ActorDispatcher()
 
 
 class _ProxyDataAccessRead[T, U]:
-    def __init__(
-        self, dispatcher: ActorDispatcher[T], value_type: type[DataAccessRead[typing.Any, U]], name: str
-    ) -> None:
+    def __init__(self, dispatcher: ActorDispatcher, value_type: type[DataAccessRead[typing.Any, U]], name: str) -> None:
         self._dispatcher = dispatcher
         self._value_type = value_type
         self._name = name
@@ -24,7 +22,7 @@ class _ProxyDataAccessRead[T, U]:
 
 
 class _ProxyDataWatcher[T, U]:
-    def __init__(self, dispatcher: ActorDispatcher[T], value_type: type[DataWatcher[typing.Any, U]], name: str) -> None:
+    def __init__(self, dispatcher: ActorDispatcher, value_type: type[DataWatcher[typing.Any, U]], name: str) -> None:
         self._dispatcher = dispatcher
         self._value_type = value_type
         self._name = name
@@ -40,7 +38,7 @@ class _ProxyDataWatcher[T, U]:
 
 
 class _ProxyFakeDataWatcher[T]:
-    def __init__(self, dispatcher: ActorDispatcher[T], value_type: type[FakeDataWatcher[T]], name: str) -> None:
+    def __init__(self, dispatcher: ActorDispatcher, value_type: type[FakeDataWatcher[T]], name: str) -> None:
         self._dispatcher = dispatcher
         self._value_type = value_type
         self._name = name
@@ -55,10 +53,10 @@ class _ProxyFakeDataWatcher[T]:
             yield reader
 
 
-battery = _ProxyDataAccessRead(_evo_dispatcher, DataAccessRead, "_property_battery")
-color_codes = _ProxyDataWatcher(_evo_dispatcher, DataWatcher, "_watcher_color_codes")
-line_color = _ProxyDataWatcher(_evo_dispatcher, DataWatcher, "_watcher_line_color")
-surface_color = _ProxyDataWatcher(_evo_dispatcher, DataWatcher, "_watcher_surface_color")
+battery = _ProxyDataAccessRead[typing.Any, BatteryState](_evo_dispatcher, DataAccessRead, "_property_battery")
+color_codes = _ProxyDataWatcher[typing.Any, ColorCode](_evo_dispatcher, DataWatcher, "_watcher_color_codes")
+line_color = _ProxyDataWatcher[typing.Any, Color](_evo_dispatcher, DataWatcher, "_watcher_line_color")
+surface_color = _ProxyDataWatcher[typing.Any, Color](_evo_dispatcher, DataWatcher, "_watcher_surface_color")
 intersection = _ProxyFakeDataWatcher(_evo_dispatcher, FakeDataWatcher, "_intersection")
 
 
