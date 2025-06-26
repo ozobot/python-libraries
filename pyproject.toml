@@ -6,6 +6,7 @@ dependencies = []
 
 [tool.uv.workspace]
 members = [
+  "ozobot-ari",
   "ozobot-ble",
   "ozobot-evo",
   "ozobot-common",
@@ -26,6 +27,7 @@ installer = "uv"
 namespace_packages = true
 explicit_package_bases = true
 mypy_path = [
+  "ozobot-ari/src",
   "ozobot-ble/src",
   "ozobot-evo/src",
   "ozobot-common/src",

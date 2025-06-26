@@ -1,0 +1,28 @@
+[project]
+name = "ozobot-ari"
+version = "0.1.0"
+description = "Ozobot ARI library"
+readme = "README.md"
+authors = [
+    { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "ozobot-ble",
+    "bleak>=0.22.3"
+]
+
+[tool.hatch.build.targets.sdist]
+sources = ["src"]
+only-include = ["src/ozobot"]
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+only-include = ["src/ozobot"]
+
+[tool.uv.sources]
+ozobot-ble = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
