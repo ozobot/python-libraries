@@ -3,10 +3,7 @@ import typing
 
 import pytest
 from ozobot.common.algebraic import ActorDispatcher
-from ozobot.common.exceptions import (
-    ActorAlreadyExistsError,
-    ActorNotFoundError,
-)
+from ozobot.common.exceptions import ActorAlreadyExistsError, ActorNotFoundError, SuitableActorNotFoundError
 
 
 @typing.runtime_checkable
@@ -54,14 +51,14 @@ def test_dispatcher_get_property():
     dispatcher.add("two", _ValueStore2("b"))
 
     with dispatcher.actor("one"):
-        assert dispatcher.get_property(_ValueStore, str, "val") == "a"
+        assert dispatcher.get_property(str, "val") == "a"
 
     with dispatcher.actor("two"):
-        assert dispatcher.get_property(_ValueStore, str, "val") == "b"
+        assert dispatcher.get_property(str, "val") == "b"
 
     dispatcher2 = ActorDispatcher()
-    with pytest.raises(ActorNotFoundError):
-        dispatcher2.get_property(_ValueStore, str, "val")
+    with pytest.raises(SuitableActorNotFoundError):
+        dispatcher2.get_property(str, "val")
 
 
 def test_dispatcher_call():
@@ -70,10 +67,10 @@ def test_dispatcher_call():
     dispatcher.add("two", _ValueStore2("b"))
 
     with dispatcher.actor("one"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
     with dispatcher.actor("two"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+        assert dispatcher.call(_ValueStore.get_val) == "B"
 
 
 async def test_dispatcher_acall():
@@ -82,10 +79,10 @@ async def test_dispatcher_acall():
     dispatcher.add("two", _ValueStore2("b"))
 
     with dispatcher.actor("one"):
-        assert (await dispatcher.acall(_ValueStore, _ValueStore.aget_val)) == "A"
+        assert (await dispatcher.acall(_ValueStore.aget_val)) == "A"
 
     with dispatcher.actor("two"):
-        assert (await dispatcher.acall(_ValueStore, _ValueStore.aget_val)) == "B"
+        assert (await dispatcher.acall(_ValueStore.aget_val)) == "B"
 
 
 def test_dispatcher_actor_not_found():
@@ -108,17 +105,17 @@ def test_dispatcher_nested():
     dispatcher.add("two", _ValueStore2("b"))
 
     with dispatcher.actor("one"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
         with dispatcher.actor("two"):
-            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+            assert dispatcher.call(_ValueStore.get_val) == "B"
 
             with dispatcher.actor("one"):
-                assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+                assert dispatcher.call(_ValueStore.get_val) == "A"
 
-            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+            assert dispatcher.call(_ValueStore.get_val) == "B"
 
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
 def test_dispatcher_protocol_nested():
@@ -128,14 +125,14 @@ def test_dispatcher_protocol_nested():
     dispatcher.add("three", _DummyClass("dummy"))
 
     with dispatcher.actor("one"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
         with dispatcher.actor("two"):
-            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+            assert dispatcher.call(_ValueStore.get_val) == "B"
 
             with dispatcher.actor("three"):
-                assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
-                assert dispatcher.call(_DummyClass, _DummyClass.get_field_reverse) == "ymmud"
+                assert dispatcher.call(_ValueStore.get_val) == "B"
+                assert dispatcher.call(_DummyClass.get_field_reverse) == "ymmud"
 
 
 def test_dispatcher_protocol_multiple_names():
@@ -143,8 +140,8 @@ def test_dispatcher_protocol_multiple_names():
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
     with dispatcher.actor("two", "one"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
-        assert dispatcher.call(_ValueStore2, _ValueStore2.get_val_with_suffix) == "b_suffix"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore2.get_val_with_suffix) == "b_suffix"
 
 
 async def test_dispatcher_state_consistency_concurrent():
@@ -156,13 +153,13 @@ async def test_dispatcher_state_consistency_concurrent():
         for _ in range(10):
             with dispatcher.actor("one"):
                 await asyncio.sleep(0.01)
-                assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+                assert dispatcher.call(_ValueStore.get_val) == "A"
 
     async def task_two():
         for _ in range(10):
             with dispatcher.actor("two"):
                 await asyncio.sleep(0.01)
-                assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+                assert dispatcher.call(_ValueStore.get_val) == "B"
 
     await asyncio.gather(task_one(), task_two())
 
@@ -173,15 +170,15 @@ def test_dispatcher_mask_single_actor():
     dispatcher.add("two", _ValueStore2("b"))
 
     with dispatcher.actor("two", "one"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
         with dispatcher.mask("two"):
-            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+            assert dispatcher.call(_ValueStore.get_val) == "A"
 
         with dispatcher.mask("one"):
-            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+            assert dispatcher.call(_ValueStore.get_val) == "B"
 
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
 def test_dispatcher_mask_multiple_actors():
@@ -191,11 +188,11 @@ def test_dispatcher_mask_multiple_actors():
     dispatcher.add("three", _ValueStore2("c"))
 
     with dispatcher.actor("three", "two", "one"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
         with dispatcher.mask("one", "two"):
-            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "C"
+            assert dispatcher.call(_ValueStore.get_val) == "C"
 
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
 def test_dispatcher_mask_multiple_actors_nested():
@@ -205,15 +202,15 @@ def test_dispatcher_mask_multiple_actors_nested():
     dispatcher.add("three", _ValueStore2("c"))
 
     with dispatcher.actor("three", "two", "one"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
         with dispatcher.mask("one"):
-            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+            assert dispatcher.call(_ValueStore.get_val) == "B"
 
             with dispatcher.mask("two"):
-                assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "C"
+                assert dispatcher.call(_ValueStore.get_val) == "C"
 
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
 def test_dispatcher_mask_invalid_actor():
@@ -231,7 +228,7 @@ def test_dispatcher_mask_not_activated_actor():
 
     with dispatcher.actor("one"):
         with dispatcher.mask("two"):
-            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+            assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
 def test_dispatcher_mask_all_actors_explicit():
@@ -240,12 +237,12 @@ def test_dispatcher_mask_all_actors_explicit():
     dispatcher.add("two", _ValueStore2("b"))
 
     with dispatcher.actor("two", "one"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
         with dispatcher.mask("one", "two"):
-            with pytest.raises(ActorNotFoundError):
-                dispatcher.call(_ValueStore, _ValueStore.get_val)
+            with pytest.raises(SuitableActorNotFoundError):
+                dispatcher.call(_ValueStore.get_val)
 
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
 def test_dispatcher_mask_all_actors():
@@ -254,9 +251,9 @@ def test_dispatcher_mask_all_actors():
     dispatcher.add("two", _ValueStore2("b"))
 
     with dispatcher.actor("two", "one"):
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"
         with dispatcher.mask(all=True):
-            with pytest.raises(ActorNotFoundError):
-                dispatcher.call(_ValueStore, _ValueStore.get_val)
+            with pytest.raises(SuitableActorNotFoundError):
+                dispatcher.call(_ValueStore.get_val)
 
-        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        assert dispatcher.call(_ValueStore.get_val) == "A"

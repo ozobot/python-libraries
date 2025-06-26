@@ -1,3 +1,4 @@
+from ozobot.common.exceptions import SuitableActorNotFoundError
 import contextlib
 import contextvars
 import typing
@@ -56,36 +57,45 @@ class ActorDispatcher[T]:
         finally:
             self._stack.reset(context_token)
 
-    def get_property[U](self, actor_type: type[T], value_type: type[U], name: str) -> U:
-        actor = self._find_in_stack(actor_type)
-        property: U = getattr(actor, name)
+    def get_property[U](self, value_type: type[U], name: str) -> U:
+        actor, property = self._find_field_in_stack(value_type, name)
         return property
 
     def call[U, **P](
         self,
-        actor_type: type[T],
         template: typing.Callable[typing.Concatenate[T, P], U],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> U:
-        actor = self._find_in_stack(actor_type)
-        method: typing.Callable[P, U] = getattr(actor, template.__name__)
+        actor, method = self._find_callable_in_stack(template)
         return method(*args, **kwargs)
 
     async def acall[U, **P](
         self,
-        actor_type: type[T],
         template: typing.Callable[typing.Concatenate[T, P], typing.Coroutine[None, None, U]],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> U:
-        actor = self._find_in_stack(actor_type)
-        method: typing.Callable[P, typing.Coroutine[None, None, U]] = getattr(actor, template.__name__)
+        actor, method = self._find_callable_in_stack(template)
         return await method(*args, **kwargs)
 
-    def _find_in_stack[U](self, _type: type[U]) -> U:
+    def _find_field_in_stack[U](self, _type: type[U], name: str) -> tuple[T, U]:
         for actor in self._stack.get():
-            if isinstance(actor, _type):
-                return actor
+            if hasattr(actor, name):
+                _callable = getattr(actor, name)
+                if not callable(_callable):
+                    return actor, getattr(actor, name)
 
-        raise ActorNotFoundError(str(_type))
+        raise SuitableActorNotFoundError(f"missing property {name}")
+
+    def _find_callable_in_stack[U, **P](
+        self, _type: typing.Callable[typing.Concatenate[T, P], U]
+    ) -> tuple[T, typing.Callable[P, U]]:
+        name = _type.__name__
+        for actor in self._stack.get():
+            if hasattr(actor, name):
+                _callable = getattr(actor, name)
+                if callable(_callable):
+                    return actor, getattr(actor, name)
+
+        raise SuitableActorNotFoundError(f"missing callable {name}")

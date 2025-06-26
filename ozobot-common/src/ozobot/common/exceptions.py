@@ -24,6 +24,11 @@ class ActorNotFoundError(AlgebraicError):
         super().__init__(f"Actor not found: {actor}")
 
 
+class SuitableActorNotFoundError(AlgebraicError):
+    def __init__(self, description: str):
+        super().__init__(f"No suitable actor found: {description}")
+
+
 class ActorAlreadyExistsError(AlgebraicError):
     def __init__(self, actor: str):
         super().__init__(f"Actor already exists: {actor}")
