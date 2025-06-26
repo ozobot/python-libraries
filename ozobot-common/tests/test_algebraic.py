@@ -142,7 +142,7 @@ def test_dispatcher_protocol_multiple_names():
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
     dispatcher.add("two", _ValueStore2("b"))
-    with dispatcher.actor("one", "two"):
+    with dispatcher.actor("two", "one"):
         assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
         assert dispatcher.call(_ValueStore2, _ValueStore2.get_val_with_suffix) == "b_suffix"
 
@@ -165,3 +165,98 @@ async def test_dispatcher_state_consistency_concurrent():
                 assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
 
     await asyncio.gather(task_one(), task_two())
+
+
+def test_dispatcher_mask_single_actor():
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    dispatcher.add("two", _ValueStore2("b"))
+
+    with dispatcher.actor("two", "one"):
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+
+        with dispatcher.mask("two"):
+            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+
+        with dispatcher.mask("one"):
+            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+
+
+def test_dispatcher_mask_multiple_actors():
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    dispatcher.add("two", _ValueStore2("b"))
+    dispatcher.add("three", _ValueStore2("c"))
+
+    with dispatcher.actor("three", "two", "one"):
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        with dispatcher.mask("one", "two"):
+            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "C"
+
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+
+
+def test_dispatcher_mask_multiple_actors_nested():
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    dispatcher.add("two", _ValueStore2("b"))
+    dispatcher.add("three", _ValueStore2("c"))
+
+    with dispatcher.actor("three", "two", "one"):
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+
+        with dispatcher.mask("one"):
+            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "B"
+
+            with dispatcher.mask("two"):
+                assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "C"
+
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+
+
+def test_dispatcher_mask_invalid_actor():
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    with pytest.raises(ActorNotFoundError):
+        with dispatcher.mask("invalid"):
+            pass
+
+
+def test_dispatcher_mask_not_activated_actor():
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    dispatcher.add("two", _ValueStore2("b"))
+
+    with dispatcher.actor("one"):
+        with dispatcher.mask("two"):
+            assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+
+
+def test_dispatcher_mask_all_actors_explicit():
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    dispatcher.add("two", _ValueStore2("b"))
+
+    with dispatcher.actor("two", "one"):
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        with dispatcher.mask("one", "two"):
+            with pytest.raises(ActorNotFoundError):
+                dispatcher.call(_ValueStore, _ValueStore.get_val)
+
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+
+
+def test_dispatcher_mask_all_actors():
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    dispatcher.add("two", _ValueStore2("b"))
+
+    with dispatcher.actor("two", "one"):
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"
+        with dispatcher.mask(all=True):
+            with pytest.raises(ActorNotFoundError):
+                dispatcher.call(_ValueStore, _ValueStore.get_val)
+
+        assert dispatcher.call(_ValueStore, _ValueStore.get_val) == "A"

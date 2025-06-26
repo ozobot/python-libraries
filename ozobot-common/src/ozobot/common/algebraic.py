@@ -25,7 +25,30 @@ class ActorDispatcher[T]:
                 raise ActorNotFoundError(name)
 
         actor_objects = [self._actors[name] for name in names]
-        new_stack = actor_objects + self._stack.get()
+        new_stack = list(reversed(actor_objects)) + self._stack.get()
+        context_token = self._stack.set(new_stack)
+
+        try:
+            yield
+        finally:
+            self._stack.reset(context_token)
+
+    @contextlib.contextmanager
+    def mask(self, *names: str, all: bool = False) -> typing.Iterator[None]:
+        for name in names:
+            if name not in self._actors:
+                raise ActorNotFoundError(name)
+
+        if all:
+            new_stack = []
+        else:
+            # select actors that are in `names` and in the stack at the same time
+            actor_objects = [self._actors[name] for name in names]
+            valid_actor_objects = set(self._stack.get()).intersection(actor_objects)
+            new_stack = [*self._stack.get()]
+            for obj in valid_actor_objects:
+                new_stack.remove(obj)
+
         context_token = self._stack.set(new_stack)
 
         try:
