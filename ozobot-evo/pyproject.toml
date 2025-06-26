@@ -20,9 +20,6 @@ only-include = ["src/ozobot"]
 sources = ["src"]
 only-include = ["src/ozobot"]
 
-[project.scripts]
-evo-playground = "ozobot.evo.playground:run"
-
 [tool.uv.sources]
 ozobot-ble = { workspace = true }
 
