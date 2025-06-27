@@ -1,5 +1,5 @@
 [project]
-name = "ozobot-ari"
+name = "ozobot-webrtc"
 version = "0.1.0"
 description = "Ozobot WebRTC library"
 readme = "README.md"
