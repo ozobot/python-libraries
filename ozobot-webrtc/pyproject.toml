@@ -8,6 +8,9 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "aiortc>=1.13.0",
+    "aio-pika",
+    "pydantic>=2",
 ]
 
 [tool.hatch.build.targets.sdist]
