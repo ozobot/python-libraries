@@ -8,8 +8,9 @@ dependencies = []
 members = [
   "ozobot-ari",
   "ozobot-ble",
-  "ozobot-evo",
   "ozobot-common",
+  "ozobot-evo",
+  "ozobot-webrtc",
 ]
 
 [dependency-groups]
@@ -29,8 +30,9 @@ explicit_package_bases = true
 mypy_path = [
   "ozobot-ari/src",
   "ozobot-ble/src",
-  "ozobot-evo/src",
   "ozobot-common/src",
+  "ozobot-evo/src",
+  "ozobot-webrtc/src",
 ]
 
 [tool.ruff]
