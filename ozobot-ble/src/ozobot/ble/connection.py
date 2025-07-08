@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 import bleak
 from loguru import logger
 
+from ozobot.ble.exceptions import NoFilterSpecifiedError
 from ozobot.common.broadcast import BroadcastManager
 
 from .datatypes import DeviceDescription
@@ -70,6 +71,12 @@ async def _get_device(
     raise DeviceNotFoundError("Device with given parameters could not be found")
 
 
+def _raise_when_no_filter(*filter_values: typing.Any) -> None:
+    filter_values_valid = [v is not None for v in filter_values]
+    if not any(filter_values_valid):
+        raise NoFilterSpecifiedError()
+
+
 @contextlib.asynccontextmanager
 async def open_client(
     *,
@@ -77,6 +84,7 @@ async def open_client(
     address: str | None = None,
     id_prefix: str | None = None,
 ) -> typing.AsyncIterator[Client]:
+    _raise_when_no_filter(name, address, id_prefix)
     handle = await _get_device(name=name, address=address, id_prefix=id_prefix)
     logger.info("Opening connection")
     async with bleak.BleakClient(handle) as client:

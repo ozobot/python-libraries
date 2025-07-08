@@ -1,3 +1,4 @@
+from ozobot.ble.exceptions import NoFilterSpecifiedError
 import contextlib
 import typing
 from unittest.mock import AsyncMock, Mock, patch, sentinel
@@ -132,6 +133,12 @@ async def test_open_client(filters: dict[str, str], expected_device: Mock | None
         with exception_check:
             async with open_client(**filters):
                 client_cls.assert_called_once_with(expected_device)
+
+
+async def test_open_client_no_filters() -> None:
+    with pytest.raises(NoFilterSpecifiedError):
+        async with open_client():
+            pass
 
 
 def test_client_get_characteristic():
