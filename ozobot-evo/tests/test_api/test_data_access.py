@@ -3,7 +3,7 @@ import datetime
 import typing
 from unittest.mock import AsyncMock, Mock, sentinel
 
-from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, FakeDataWatcher, FakeDataWatcherQueue
+from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
 from ozobot.evo.api.watchers import WatcherSubscription
 from ozobot.evo.datatypes import Sample
 from ozobot.evo.driver.driver import Driver
@@ -33,8 +33,8 @@ async def test_access_read() -> None:
 
 
 async def test_fake_data_watcher() -> None:
-    q = FakeDataWatcherQueue[int](Sample(0, 0))
-    w = FakeDataWatcher[int](q)
+    q = EventWatcherQueue[int](Sample(0, 0))
+    w = EventWatcher[int](q)
 
     assert (await w.read()).data == 0
     await q.write(Sample(1, 0))

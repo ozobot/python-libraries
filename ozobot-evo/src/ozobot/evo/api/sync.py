@@ -8,7 +8,7 @@ import typing
 from ozobot.evo.datatypes import Color, Direction, LEDMask, Sample
 
 from .core import Evo, TNote
-from .data_access import DataAccessRead, DataWatcher, FakeDataWatcher
+from .data_access import DataAccessRead, DataWatcher, EventWatcher
 
 _loop = asyncio.new_event_loop()
 
@@ -34,7 +34,7 @@ def as_sync_context_manager[T](async_context_manager: typing.AsyncContextManager
 
 
 class SyncDataAccessRead[T]:
-    def __init__(self, reader: DataAccessRead[typing.Any, T] | DataWatcher[typing.Any, T] | FakeDataWatcher[T]) -> None:
+    def __init__(self, reader: DataAccessRead[typing.Any, T] | DataWatcher[typing.Any, T] | EventWatcher[T]) -> None:
         self._reader = reader
 
     @as_sync

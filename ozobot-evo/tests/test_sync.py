@@ -1,6 +1,6 @@
 from unittest.mock import AsyncMock, Mock, sentinel
 
-from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, FakeDataWatcher, FakeDataWatcherQueue
+from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
 from ozobot.evo.api.sync import SyncDataAccessRead
 from ozobot.evo.datatypes import Sample
 from ozobot.evo.protocol import Types
@@ -27,8 +27,8 @@ def test_sync_watcher_read() -> None:
 
 
 def test_fake_watcher_read() -> None:
-    q = FakeDataWatcherQueue(Sample(1, 0))
-    watcher = FakeDataWatcher[int](q)
+    q = EventWatcherQueue(Sample(1, 0))
+    watcher = EventWatcher[int](q)
     sync_watcher = SyncDataAccessRead(watcher)
 
     sample = sync_watcher.read()

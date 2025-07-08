@@ -6,7 +6,7 @@ import math
 import typing
 
 from loguru import logger
-from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, FakeDataWatcher, FakeDataWatcherQueue
+from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
 from ozobot.evo.api.watchers import WatcherSubscription
 from ozobot.evo.conversions import (
     battery_state_from_protocol,
@@ -66,7 +66,7 @@ class Evo:
         return self._watcher_surface_color
 
     @property
-    def intersection(self) -> FakeDataWatcher[Direction]:
+    def intersection(self) -> EventWatcher[Direction]:
         return self._intersection
 
     def __init__(
@@ -91,8 +91,8 @@ class Evo:
         self._property_battery = DataAccessRead[Types.Battery, BatteryState](
             driver, VirtualMemory.batteryState, battery_state_from_protocol
         )
-        self._intersection_queue = FakeDataWatcherQueue[Direction](Sample(Direction(0), 0))
-        self._intersection = FakeDataWatcher(self._intersection_queue)
+        self._intersection_queue = EventWatcherQueue[Direction](Sample(Direction(0), 0))
+        self._intersection = EventWatcher(self._intersection_queue)
 
     @classmethod
     @contextlib.asynccontextmanager

@@ -4,7 +4,7 @@ import typing
 
 from ozobot.common.algebraic import ActorDispatcher
 from ozobot.evo.api.core import Evo
-from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, FakeDataWatcher
+from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, EventWatcher
 from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample, TNote
 
 _evo_dispatcher = ActorDispatcher()
@@ -37,8 +37,8 @@ class _ProxyDataWatcher[T, U]:
             yield reader
 
 
-class _ProxyFakeDataWatcher[T]:
-    def __init__(self, dispatcher: ActorDispatcher, value_type: type[FakeDataWatcher[T]], name: str) -> None:
+class _ProxyEventWatcher[T]:
+    def __init__(self, dispatcher: ActorDispatcher, value_type: type[EventWatcher[T]], name: str) -> None:
         self._dispatcher = dispatcher
         self._value_type = value_type
         self._name = name
@@ -57,7 +57,7 @@ battery = _ProxyDataAccessRead[typing.Any, BatteryState](_evo_dispatcher, DataAc
 color_codes = _ProxyDataWatcher[typing.Any, ColorCode](_evo_dispatcher, DataWatcher, "_watcher_color_codes")
 line_color = _ProxyDataWatcher[typing.Any, Color](_evo_dispatcher, DataWatcher, "_watcher_line_color")
 surface_color = _ProxyDataWatcher[typing.Any, Color](_evo_dispatcher, DataWatcher, "_watcher_surface_color")
-intersection = _ProxyFakeDataWatcher(_evo_dispatcher, FakeDataWatcher, "_intersection")
+intersection = _ProxyEventWatcher(_evo_dispatcher, EventWatcher, "_intersection")
 
 
 async def move(distance_m: float, speed_mps: float) -> None:

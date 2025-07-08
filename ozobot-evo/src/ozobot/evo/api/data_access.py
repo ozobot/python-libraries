@@ -28,7 +28,7 @@ class DataAccessRead[T: _TimestampAndDeserializable, U]:
         return sample_from_protocol(val, self._from_protocol)
 
 
-class FakeDataWatcherQueue[T]:
+class EventWatcherQueue[T]:
     def __init__(self, initial_value: Sample[T]) -> None:
         self.last = initial_value
         self._broadcast = BroadcastManager[Sample[T]]()
@@ -43,8 +43,8 @@ class FakeDataWatcherQueue[T]:
             yield out
 
 
-class FakeDataWatcher[T]:
-    def __init__(self, queue: FakeDataWatcherQueue[T]):
+class EventWatcher[T]:
+    def __init__(self, queue: EventWatcherQueue[T]):
         self._queue = queue
 
     async def read(self) -> Sample[T]:
