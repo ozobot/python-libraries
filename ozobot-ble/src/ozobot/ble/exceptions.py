@@ -1,7 +1,13 @@
-class BLEError(Exception): ...
+from ozobot.common.exceptions import OzobotError
 
 
-class DeviceNotFoundError(BLEError): ...
+class BLEError(OzobotError):
+    """Base BLE error"""
+
+
+class DeviceNotFoundError(BLEError):
+    def __init__(self):
+        super().__init__("No device matching given filters found")
 
 
 class DeviceDescriptionError(BLEError):

@@ -1,7 +1,7 @@
 import typing
 
-from ozobot.common.exceptions import OzobotDataTypeError
 from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask, Sample
+from ozobot.evo.exceptions import OzobotDataTypeError
 from ozobot.evo.protocol import Types
 
 

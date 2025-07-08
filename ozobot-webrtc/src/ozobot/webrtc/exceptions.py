@@ -1,7 +1,12 @@
-class WebRTCError(Exception): ...
+from ozobot.common.exceptions import OzobotError
 
 
-class SignalingError(WebRTCError): ...
+class WebRTCError(OzobotError):
+    """Base WebRTC error"""
+
+
+class SignalingError(WebRTCError):
+    """Base WebRTC signaling error"""
 
 
 class UnknownSdpTypeError(SignalingError):

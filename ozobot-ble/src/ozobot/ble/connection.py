@@ -60,7 +60,7 @@ async def _get_device(
                 logger.info("Device scan match", device=device)
                 return handle
 
-    raise DeviceNotFoundError("Device with given parameters could not be found")
+    raise DeviceNotFoundError()
 
 
 def _raise_when_no_filter(*filter_values: typing.Any) -> None:

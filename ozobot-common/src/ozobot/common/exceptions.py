@@ -1,22 +1,12 @@
-class OzobotProtocolCommandError(Exception):
-    def __init__(self, command: str, return_value: str, *, description: str | None = None) -> None:
-        if description:
-            details = f"(returned: {return_value}, description: {description})"
-        else:
-            details = f"({return_value})"
+class OzobotError(Exception):
+    """Base Ozobot library error"""
 
-        super().__init__(f"Protocol command failed: {command} {details}")
-
-
-class OzobotDataTypeError(Exception):
-    def __init__(self, expected_type: type, received_type: type) -> None:
-        super().__init__(f"Unexpected type: expected '{expected_type}' but got '{received_type}'")
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
 
 
 class AlgebraicError(Exception):
     """Base exception for algebraic errors."""
-
-    pass
 
 
 class ActorNotFoundError(AlgebraicError):

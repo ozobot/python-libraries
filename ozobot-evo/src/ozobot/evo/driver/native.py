@@ -5,14 +5,14 @@ import typing
 from uuid import UUID
 
 from ozobot.ble.connection import Characteristic, open_client
-from ozobot.common.exceptions import OzobotProtocolCommandError
 from ozobot.evo.api.watchers import EvoWatcher, WatcherSubscription
 from ozobot.evo.conversions import (
-    intersection_direction_to_protocol,
     intersection_bitmap_from_protocol,
+    intersection_direction_to_protocol,
     led_to_protocol,
 )
 from ozobot.evo.driver.driver import Deserializable, MemoryProperty, Serializable
+from ozobot.evo.exceptions import OzobotProtocolCommandError
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 
 from .driver import Direction, LEDMask
