@@ -7,7 +7,7 @@ from ozobot.webrtc.datatypes import (
     Message,
 )
 from ozobot.webrtc.exceptions import WebRTCConnectionUnexpectedStateError
-from ozobot.webrtc.signaling import SignalingClient, SignalingProcess
+from ozobot.webrtc.signaling.negotiation import SignalingClient, SignalingProcess
 
 from .testutils import create_channel_factory
 
@@ -69,7 +69,7 @@ async def test_error_handling() -> None:
     from_process = asyncio.Queue[Message]()
     channel_factory = create_channel_factory(to_process, from_process)
 
-    with patch("ozobot.webrtc.signaling.ConnectionFactory") as connection_factory_mock:
+    with patch("ozobot.webrtc.signaling.negotiation.ConnectionFactory") as connection_factory_mock:
         connection_factory_mock().create_offer = AsyncMock(side_effect=InstrumentationError)
         async with channel_factory.create() as channel:
             negotiation = SignalingProcess(channel, "caller")

@@ -2,7 +2,7 @@ from ozobot.webrtc.aiortc_wrapper import ReadyState
 import asyncio
 
 from ozobot.webrtc.datatypes import Message
-from ozobot.webrtc.signaling import SignalingClient
+from ozobot.webrtc.signaling.negotiation import SignalingClient
 
 from .testutils import create_channel_factory
 
