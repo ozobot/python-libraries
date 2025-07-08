@@ -77,8 +77,8 @@ async def open_client(
     id_prefix: str | None = None,
     product: TProductName | None = None,
 ) -> typing.AsyncIterator[Client]:
-    _raise_when_no_filter(name, address, id_prefix)
-    handle = await _get_device(name=name, address=address, id_prefix=id_prefix)
+    _raise_when_no_filter(name, address, id_prefix, product)
+    handle = await _get_device(name=name, address=address, id_prefix=id_prefix, product=product)
     logger.info("Opening connection")
     async with bleak.BleakClient(handle) as client:
         yield Client(client)
