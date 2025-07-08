@@ -20,15 +20,13 @@ from ozobot.webrtc.datatypes import (
     MessageBody,
     parse_message,
 )
-from ozobot.webrtc.utils import get_unused_tcp_port
-from ozobot.webrtc.wsrelay import WebSocketRelay
-from yarl import URL
 
 
 class MessagingChannelConfig:
     polite = True
     ssl = True
     host = "rmq.editor.ozobot.com"
+    port = 5672
     virtualhost = "webrtc-signaling"
     exchange = "webrtc-signaling"
 
@@ -44,32 +42,25 @@ class WebSocketMessagingChannel:
     @contextlib.asynccontextmanager
     async def create(cls) -> typing.AsyncIterator[typing.Self]:
         config = MessagingChannelConfig()
-        relay_port = get_unused_tcp_port()
-        remote_url = URL.build(
-            scheme="wss" if config.ssl else "ws",
-            host=config.host,
-            port=15671,
-        )
 
         username, password = config.get_credentials()
 
-        async with WebSocketRelay(remote_url, relay_port).serve():
-            connection = await connect_robust(
-                host="localhost",
-                port=relay_port,
-                ssl=False,
-                login=username,
-                password=password,
-                virtualhost=config.virtualhost,
-                heartbeat=10,
-            )
+        connection = await connect_robust(
+            host=config.host,
+            port=config.port,
+            ssl=config.ssl,
+            login=username,
+            password=password,
+            virtualhost=config.virtualhost,
+            heartbeat=10,
+        )
 
-            channel_factory = MessagingChannelFactory(connection, config.exchange)
+        channel_factory = MessagingChannelFactory(connection, config.exchange)
 
-            try:
-                yield cls(channel_factory, config.get_device_id(), config.polite)
-            finally:
-                await connection.close()
+        try:
+            yield cls(channel_factory, config.get_device_id(), config.polite)
+        finally:
+            await connection.close()
 
     def __init__(
         self, messaging_channel_factory: MessagingChannelFactory, ingress_channel_identifier: str, polite: bool

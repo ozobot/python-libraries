@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import contextlib
-import socket
 import typing
 from asyncio import Queue, QueueShutDown
 from collections.abc import AsyncIterator, Callable
@@ -54,9 +52,3 @@ class QueueReader[T]:
                 return event
 
         return None
-
-
-def get_unused_tcp_port() -> int:
-    with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(("localhost", 0))
-        return int(s.getsockname()[1])
