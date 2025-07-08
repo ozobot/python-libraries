@@ -9,21 +9,10 @@ from uuid import UUID, uuid4
 import bleak
 from loguru import logger
 from ozobot.ble.datatypes import TProductName
-from ozobot.ble.exceptions import NoFilterSpecifiedError
+from ozobot.ble.exceptions import DeviceDescriptionError, DeviceNotFoundError, NoFilterSpecifiedError
 from ozobot.common.broadcast import BroadcastManager
 
 from .datatypes import DeviceDescription
-
-
-class BLEError(Exception): ...
-
-
-class DeviceNotFoundError(BLEError): ...
-
-
-class DeviceDescriptionError(BLEError):
-    def __init__(self, reason: str):
-        super().__init__(f"Device description does not match the expected one: {reason}")
 
 
 async def _scan_devices(
