@@ -22,7 +22,7 @@ from ozobot.evo.protocol import Types, VirtualMemory
 _map_audioname_filename = {
     "happy": "01010100",
     "sad": "01010110",
-    "surprise": "01010170",
+    "surprised": "01010170",
     "laugh": "01010250",
     "black": "01040200",
     "red": "01040201",
@@ -36,10 +36,10 @@ _map_audioname_filename = {
     "backward": "01040108",
     "left": "01040102",
     "right": "01040104",
-    "numns": "010400FF",
     "num0": "01040000",
     # numbers
     **{f"num{i}": f"010400{format(i, 'x').rjust(2, '0').upper()}" for i in range(99)},
+    "minus": "010400FF",
 }
 
 
