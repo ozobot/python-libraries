@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 
 import bleak
 from loguru import logger
-
+from ozobot.ble.datatypes import TProductName
 from ozobot.ble.exceptions import NoFilterSpecifiedError
 from ozobot.common.broadcast import BroadcastManager
 
@@ -55,6 +55,7 @@ async def _get_device(
     name: str | None = None,
     address: str | None = None,
     id_prefix: str | None = None,
+    product: TProductName | None = None,
 ) -> bleak.BLEDevice:
     async with scan_devices() as devices:
         async for device, handle in devices:
@@ -63,8 +64,10 @@ async def _get_device(
             name_match = name is None or device.name == name
             address_match = address is None or device.address == address
             id_match = id_prefix is None or normalized_id.startswith(id_prefix)
+            product_match = product is None or device.product == product
 
-            if name_match and address_match and id_match:
+            matches = [name_match, address_match, id_match, product_match]
+            if all(matches):
                 logger.info("Device scan match", device=device)
                 return handle
 
@@ -83,6 +86,7 @@ async def open_client(
     name: str | None = None,
     address: str | None = None,
     id_prefix: str | None = None,
+    product: TProductName | None = None,
 ) -> typing.AsyncIterator[Client]:
     _raise_when_no_filter(name, address, id_prefix)
     handle = await _get_device(name=name, address=address, id_prefix=id_prefix)

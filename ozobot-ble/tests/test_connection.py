@@ -117,12 +117,19 @@ async def _scan_devices() -> typing.AsyncGenerator[tuple[DeviceDescription, Mock
             sentinel.scanned_device_1,
         ),
         (
+            {
+                "name": "EVO-123456",
+                "product": "evo",
+            },
+            None,
+        ),
+        (
             {"name": "EVO-123456", "id_prefix": "asdf", "address": "11:22:33:44:55:66"},
             None,
         ),
     ],
 )
-async def test_open_client(filters: dict[str, str], expected_device: Mock | None) -> None:
+async def test_open_client(filters: dict[str, typing.Any], expected_device: Mock | None) -> None:
     with (
         patch("ozobot.ble.connection.bleak.BleakClient") as client_cls,
         patch("ozobot.ble.connection.scan_devices") as scan_devices_func,

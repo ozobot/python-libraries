@@ -5,9 +5,9 @@ from dataclasses import dataclass
 
 from bleak import AdvertisementData, BLEDevice
 
-ProductName = typing.Literal["evo", "jot15b"]
+TProductName = typing.Literal["evo", "jot15b"]
 
-_products: dict[int, ProductName] = {
+_products: dict[int, TProductName] = {
     0: "evo",
     4: "jot15b",
 }
@@ -17,7 +17,7 @@ _products: dict[int, ProductName] = {
 class DeviceDescription:
     name: str | None
     address: str
-    product: ProductName | None
+    product: TProductName | None
     version: tuple[int, int, int] | None
     id: str | None
     rssi: int | None
