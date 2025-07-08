@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import dataclasses
 import typing
 
 import aio_pika
@@ -22,49 +23,34 @@ from ozobot.webrtc.datatypes import (
 )
 
 
+@dataclasses.dataclass
 class MessagingChannelConfig:
-    polite = True
-    ssl = True
-    host = "rmq.editor.ozobot.com"
-    port = 5672
-    virtualhost = "webrtc-signaling"
-    exchange = "webrtc-signaling"
+    device_id: str
     username: str
     password: str
+    ssl: bool = dataclasses.field(default=True)
+    host: str = dataclasses.field(default="rmq.editor.ozobot.com")
+    port: int = dataclasses.field(default=5671)
+    virtualhost: str = dataclasses.field(default="webrtc-signaling")
+    exchange: str = dataclasses.field(default="webrtc-signaling")
 
-    def get_device_id(self) -> str:
-        raise NotImplementedError()
 
+@contextlib.asynccontextmanager
+async def create_channel_factory(config: MessagingChannelConfig) -> typing.AsyncIterator[MessagingChannelFactory]:
+    connection = await connect_robust(
+        host=config.host,
+        port=config.port,
+        ssl=config.ssl,
+        login=config.username,
+        password=config.password,
+        virtualhost=config.virtualhost,
+        heartbeat=10,
+    )
 
-class WebSocketMessagingChannel:
-    @classmethod
-    @contextlib.asynccontextmanager
-    async def create(cls) -> typing.AsyncIterator[typing.Self]:
-        config = MessagingChannelConfig()
-
-        connection = await connect_robust(
-            host=config.host,
-            port=config.port,
-            ssl=config.ssl,
-            login=config.username,
-            password=config.password,
-            virtualhost=config.virtualhost,
-            heartbeat=10,
-        )
-
-        channel_factory = MessagingChannelFactory(connection, config.exchange)
-
-        try:
-            yield cls(channel_factory, config.get_device_id(), config.polite)
-        finally:
-            await connection.close()
-
-    def __init__(
-        self, messaging_channel_factory: MessagingChannelFactory, ingress_channel_identifier: str, polite: bool
-    ):
-        self._channel_factory = messaging_channel_factory
-        self._ingress_channel_identifier = ingress_channel_identifier
-        self._polite = polite
+    try:
+        yield MessagingChannelFactory(connection, config.exchange)
+    finally:
+        await connection.close()
 
 
 class MessagingChannelFactory:
@@ -95,6 +81,10 @@ class MessagingChannelFactory:
 
 
 class MessagingChannel:
+    @property
+    def name(self) -> str:
+        return self._receive_queue.name
+
     def __init__(self, exchange: AbstractExchange, receive_queue: AbstractQueue, destination: str | None):
         self._exchange = exchange
         self._route_name = receive_queue.name
