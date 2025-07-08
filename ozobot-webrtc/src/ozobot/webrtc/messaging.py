@@ -29,11 +29,10 @@ class MessagingChannelConfig:
     port = 5672
     virtualhost = "webrtc-signaling"
     exchange = "webrtc-signaling"
+    username: str
+    password: str
 
     def get_device_id(self) -> str:
-        raise NotImplementedError()
-
-    def get_credentials(self) -> tuple[str, str]:
         raise NotImplementedError()
 
 
@@ -43,14 +42,12 @@ class WebSocketMessagingChannel:
     async def create(cls) -> typing.AsyncIterator[typing.Self]:
         config = MessagingChannelConfig()
 
-        username, password = config.get_credentials()
-
         connection = await connect_robust(
             host=config.host,
             port=config.port,
             ssl=config.ssl,
-            login=username,
-            password=password,
+            login=config.username,
+            password=config.password,
             virtualhost=config.virtualhost,
             heartbeat=10,
         )

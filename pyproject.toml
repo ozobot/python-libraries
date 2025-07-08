@@ -16,6 +16,7 @@ members = [
 [dependency-groups]
 dev = [
   "pytest>=8.4.0",
+  "pytest-aiohttp",
   "pytest-asyncio",
   "pytest-mypy",
   "pytest-ruff",

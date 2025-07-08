@@ -40,3 +40,8 @@ class WebRTCChannelUnexpectedDatatypeError(WebRTCError):
 class WebRTCConnectionUnexpectedStateError(WebRTCError):
     def __init__(self, state: str) -> None:
         super().__init__(f"Unexpected WebRTC connection state: {state}")
+
+
+class CouldNotGetSignalingTokenError(SignalingError):
+    def __init__(self, status: int, text: str) -> None:
+        super().__init__(f"Getting signaling token failed with {status}: {text}")
