@@ -5,22 +5,16 @@ import contextlib
 import dataclasses
 import typing
 
-import aio_pika
+import aiormq
 import pydantic
-from aio_pika.abc import (
-    AbstractExchange,
-    AbstractIncomingMessage,
-    AbstractQueue,
-    AbstractRobustConnection,
-    ConsumerTag,
-)
-from aio_pika.robust_connection import connect_robust
+
 from loguru import logger
 from ozobot.webrtc.datatypes import (
     Message,
     MessageBody,
     parse_message,
 )
+from yarl import URL
 
 
 @dataclasses.dataclass
@@ -37,14 +31,21 @@ class MessagingChannelConfig:
 
 @contextlib.asynccontextmanager
 async def create_channel_factory(config: MessagingChannelConfig) -> typing.AsyncIterator[MessagingChannelFactory]:
-    connection = await connect_robust(
+    scheme = "amqps" if config.ssl else "amqp"
+    url = URL.build(
+        scheme=scheme,
         host=config.host,
         port=config.port,
-        ssl=config.ssl,
-        login=config.username,
+        user=config.username,
         password=config.password,
-        virtualhost=config.virtualhost,
-        heartbeat=10,
+        path="/" + config.virtualhost,
+        query={
+            "heartbeat": 10,
+        },
+    )
+
+    connection = await aiormq.connect(
+        url,
     )
 
     try:
@@ -54,7 +55,7 @@ async def create_channel_factory(config: MessagingChannelConfig) -> typing.Async
 
 
 class MessagingChannelFactory:
-    def __init__(self, connection: AbstractRobustConnection, exchange_name: str):
+    def __init__(self, connection: aiormq.abc.AbstractConnection, exchange_name: str):
         self._connection = connection
         self._exchange_name = exchange_name
 
@@ -62,19 +63,26 @@ class MessagingChannelFactory:
     async def create(
         self, *, name: str | None = None, destination: str | None = None
     ) -> typing.AsyncIterator[MessagingChannel]:
-        async with self._create(name) as (exchange, queue):
-            yield MessagingChannel(exchange, queue, destination)
+        async with self._create(name, declare=True) as (channel, queue_name):
+            yield MessagingChannel(channel, self._exchange_name, queue_name, destination)
 
     @contextlib.asynccontextmanager
-    async def _create(self, name: str | None) -> typing.AsyncIterator[tuple[AbstractExchange, AbstractQueue]]:
+    async def get(self, *, name: str, destination: str | None = None) -> typing.AsyncIterator[MessagingChannel]:
+        async with self._create(name, declare=False) as (channel, queue_name):
+            yield MessagingChannel(channel, self._exchange_name, queue_name, destination)
+
+    @contextlib.asynccontextmanager
+    async def _create(
+        self, name: str | None, *, declare: bool
+    ) -> typing.AsyncIterator[tuple[aiormq.abc.AbstractChannel, str]]:
         logger.debug("Opening communication channel", name=name)
         channel = await self._connection.channel()
-        exchange = await channel.get_exchange(self._exchange_name)
-        queue = await channel.declare_queue(name=name, auto_delete=True, exclusive=True)
-        await queue.bind(exchange)
+        resp = await channel.queue_declare(queue=name or "", auto_delete=True, exclusive=True)
+        queue_name = resp.queue or ""
+        _ = await channel.queue_bind(queue=queue_name, exchange=self._exchange_name, routing_key=queue_name)
 
         try:
-            yield exchange, queue
+            yield channel, queue_name
         finally:
             logger.debug("Closing channel")
             await channel.close()
@@ -83,15 +91,15 @@ class MessagingChannelFactory:
 class MessagingChannel:
     @property
     def name(self) -> str:
-        return self._receive_queue.name
+        return self._queue_name
 
-    def __init__(self, exchange: AbstractExchange, receive_queue: AbstractQueue, destination: str | None):
-        self._exchange = exchange
-        self._route_name = receive_queue.name
-        self._receive_queue = receive_queue
-        self._queue = asyncio.Queue[AbstractIncomingMessage]()
+    def __init__(self, channel: aiormq.abc.AbstractChannel, exchange: str, name: str, destination: str | None):
+        self._channel = channel
+        self._queue_name = name
+        self._queue = asyncio.Queue[aiormq.abc.DeliveredMessage]()
         self._destination = destination
-        self._tag: ConsumerTag | None = None
+        self._exchange = exchange
+        self._tag: str | None = None
 
     def set_destination(self, destination: str | None) -> None:
         self._destination = destination
@@ -103,31 +111,34 @@ class MessagingChannel:
 
     async def _subscribe(self) -> None:
         if not self._tag:
-            self._tag = await self._receive_queue.consume(callback=self._queue.put)
+            resp = await self._channel.basic_consume(queue=self._queue_name, consumer_callback=self._queue.put)
+            self._tag = resp.consumer_tag
 
     async def _read(self) -> typing.AsyncIterator[Message]:
         while True:
             message = await self._queue.get()
-            async with message.process():
-                logger.debug("Received message", message=repr(message), body=message.body.replace(b"\n", b"\\n"))
-                try:
-                    parsed_message = parse_message(message)
-                except pydantic.ValidationError:
-                    logger.exception("Ignoring message")
-                else:
-                    logger.debug("Parsed message", body=parsed_message)
-                    yield parsed_message
+            logger.debug("Received message", message=repr(message), body=message.body.replace(b"\n", b"\\n"))
+            try:
+                parsed_message = parse_message(message.body, message.header.properties.reply_to)
+            except pydantic.ValidationError:
+                logger.exception("Ignoring message")
+            else:
+                logger.debug("Parsed message", body=parsed_message)
+                yield parsed_message
 
     async def send(self, message_payload: MessageBody) -> None:
         if self._destination:
-            raw_message = message_payload.model_dump_json()
-            message = aio_pika.Message(body=raw_message.encode("utf8"), reply_to=self._route_name)
-
-            await self._exchange.publish(
-                message=message,
+            raw_message_body = message_payload.model_dump_json().encode("utf8")
+            await self._channel.basic_publish(
+                raw_message_body,
+                exchange=self._exchange,
                 routing_key=self._destination,
+                properties=aiormq.spec.Basic.Properties(reply_to=self._queue_name),
+                mandatory=True,
             )
 
-            logger.debug("Sent message", body=raw_message, reply_to=self._route_name, routing_key=self._destination)
+            logger.debug(
+                "Sent message", body=raw_message_body, reply_to=self._queue_name, routing_key=self._destination
+            )
         else:
             logger.warning("Message not send, no destination given")

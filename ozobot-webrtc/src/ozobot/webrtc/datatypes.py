@@ -149,8 +149,8 @@ def parse_message_body(data: str) -> MessageBody:
     return _MessageBodyAdapter.validate_json(data)
 
 
-def parse_message(message: aio_pika.abc.AbstractMessage) -> Message:
+def parse_message(raw_message_body: bytes, reply_to: str | None) -> Message:
     return Message(
-        body=parse_message_body(message.body.decode("utf8")),
-        reply_to=message.reply_to,
+        body=parse_message_body(raw_message_body.decode("utf8")),
+        reply_to=reply_to,
     )

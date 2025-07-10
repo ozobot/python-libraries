@@ -9,7 +9,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "aiortc>=1.13.0",
-    "aio-pika",
+    "aiormq",
     "pydantic>=2",
     "aiohttp>=3.12.13",
 ]
