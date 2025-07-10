@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15671:15671"
+      - "15672:15672"
+    restart: unless-stopped
+
+  relay:
+    image: cloudamqp/websocket-tcp-relay@sha256:4a4363c5a550470e701a6e2ca58be7741851868356228754324f145f0117e039
+    command: ["--port", "15670", "--upstream", "tcp://rabbitmq:5672"]
+    ports:
+      - "15670:15670"
+    restart: unless-stopped

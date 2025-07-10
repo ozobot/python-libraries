@@ -3,10 +3,12 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import dataclasses
+import ssl
 import typing
 
 import aiormq
 import pydantic
+import websockets
 
 from loguru import logger
 from ozobot.webrtc.datatypes import (
@@ -24,14 +26,170 @@ class MessagingChannelConfig:
     password: str
     ssl: bool = dataclasses.field(default=True)
     host: str = dataclasses.field(default="rmq.editor.ozobot.com")
-    port: int = dataclasses.field(default=5671)
+    port: int = dataclasses.field(default=15671)
     virtualhost: str = dataclasses.field(default="webrtc-signaling")
     exchange: str = dataclasses.field(default="webrtc-signaling")
+    transport: typing.Literal["websocket", "tcp"] = dataclasses.field(default="websocket")
+
+
+class WebsocketTransport(asyncio.transports.Transport):
+    def __init__(
+        self,
+        loop: asyncio.AbstractEventLoop,
+        protocol: asyncio.StreamReaderProtocol,
+        url: URL,
+        ssl_context: ssl.SSLContext | None,
+        extra: dict | None = None,
+    ) -> None:
+        super().__init__(extra)
+        assert url.scheme in {"ws", "wss"}
+        self.url = url
+
+        self._loop = loop
+        self._protocol = protocol
+        self._ssl_context = ssl_context
+        self._closing = False  # Set when close() or write_eof() called.
+        self._paused = False
+        self._paused_lock = asyncio.Lock()
+
+        self._task = self._loop.create_task(self._handle_connection())
+
+        self._write_queue = asyncio.Queue[bytes | str]()
+        self._read_queue = asyncio.Queue[bytes | str]()
+
+    async def _handle_connection(self) -> None:
+        try:
+            async with (
+                asyncio.TaskGroup() as tg,
+                websockets.connect(str(self.url), ssl=self._ssl_context) as connection,
+            ):
+                coros = [
+                    self._handle_sending(connection),
+                    self._handle_receiving(connection),
+                    self._flush_receive_queue(),
+                    connection.wait_closed(),
+                ]
+                tasks = [tg.create_task(coro) for coro in coros]
+                _ = await asyncio.wait(
+                    tasks,
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+
+                for t in tasks:
+                    logger.debug("Websocket task completed", task=t)
+                    # if t.done() and t.exception():
+                    #     logger.debug("Websocket task raised an exception", task=t)
+                    #     ex = t.exception()
+                    #     if ex:
+                    #         raise ex
+                    # else:
+                    # logger.debug("Cancelling Websocket task", task=t)
+                    t.cancel()
+
+        except websockets.exceptions.WebSocketException as err:
+            logger.error("Websocket error encountered", error=err)
+            err.__cause__ = aiormq.AMQPConnectionError()
+            self._protocol.connection_lost(err)
+        except Exception as e:
+            logger.error("Websocket connection error", error=e)
+            self._protocol.connection_lost(e)
+        finally:
+            self._protocol.connection_lost(None)
+
+    async def _handle_sending(self, ws: websockets.asyncio.client.ClientConnection) -> None:
+        while True:
+            data = await self._write_queue.get()
+            await ws.send(data)
+
+    async def _handle_receiving(self, ws: websockets.asyncio.client.ClientConnection) -> None:
+        async for msg in ws:
+            if isinstance(msg, str):
+                msg = msg.encode()
+            await self._read_queue.put(msg)
+
+        self._read_queue.shutdown()
+
+    async def _flush_receive_queue(self) -> None:
+        while True:
+            async with self._paused_lock:
+                try:
+                    msg = await self._read_queue.get()
+                except asyncio.QueueShutDown:
+                    self._protocol.eof_received()
+                    return
+
+                self._protocol.data_received(msg if isinstance(msg, bytes) else msg.encode("utf8"))
+
+    def get_protocol(self) -> asyncio.BaseProtocol:
+        return self._protocol
+
+    def set_protocol(self, protocol: asyncio.BaseProtocol) -> None:
+        raise NotImplementedError()
+
+    def is_closing(self) -> bool:
+        return self._closing
+
+    def write(self, data: typing.Any) -> None:
+        self._write_queue.put_nowait(data)
+
+    def is_reading(self) -> bool:
+        return not self._paused and not self._closing
+
+    def pause_reading(self):
+        if not self._paused:
+            asyncio.get_event_loop().call_soon(self._paused_lock.acquire)
+        self._paused = True
+        if self._loop.get_debug():
+            logger.debug("%r pauses reading", self)
+
+    def resume_reading(self) -> None:
+        if self._paused:
+            self._paused_lock.release()
+        if self._closing or not self._paused:
+            return
+        self._paused = False
+        if self._loop.get_debug():
+            logger.debug("%r resumes reading", self)
+
+    def can_write_eof(self) -> bool:
+        return False
+
+    def close(self) -> None:
+        self._closing = True
+        self._task.cancel()
+        self._protocol.connection_lost(None)
+
+
+class WebsocketTransportFactory(aiormq.TransportFactory):
+    async def create(
+        self, url: URL, ssl_context_provider: aiormq.SSLContextProvider, **kwargs: dict[str, typing.Any]
+    ) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+        loop = asyncio.get_event_loop()
+        reader = asyncio.StreamReader()
+        protocol = asyncio.StreamReaderProtocol(reader)
+        if url.scheme == "wss":
+            ssl_context = await ssl_context_provider.get_context()
+        else:
+            ssl_context = None
+        transport = WebsocketTransport(loop, protocol, url, ssl_context=ssl_context, extra=kwargs)
+        writer = asyncio.StreamWriter(transport, protocol, reader, loop)
+
+        return reader, writer
 
 
 @contextlib.asynccontextmanager
 async def create_channel_factory(config: MessagingChannelConfig) -> typing.AsyncIterator[MessagingChannelFactory]:
-    scheme = "amqps" if config.ssl else "amqp"
+    transport_factory = WebsocketTransportFactory() if config.transport == "websocket" else None
+    match config.transport, config.ssl:
+        case "tcp", True:
+            scheme = "amqps"
+        case "tcp", False:
+            scheme = "amqp"
+        case "websocket", True:
+            scheme = "wss"
+        case "websocket", False:
+            scheme = "ws"
+
     url = URL.build(
         scheme=scheme,
         host=config.host,
@@ -46,6 +204,7 @@ async def create_channel_factory(config: MessagingChannelConfig) -> typing.Async
 
     connection = await aiormq.connect(
         url,
+        transport_factory=transport_factory,
     )
 
     try:

@@ -10,7 +10,7 @@ requires-python = ">=3.13"
 dependencies = [
     "ozobot-common",
     "aiohttp>=3.12.13",
-    "aiormq",
+    "aiormq>=6.9.0",
     "aiortc>=1.13.0",
     "loguru",
     "pydantic>=2",

@@ -1,4 +1,5 @@
 import asyncio
+import dataclasses
 import os
 
 import pytest
@@ -14,12 +15,14 @@ _tcp_config = MessagingChannelConfig(
     exchange="amq.direct",
     username="guest",
     password="guest",
+    transport="tcp",
 )
 
+_websocket_config = dataclasses.replace(_tcp_config, transport="websocket", port=15670)
 parametrize_config = pytest.mark.parametrize(
     "config",
-    [_tcp_config],
-    ids=["tcp"],
+    [_tcp_config, _websocket_config],
+    ids=["tcp", "websocket"],
 )
 
 
