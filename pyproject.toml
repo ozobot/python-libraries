@@ -10,6 +10,7 @@ members = [
   "ozobot-ble",
   "ozobot-common",
   "ozobot-evo",
+  "ozobot-jsonrpc",
   "ozobot-webrtc",
 ]
 
@@ -33,6 +34,7 @@ mypy_path = [
   "ozobot-ble/src",
   "ozobot-common/src",
   "ozobot-evo/src",
+  "ozobot-jsonrpc/src",
   "ozobot-webrtc/src",
 ]
 
