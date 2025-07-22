@@ -8,6 +8,7 @@ members = [
     "ozobot-ble",
     "ozobot-common",
     "ozobot-evo",
+    "ozobot-jsonrpc",
     "ozobot-library",
     "ozobot-webrtc",
 ]
@@ -517,6 +518,11 @@ requires-dist = [
     { name = "bleak", specifier = ">=0.22.3" },
     { name = "ozobot-ble", editable = "ozobot-ble" },
 ]
+
+[[package]]
+name = "ozobot-jsonrpc"
+version = "0.1.0"
+source = { editable = "ozobot-jsonrpc" }
 
 [[package]]
 name = "ozobot-library"
