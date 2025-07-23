@@ -137,7 +137,7 @@ class Channel:
             else:
                 raise WebRTCChannelUnexpectedDatatypeError(str, type(message))
 
-    async def send(self, message: str) -> None:
+    async def send(self, message: str | bytes) -> None:
         self._rtc_channel.send(message)
 
     def close(self) -> None:
