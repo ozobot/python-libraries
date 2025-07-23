@@ -17,7 +17,7 @@ NOTIFICATION_JSONRPC_TYPE = "com/ozobot/jsonrpc/2.0/notification"
 type _TMessageId = int
 
 
-class _HasMessageId(typing.Protocol):
+class _JsonRpcMessage(typing.Protocol):
     @property
     def id(self) -> _TMessageId: ...
 
@@ -25,13 +25,13 @@ class _HasMessageId(typing.Protocol):
     def jsonrpc(self) -> str: ...
 
 
-class _CancellationMessage(_HasMessageId, typing.Protocol):
+class _JsonRpcCancellationMessage(_JsonRpcMessage, typing.Protocol):
     @classmethod
-    def create(cls, id: int, code: int, message: str | None) -> _CancellationMessage: ...
+    def create(cls, id: int, code: int, message: str | None) -> typing.Self: ...
 
 
 @dataclass
-class Method[TRequest: _HasMessageId, TResponse: _HasMessageId, TNotification: _HasMessageId]:
+class Method[TRequest: _JsonRpcMessage, TResponse: _JsonRpcMessage, TNotification: _JsonRpcMessage]:
     request: type[TRequest]
     response: type[TResponse] | None
     notification: type[TNotification] | None
@@ -56,12 +56,12 @@ class _ExecutorQuery[TResponse, TNotification]:
     cancel: typing.Callable[[], None]
 
 
-class Executor:
+class Executor[TMsg: _JsonRpcMessage, TCancellationMsg: _JsonRpcCancellationMessage]:
     def __init__(
         self,
-        broadcast: BroadcastManager[_HasMessageId],
-        writer: FrameWriter[_HasMessageId],
-        cancellation_message_type: type[_CancellationMessage],
+        broadcast: BroadcastManager[TMsg],
+        writer: FrameWriter[TMsg | TCancellationMsg],
+        cancellation_message_type: type[TCancellationMsg],
     ) -> None:
         self._broadcast = broadcast
         self._writer = writer
@@ -71,11 +71,11 @@ class Executor:
     @contextlib.asynccontextmanager
     async def create(
         cls,
-        reader: FrameReader[_HasMessageId],
-        writer: FrameWriter[_HasMessageId],
-        cancellation_message_type: type[_CancellationMessage],
+        reader: FrameReader[TMsg],
+        writer: FrameWriter[TMsg],
+        cancellation_message_type: type[TCancellationMsg],
     ) -> typing.AsyncIterator[Executor]:
-        broadcast = BroadcastManager[_HasMessageId]()
+        broadcast = BroadcastManager[TMsg]()
 
         async def _read() -> typing.Never:
             while True:
@@ -91,7 +91,7 @@ class Executor:
                 read_task.cancel()
 
     @contextlib.asynccontextmanager
-    async def execute[TReq: _HasMessageId, TRes: _HasMessageId, TNotif: _HasMessageId](
+    async def execute[TReq: TMsg, TRes: TMsg, TNotif: TMsg](
         self, request: TReq, method: Method[TReq, TRes, TNotif]
     ) -> typing.AsyncIterator[_ExecutorQuery[TRes, TNotif]]:
         message_id = request.id
@@ -115,11 +115,11 @@ class Executor:
                 pass  # this means there was no exception set
 
     @contextlib.asynccontextmanager
-    async def _run_executor[TReq: _HasMessageId, TRes: _HasMessageId, TNotif: _HasMessageId](
+    async def _run_executor[TReq: TMsg, TRes: TMsg, TNotif: TMsg](
         self,
         response_iter: typing.AsyncIterator[TRes],
         notification_iter: typing.AsyncIterator[TNotif],
-        cancellation_iter: typing.AsyncIterator[_CancellationMessage],
+        cancellation_iter: typing.AsyncIterator[_JsonRpcCancellationMessage],
         message_id: int,
     ) -> typing.AsyncIterator[_ExecutorQuery[TRes, TNotif]]:
         async with CancellableTaskGroup() as tg:
@@ -169,7 +169,7 @@ class Executor:
             pass  # this means there was no exception set
 
     @contextlib.asynccontextmanager
-    async def _expect_messages[T: _HasMessageId](
+    async def _expect_messages[T: TMsg | TCancellationMsg](
         self, id: _TMessageId, message_type: type[T] | None
     ) -> typing.AsyncIterator[typing.AsyncGenerator[T]]:
         if message_type:
@@ -182,8 +182,8 @@ class Executor:
         else:
             yield async_iterator_never()
 
-    async def _iterate_messages[T: _HasMessageId](
-        self, id: _TMessageId, message_type: type[T], read_queue: asyncio.Queue[_HasMessageId]
+    async def _iterate_messages[T: TMsg | TCancellationMsg](
+        self, id: _TMessageId, message_type: type[T], read_queue: asyncio.Queue[TMsg]
     ) -> typing.AsyncGenerator[T]:
         while True:
             message = await read_queue.get()
