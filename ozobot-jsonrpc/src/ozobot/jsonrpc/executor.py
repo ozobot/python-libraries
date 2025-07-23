@@ -9,7 +9,7 @@ from loguru import logger
 from ozobot.common.asyncutils import CancellableTaskGroup, async_iterator_never
 from ozobot.common.broadcast import BroadcastManager
 from ozobot.jsonrpc.exceptions import CancelledByClientError, CancelledByServerError
-from ozobot.jsonrpc.stream import Reader, Writer
+from ozobot.jsonrpc.framing import FrameReader, FrameWriter
 
 CANCELLATION_JSONRPC_TYPE = "com/ozobot/jsonrpc/2.0/cancellation"
 NOTIFICATION_JSONRPC_TYPE = "com/ozobot/jsonrpc/2.0/notification"
@@ -60,7 +60,7 @@ class Executor:
     def __init__(
         self,
         broadcast: BroadcastManager[_HasMessageId],
-        writer: Writer[_HasMessageId],
+        writer: FrameWriter[_HasMessageId],
         cancellation_message_type: type[_CancellationMessage],
     ) -> None:
         self._broadcast = broadcast
@@ -71,8 +71,8 @@ class Executor:
     @contextlib.asynccontextmanager
     async def create(
         cls,
-        reader: Reader[_HasMessageId],
-        writer: Writer[_HasMessageId],
+        reader: FrameReader[_HasMessageId],
+        writer: FrameWriter[_HasMessageId],
         cancellation_message_type: type[_CancellationMessage],
     ) -> typing.AsyncIterator[Executor]:
         broadcast = BroadcastManager[_HasMessageId]()

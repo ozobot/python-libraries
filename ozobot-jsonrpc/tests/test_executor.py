@@ -8,7 +8,7 @@ from unittest.mock import Mock
 
 import pytest
 from ozobot.jsonrpc.executor import Executor, Method
-from ozobot.jsonrpc.stream import Reader, Writer
+from ozobot.jsonrpc.framing import FrameReader, FrameWriter
 
 
 @dataclass(frozen=True)
@@ -56,16 +56,16 @@ _method_b = Method.without_notifications(_RequestB, _ResponseB)
 _method_c = Method.without_response(_RequestC, _NotificationC)
 
 
-def _get_mock_reader[T](queue: asyncio.Queue[T]) -> Reader:
+def _get_mock_reader[T](queue: asyncio.Queue[T]) -> FrameReader:
     async def _read():
         while True:
             yield await queue.get()
 
-    return Mock(spec=Reader, read=_read)
+    return Mock(spec=FrameReader, read=_read)
 
 
-def _get_mock_writer[T](queue: asyncio.Queue[T]) -> Writer:
-    return Mock(spec=Writer, write=queue.put)
+def _get_mock_writer[T](queue: asyncio.Queue[T]) -> FrameWriter:
+    return Mock(spec=FrameWriter, write=queue.put)
 
 
 async def test_executor_types() -> None:
