@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import typing
+from builtins import ExceptionGroup
 from dataclasses import dataclass
 
 from loguru import logger
@@ -125,13 +126,33 @@ class Executor[TMsg: _AbstractJsonRpcMessage, TCancellationMsg: _AbstractJsonRpc
                 async for msg in reader.read():
                     await broadcast.broadcast(msg)
 
-        async with asyncio.TaskGroup() as tg:
-            read_task = tg.create_task(_read())
+        try:
+            async with asyncio.TaskGroup() as tg:
+                program_exception: Exception | None = None
+                read_task_exception: BaseException | None = None
+                read_task = tg.create_task(_read())
 
-            try:
-                yield Executor(broadcast, writer, cancellation_message_type)
-            finally:
-                read_task.cancel()
+                try:
+                    yield Executor(broadcast, transport, cancellation_message_type)
+                except Exception as err:
+                    program_exception = err
+                finally:
+                    # check if there was read_task exception
+                    try:
+                        read_task_exception = read_task.exception()
+                    except asyncio.InvalidStateError:
+                        pass
+                    read_task.cancel()
+        except* Exception:
+            # we'll handle the read_task exception manually
+            pass
+
+        # reraise exceptions outside the taskgroup to get a nice trace
+        if program_exception:
+            raise program_exception
+
+        if read_task_exception:
+            raise read_task_exception
 
     @contextlib.asynccontextmanager
     async def _run_executor[TReq: _AbstractJsonRpcMessage, TRes: _AbstractJsonRpcMessage, TNotif: _AbstractJsonRpcMessage](
@@ -146,7 +167,9 @@ class Executor[TMsg: _AbstractJsonRpcMessage, TCancellationMsg: _AbstractJsonRpc
 
             async def _await_cancellation_from_server() -> None:
                 message = await anext(cancellation_iter)
-                cancellation_future.set_exception(CancelledByServerError(message.id, message.code, message.message))
+                cancellation_future.set_exception(
+                    CancelledByServerError(message.id, message.code, message.message or "")
+                )
                 tg.cancel()
 
             def _cancel_by_client(reason: str) -> None:
@@ -165,12 +188,11 @@ class Executor[TMsg: _AbstractJsonRpcMessage, TCancellationMsg: _AbstractJsonRpc
             try:
                 yield query
             except asyncio.CancelledError:
-                logger.exception("omg")
-                logger.debug("Request cancelled by asyncio.CancelledError", id=message_id)
-                # the exception can originate from the program itself (when the control is given above by `yield`)
-                #     or by failing the TaskGroup which cancels the program. We'll only consider this the "program cancellation",
-                #     when the "Cancelled by user" has no already been set
                 if not cancellation_future.done():
+                    # the exception can originate from the program itself (when the control is given above by `yield`)
+                    #     or by failing the TaskGroup which cancels the program. We'll only consider this the "program cancellation",
+                    #     when the "Cancelled by user" has no already been set
+                    logger.debug("Request cancelled by asyncio.CancelledError", id=message_id)
                     _cancel_by_client("Program cancellation")
             except Exception:
                 logger.exception("Request cancelled by error", id=message_id)
