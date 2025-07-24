@@ -25,6 +25,12 @@ class _AbstractJsonRpcMessage(typing.Protocol):
 
 
 class _AbstractJsonRpcCancellationMessage(_AbstractJsonRpcMessage, typing.Protocol):
+    @property
+    def code(self) -> int: ...
+
+    @property
+    def message(self) -> str: ...
+
     @classmethod
     def create(cls, id: int, code: int, message: str | None) -> typing.Self: ...
 
@@ -140,10 +146,7 @@ class Executor[TMsg: _AbstractJsonRpcMessage, TCancellationMsg: _AbstractJsonRpc
 
             async def _await_cancellation_from_server() -> None:
                 message = await anext(cancellation_iter)
-                id = message.id
-                code = message.code if hasattr(message, "code") else -1
-                cancellation_message = message.message if hasattr(message, "message") else ""
-                cancellation_future.set_exception(CancelledByServerError(id, code, cancellation_message))
+                cancellation_future.set_exception(CancelledByServerError(message.id, message.code, message.message))
                 tg.cancel()
 
             def _cancel_by_client(reason: str) -> None:
