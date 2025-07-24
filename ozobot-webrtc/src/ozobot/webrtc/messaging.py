@@ -63,7 +63,7 @@ class MessagingChannelFactory:
     async def create(
         self, *, name: str | None = None, destination: str | None = None
     ) -> typing.AsyncIterator[MessagingChannel]:
-        async with self._create(name, declare=True) as (channel, queue_name):
+        async with self._create(name or "", declare=True) as (channel, queue_name):
             yield MessagingChannel(channel, self._exchange_name, queue_name, destination)
 
     @contextlib.asynccontextmanager
@@ -73,12 +73,15 @@ class MessagingChannelFactory:
 
     @contextlib.asynccontextmanager
     async def _create(
-        self, name: str | None, *, declare: bool
+        self, name: str, *, declare: bool,
     ) -> typing.AsyncIterator[tuple[aiormq.abc.AbstractChannel, str]]:
         logger.debug("Opening communication channel", name=name)
         channel = await self._connection.channel()
-        resp = await channel.queue_declare(queue=name or "", auto_delete=True, exclusive=True)
-        queue_name = resp.queue or ""
+        if declare:
+            resp = await channel.queue_declare(queue=name or "", auto_delete=True, exclusive=True)
+            queue_name = resp.queue or ""
+        else:
+            queue_name = name
         _ = await channel.queue_bind(queue=queue_name, exchange=self._exchange_name, routing_key=queue_name)
 
         try:
