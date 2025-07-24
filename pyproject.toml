@@ -37,6 +37,7 @@ mypy_path = [
   "ozobot-jsonrpc/src",
   "ozobot-webrtc/src",
 ]
+plugins = ["pydantic.mypy"]
 
 [tool.ruff]
 line-length=120

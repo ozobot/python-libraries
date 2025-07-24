@@ -1,9 +1,4 @@
-import asyncio
-from unittest.mock import AsyncMock, Mock, call
-
-import pytest
-from ozobot.jsonrpc.framing import FrameDecoder as Decoder
-from ozobot.jsonrpc.framing import FrameReader, FrameWriter, encode_frame
+from ozobot.ari.framing import encode_frame, FrameDecoder as Decoder
 
 
 def test_frame_simple():
@@ -128,59 +123,3 @@ def test_deframer_escape_at_end():
     # Now feed the escaped byte
     result2 = list(deframer.feed(bytes([Decoder.FRAME_FLAG ^ Decoder.FRAME_ALT, Decoder.FRAME_FLAG])))
     assert result2 == [bytes([Decoder.FRAME_FLAG])]
-
-
-async def test_reader() -> None:
-    data = [encode_frame(d) for d in [b"hello", b"world"]]
-
-    queue = asyncio.Queue[bytes]()
-    readable = Mock(read=queue.get)
-    reader = FrameReader(readable, lambda b: b.decode("utf8"))
-
-    with pytest.raises(asyncio.TimeoutError):
-        async with asyncio.timeout(0.1):
-            _ = await anext(reader.read())
-
-    iter = reader.read()
-
-    for d in data:
-        await queue.put(d)
-
-    result = await anext(iter)
-    assert result == "hello"
-
-    result = await anext(iter)
-    assert result == "world"
-
-
-async def test_reader_corrupted_data() -> None:
-    queue = asyncio.Queue[bytes]()
-    readable = Mock(read=queue.get)
-    reader = FrameReader(readable, lambda b: b.decode("utf8"))
-
-    # data not framed
-    data = b"hello world"
-    await queue.put(data)
-
-    # the corrupted data got dropped
-    with pytest.raises(asyncio.TimeoutError):
-        async with asyncio.timeout(0.1):
-            _ = await anext(reader.read())
-
-    await queue.put(encode_frame(b"hi"))
-    result = await anext(reader.read())
-    assert result == "hi"
-
-
-async def test_writer() -> None:
-    writable = Mock(write=AsyncMock())
-    writer = FrameWriter[str](writable, lambda s: s.encode("utf8"))
-    await writer.write("hello")
-    await writer.write("world")
-
-    writable.write.assert_has_calls(
-        [
-            call(encode_frame(b"hello")),
-            call(encode_frame(b"world")),
-        ]
-    )

@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import typing
-from builtins import ExceptionGroup
 from dataclasses import dataclass
 
 from loguru import logger
@@ -30,7 +29,7 @@ class _AbstractJsonRpcCancellationMessage(_AbstractJsonRpcMessage, typing.Protoc
     def code(self) -> int: ...
 
     @property
-    def message(self) -> str: ...
+    def message(self) -> str | None: ...
 
     @classmethod
     def create(cls, id: int, code: int, message: str | None) -> typing.Self: ...
@@ -44,8 +43,15 @@ class _MessageWriter[T: _AbstractJsonRpcMessage](typing.Protocol):
     async def write(self, data: T) -> None: ...
 
 
+class _MessageReaderWriter[T: _AbstractJsonRpcMessage](_MessageReader[T], _MessageWriter[T], typing.Protocol): ...
+
+
 @dataclass(frozen=True)
-class Method[TRequest, TResponse, TNotification]:
+class Method[
+    TRequest: _AbstractJsonRpcMessage,
+    TResponse: _AbstractJsonRpcMessage | typing.Never,
+    TNotification: _AbstractJsonRpcMessage | typing.Never,
+]:
     request: type[TRequest]
     response: type[TResponse] | None
     notification: type[TNotification] | None
@@ -115,15 +121,14 @@ class Executor[TMsg: _AbstractJsonRpcMessage, TCancellationMsg: _AbstractJsonRpc
     @contextlib.asynccontextmanager
     async def create(
         cls,
-        reader: _MessageReader[TMsg],
-        writer: _MessageWriter[TMsg | TCancellationMsg],
+        transport: _MessageReaderWriter[TMsg | TCancellationMsg],
         cancellation_message_type: type[TCancellationMsg],
     ) -> typing.AsyncIterator[Executor[TMsg, TCancellationMsg]]:
         broadcast = BroadcastManager[TMsg | TCancellationMsg]()
 
         async def _read() -> typing.Never:
             while True:
-                async for msg in reader.read():
+                async for msg in transport.read():
                     await broadcast.broadcast(msg)
 
         try:
@@ -155,7 +160,11 @@ class Executor[TMsg: _AbstractJsonRpcMessage, TCancellationMsg: _AbstractJsonRpc
             raise read_task_exception
 
     @contextlib.asynccontextmanager
-    async def _run_executor[TReq: _AbstractJsonRpcMessage, TRes: _AbstractJsonRpcMessage, TNotif: _AbstractJsonRpcMessage](
+    async def _run_executor[
+        TReq: _AbstractJsonRpcMessage,
+        TRes: _AbstractJsonRpcMessage,
+        TNotif: _AbstractJsonRpcMessage,
+    ](
         self,
         response_iter: typing.AsyncIterator[TRes],
         notification_iter: typing.AsyncIterator[TNotif],

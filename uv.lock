@@ -445,12 +445,14 @@ source = { editable = "ozobot-ari" }
 dependencies = [
     { name = "bleak" },
     { name = "ozobot-ble" },
+    { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "bleak", specifier = ">=0.22.3" },
     { name = "ozobot-ble", editable = "ozobot-ble" },
+    { name = "pydantic", specifier = ">=2.11.7" },
 ]
 
 [[package]]
