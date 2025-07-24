@@ -7,7 +7,7 @@ from ozobot.webrtc.datatypes import (
     Message,
 )
 from ozobot.webrtc.exceptions import WebRTCConnectionUnexpectedStateError
-from ozobot.webrtc.signaling.negotiation import SignalingClient, SignalingProcess
+from ozobot.webrtc.signaling.negotiation import SignalingCallee, SignalingCaller, SignalingProcess
 
 from .testutils import create_channel_factory
 
@@ -21,31 +21,31 @@ async def test_negotiation() -> None:
 
     caller_factory = create_channel_factory(to_caller, from_caller)
     callee_factory = create_channel_factory(from_caller, to_caller)
-    handshake_channel_factory = create_channel_factory(inputs=[])
+    handshake_channel_factory = create_channel_factory(from_caller, to_caller)
 
+    caller = SignalingCaller(caller_factory, "callee_name")
     async with handshake_channel_factory.create() as handshake_channel:
-        caller = SignalingClient(caller_factory, handshake_channel, type="caller")
-        callee = SignalingClient(callee_factory, handshake_channel, type="callee")
+        callee = SignalingCallee(callee_factory, handshake_channel)
 
-    async with asyncio.timeout(5):
-        ret_caller, ret_callee = await asyncio.gather(caller.signal(channels=("test",)), callee.signal())
+        async with asyncio.timeout(5):
+            ret_caller, ret_callee = await asyncio.gather(caller.signal(channels=("test",)), callee.signal())
 
-    connection_caller, channels_caller = ret_caller
-    connection_callee, channels_callee = ret_callee
+        connection_caller, channels_caller = ret_caller
+        connection_callee, channels_callee = ret_callee
 
-    assert len(channels_caller) == 1
-    assert len(channels_callee) == 0
+        assert len(channels_caller) == 1
+        assert len(channels_callee) == 0
 
-    async with connection_callee.data_channels() as channels, asyncio.timeout(1):
-        channel = await anext(channels)
-        assert channel.label == "test"
+        async with connection_callee.data_channels() as channels, asyncio.timeout(1):
+            channel = await anext(channels)
+            assert channel.label == "test"
 
-        with pytest.raises(asyncio.TimeoutError):
-            async with asyncio.timeout(0.1):
-                _ = await anext(channels)
+            with pytest.raises(asyncio.TimeoutError):
+                async with asyncio.timeout(0.1):
+                    _ = await anext(channels)
 
-    await connection_caller.close()
-    await connection_callee.close()
+        await connection_caller.close()
+        await connection_callee.close()
 
 
 async def test_close() -> None:

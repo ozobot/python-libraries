@@ -18,29 +18,49 @@ from ozobot.webrtc.datatypes import (
 from ozobot.webrtc.messaging import MessagingChannel, MessagingChannelFactory
 
 
-class SignalingClient:
+class SignalingCaller:
     def __init__(
         self,
         channel_factory: MessagingChannelFactory,
-        handshake_channel: MessagingChannel,
-        type: typing.Literal["caller", "callee"],
+        handshake_channel_name: str,
     ) -> None:
         self._channel_factory = channel_factory
-        self._handshake_channel = handshake_channel
-        self._type = type
+        self._handshake_channel_name = handshake_channel_name
 
     async def signal(self, *, channels: tuple[str, ...] = tuple()) -> tuple[Connection, tuple[Channel, ...]]:
         with logger.contextualize(signaling_uuid=uuid.uuid4()):
             async with self._channel_factory.create() as channel:
-                match self._type:
-                    case "caller":
-                        await self._initiate_handshake(channel)
-                    case "callee":
-                        await self._accept_handshake(channel)
-                    case _:
-                        typing.assert_never(self._type)
+                await self._initiate_handshake(channel)
+                return await SignalingProcess(channel, "caller").signal(channels)
 
-                return await SignalingProcess(channel, self._type).signal(channels)
+    async def _initiate_handshake(self, channel: MessagingChannel) -> None:
+        payload = HandshakeRequestBody(name="python-library")
+        logger.debug("Sending handshake request")
+        channel.set_destination(self._handshake_channel_name)
+        await channel.send(payload)
+
+        async with channel.receive() as messages:
+            async for msg in messages:
+                if isinstance(msg.body, HandshakeResponseBody):
+                    logger.info("Received handshake response")
+                    channel.set_destination(msg.reply_to)
+                    return
+
+
+class SignalingCallee:
+    def __init__(
+        self,
+        channel_factory: MessagingChannelFactory,
+        handshake_channel: MessagingChannel,
+    ) -> None:
+        self._channel_factory = channel_factory
+        self._handshake_channel = handshake_channel
+
+    async def signal(self, *, channels: tuple[str, ...] = tuple()) -> tuple[Connection, tuple[Channel, ...]]:
+        with logger.contextualize(signaling_uuid=uuid.uuid4()):
+            async with self._channel_factory.create() as channel:
+                await self._accept_handshake(channel)
+                return await SignalingProcess(channel, "callee").signal(channels)
 
     async def _initiate_handshake(self, channel: MessagingChannel) -> None:
         payload = HandshakeRequestBody(name="python-library")
