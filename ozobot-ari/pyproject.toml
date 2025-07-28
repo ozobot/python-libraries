@@ -9,7 +9,11 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "ozobot-ble",
-    "bleak>=0.22.3"
+    "ozobot-common",
+    "ozobot-jsonrpc",
+    "ozobot-webrtc",
+    "bleak>=0.22.3",
+    "loguru",
 ]
 
 [tool.hatch.build.targets.sdist]

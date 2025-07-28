@@ -8,10 +8,12 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "aiortc>=1.13.0",
-    "aiormq",
-    "pydantic>=2",
+    "ozobot-common",
     "aiohttp>=3.12.13",
+    "aiormq",
+    "aiortc>=1.13.0",
+    "loguru",
+    "pydantic>=2",
 ]
 
 [tool.hatch.build.targets.sdist]
