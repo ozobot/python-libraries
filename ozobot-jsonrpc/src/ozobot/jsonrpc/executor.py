@@ -223,10 +223,7 @@ class Executor[TMsg: _AbstractJsonRpcMessage, TCancellationMsg: _AbstractJsonRpc
         if message_type:
             with self._broadcast.output() as queue:
                 iter = self._iterate_messages(id, message_type, queue)
-                try:
-                    yield iter
-                finally:
-                    await iter.aclose()
+                yield iter
         else:
             yield async_iterator_never()
 
