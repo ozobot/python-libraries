@@ -12,8 +12,8 @@ dependencies = [
     "ozobot-common",
     "ozobot-jsonrpc",
     "ozobot-webrtc",
-    "bleak>=0.22.3",
     "loguru",
+    "pydantic>=2.11.7",
 ]
 
 [tool.hatch.build.targets.sdist]

@@ -2,7 +2,7 @@ from ozobot.webrtc.aiortc_wrapper import ReadyState
 import asyncio
 
 from ozobot.webrtc.datatypes import Message
-from ozobot.webrtc.signaling.negotiation import SignalingClient
+from ozobot.webrtc.signaling.negotiation import SignalingCaller, SignalingCallee
 
 from .testutils import create_channel_factory
 
@@ -13,11 +13,11 @@ async def test_channel_read_write() -> None:
 
     caller_factory = create_channel_factory(to_caller, from_caller)
     callee_factory = create_channel_factory(from_caller, to_caller)
-    handshake_channel_factory = create_channel_factory(inputs=[])
+    handshake_channel_factory = create_channel_factory(from_caller, to_caller)
 
     async with handshake_channel_factory.create() as handshake_channel:
-        caller = SignalingClient(caller_factory, handshake_channel, type="caller")
-        callee = SignalingClient(callee_factory, handshake_channel, type="callee")
+        caller = SignalingCaller(caller_factory, "handshake-channel")
+        callee = SignalingCallee(callee_factory, handshake_channel)
 
     async with asyncio.timeout(5):
         ret_caller, ret_callee = await asyncio.gather(caller.signal(channels=("test",)), callee.signal())

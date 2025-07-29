@@ -9,7 +9,6 @@ from loguru import logger
 from ozobot.common.asyncutils import CancellableTaskGroup, async_iterator_never
 from ozobot.common.broadcast import BroadcastManager
 from ozobot.jsonrpc.exceptions import CancelledByClientError, CancelledByServerError
-from ozobot.jsonrpc.framing import FrameReader, FrameWriter
 
 CANCELLATION_JSONRPC_TYPE = "com/ozobot/jsonrpc/2.0/cancellation"
 NOTIFICATION_JSONRPC_TYPE = "com/ozobot/jsonrpc/2.0/notification"
@@ -17,7 +16,7 @@ NOTIFICATION_JSONRPC_TYPE = "com/ozobot/jsonrpc/2.0/notification"
 type _TMessageId = int
 
 
-class AbstractJsonRpcMessage(typing.Protocol):
+class _AbstractJsonRpcMessage(typing.Protocol):
     @property
     def id(self) -> _TMessageId: ...
 
@@ -25,13 +24,34 @@ class AbstractJsonRpcMessage(typing.Protocol):
     def jsonrpc(self) -> str: ...
 
 
-class AbstractJsonRpcCancellationMessage(AbstractJsonRpcMessage, typing.Protocol):
+class _AbstractJsonRpcCancellationMessage(_AbstractJsonRpcMessage, typing.Protocol):
+    @property
+    def code(self) -> int: ...
+
+    @property
+    def message(self) -> str | None: ...
+
     @classmethod
     def create(cls, id: int, code: int, message: str | None) -> typing.Self: ...
 
 
+class _MessageReader[T: _AbstractJsonRpcMessage](typing.Protocol):
+    def read(self) -> typing.AsyncIterator[T]: ...
+
+
+class _MessageWriter[T: _AbstractJsonRpcMessage](typing.Protocol):
+    async def write(self, data: T) -> None: ...
+
+
+class _MessageReaderWriter[T: _AbstractJsonRpcMessage](_MessageReader[T], _MessageWriter[T], typing.Protocol): ...
+
+
 @dataclass(frozen=True)
-class Method[TRequest, TResponse, TNotification]:
+class Method[
+    TRequest: _AbstractJsonRpcMessage,
+    TResponse: _AbstractJsonRpcMessage | typing.Never,
+    TNotification: _AbstractJsonRpcMessage | typing.Never,
+]:
     request: type[TRequest]
     response: type[TResponse] | None
     notification: type[TNotification] | None
@@ -56,7 +76,7 @@ class _ExecutorQuery[TResponse, TNotification]:
     cancel: typing.Callable[[], None]
 
 
-class Query[TReq: AbstractJsonRpcMessage, TRes: AbstractJsonRpcMessage, TNotif: AbstractJsonRpcMessage]:
+class Query[TReq: _AbstractJsonRpcMessage, TRes: _AbstractJsonRpcMessage, TNotif: _AbstractJsonRpcMessage]:
     def __init__(self, request: TReq, method: Method[TReq, TRes, TNotif]) -> None:
         self._request = request
         self._method = method
@@ -86,11 +106,11 @@ class Query[TReq: AbstractJsonRpcMessage, TRes: AbstractJsonRpcMessage, TNotif: 
                 pass  # this means there was no exception set
 
 
-class Executor[TMsg: AbstractJsonRpcMessage, TCancellationMsg: AbstractJsonRpcCancellationMessage]:
+class Executor[TMsg: _AbstractJsonRpcMessage, TCancellationMsg: _AbstractJsonRpcCancellationMessage]:
     def __init__(
         self,
         broadcast: BroadcastManager[TMsg | TCancellationMsg],
-        writer: FrameWriter[TMsg | TCancellationMsg],
+        writer: _MessageWriter[TMsg | TCancellationMsg],
         cancellation_message_type: type[TCancellationMsg],
     ) -> None:
         self._broadcast = broadcast
@@ -101,31 +121,54 @@ class Executor[TMsg: AbstractJsonRpcMessage, TCancellationMsg: AbstractJsonRpcCa
     @contextlib.asynccontextmanager
     async def create(
         cls,
-        reader: FrameReader[TMsg],
-        writer: FrameWriter[TMsg | TCancellationMsg],
+        transport: _MessageReaderWriter[TMsg | TCancellationMsg],
         cancellation_message_type: type[TCancellationMsg],
     ) -> typing.AsyncIterator[Executor[TMsg, TCancellationMsg]]:
         broadcast = BroadcastManager[TMsg | TCancellationMsg]()
 
         async def _read() -> typing.Never:
             while True:
-                async for msg in reader.read():
+                async for msg in transport.read():
                     await broadcast.broadcast(msg)
 
-        async with asyncio.TaskGroup() as tg:
-            read_task = tg.create_task(_read())
+        try:
+            async with asyncio.TaskGroup() as tg:
+                program_exception: Exception | None = None
+                read_task_exception: BaseException | None = None
+                read_task = tg.create_task(_read())
 
-            try:
-                yield Executor(broadcast, writer, cancellation_message_type)
-            finally:
-                read_task.cancel()
+                try:
+                    yield Executor(broadcast, transport, cancellation_message_type)
+                except Exception as err:
+                    program_exception = err
+                finally:
+                    # check if there was read_task exception
+                    try:
+                        read_task_exception = read_task.exception()
+                    except asyncio.InvalidStateError:
+                        pass
+                    read_task.cancel()
+        except* Exception:
+            # we'll handle the read_task exception manually
+            pass
+
+        # reraise exceptions outside the taskgroup to get a nice trace
+        if program_exception:
+            raise program_exception
+
+        if read_task_exception:
+            raise read_task_exception
 
     @contextlib.asynccontextmanager
-    async def _run_executor[TReq: AbstractJsonRpcMessage, TRes: AbstractJsonRpcMessage, TNotif: AbstractJsonRpcMessage](
+    async def _run_executor[
+        TReq: _AbstractJsonRpcMessage,
+        TRes: _AbstractJsonRpcMessage,
+        TNotif: _AbstractJsonRpcMessage,
+    ](
         self,
         response_iter: typing.AsyncIterator[TRes],
         notification_iter: typing.AsyncIterator[TNotif],
-        cancellation_iter: typing.AsyncIterator[AbstractJsonRpcCancellationMessage],
+        cancellation_iter: typing.AsyncIterator[_AbstractJsonRpcCancellationMessage],
         message_id: int,
     ) -> typing.AsyncIterator[_ExecutorQuery[TRes, TNotif]]:
         async with CancellableTaskGroup() as tg:
@@ -133,10 +176,9 @@ class Executor[TMsg: AbstractJsonRpcMessage, TCancellationMsg: AbstractJsonRpcCa
 
             async def _await_cancellation_from_server() -> None:
                 message = await anext(cancellation_iter)
-                id = message.id
-                code = message.code if hasattr(message, "code") else -1
-                cancellation_message = message.message if hasattr(message, "message") else ""
-                cancellation_future.set_exception(CancelledByServerError(id, code, cancellation_message))
+                cancellation_future.set_exception(
+                    CancelledByServerError(message.id, message.code, message.message or "")
+                )
                 tg.cancel()
 
             def _cancel_by_client(reason: str) -> None:
@@ -155,11 +197,11 @@ class Executor[TMsg: AbstractJsonRpcMessage, TCancellationMsg: AbstractJsonRpcCa
             try:
                 yield query
             except asyncio.CancelledError:
-                logger.debug("Request cancelled by asyncio.CancelledError", id=message_id)
-                # the exception can originate from the program itself (when the control is given above by `yield`)
-                #     or by failing the TaskGroup which cancels the program. We'll only consider this the "program cancellation",
-                #     when the "Cancelled by user" has no already been set
                 if not cancellation_future.done():
+                    # the exception can originate from the program itself (when the control is given above by `yield`)
+                    #     or by failing the TaskGroup which cancels the program. We'll only consider this the "program cancellation",
+                    #     when the "Cancelled by user" has no already been set
+                    logger.debug("Request cancelled by asyncio.CancelledError", id=message_id)
                     _cancel_by_client("Program cancellation")
             except Exception:
                 logger.exception("Request cancelled by error", id=message_id)
@@ -181,14 +223,11 @@ class Executor[TMsg: AbstractJsonRpcMessage, TCancellationMsg: AbstractJsonRpcCa
         if message_type:
             with self._broadcast.output() as queue:
                 iter = self._iterate_messages(id, message_type, queue)
-                try:
-                    yield iter
-                finally:
-                    await iter.aclose()
+                yield iter
         else:
             yield async_iterator_never()
 
-    async def _iterate_messages[T: AbstractJsonRpcMessage | AbstractJsonRpcCancellationMessage](
+    async def _iterate_messages[T: _AbstractJsonRpcMessage | _AbstractJsonRpcCancellationMessage](
         self, id: _TMessageId, message_type: type[T], read_queue: asyncio.Queue[TMsg | TCancellationMsg]
     ) -> typing.AsyncGenerator[T]:
         while True:

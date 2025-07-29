@@ -4,11 +4,9 @@ import asyncio
 import contextlib
 import typing
 from dataclasses import dataclass, field
-from unittest.mock import Mock
 
 import pytest
 from ozobot.jsonrpc.executor import Executor, Method, Query
-from ozobot.jsonrpc.framing import FrameReader, FrameWriter
 
 
 @dataclass(frozen=True)
@@ -56,60 +54,65 @@ _method_b = Method.without_notifications(_RequestB, _ResponseB)
 _method_c = Method.without_response(_RequestC, _NotificationC)
 
 
-def _get_mock_reader[T](queue: asyncio.Queue[T]) -> FrameReader[_Message]:
-    async def _read():
+class _QueueTransport:
+    def __init__(
+        self, to_transport: asyncio.Queue[_Message | _Cancel], from_transport: asyncio.Queue[_Message | _Cancel]
+    ) -> None:
+        self._read_queue = to_transport
+        self._write_queue = from_transport
+
+    async def read(self) -> typing.AsyncIterator[_Message | _Cancel]:
         while True:
-            yield await queue.get()
+            yield await self._read_queue.get()
 
-    return Mock(spec=FrameReader, read=_read)
-
-
-def _get_mock_writer[T](queue: asyncio.Queue[T]) -> FrameWriter[_Message | _Cancel]:
-    return Mock(spec=FrameWriter, write=queue.put)
+    async def write(self, data: _Message | _Cancel) -> None:
+        await self._write_queue.put(data)
 
 
 async def test_executor_types() -> None:
-    reader = _get_mock_reader(asyncio.Queue())
-    writer = _get_mock_writer(asyncio.Queue())
+    to_transport = asyncio.Queue[_Message | _Cancel]()
+    from_transport = asyncio.Queue[_Message | _Cancel]()
+    transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor[_Message, _Cancel].create(reader, writer, _Cancel) as executor:
+    async with Executor[_Message, _Cancel].create(transport, _Cancel) as executor:
         async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
             typing.assert_type(execution.response, typing.Awaitable[_ResponseA])
             typing.assert_type(execution.notifications, typing.AsyncIterator[_NotificationA])
 
 
 async def test_executor_types_no_response() -> None:
-    reader = _get_mock_reader(asyncio.Queue())
-    writer = _get_mock_writer(asyncio.Queue())
+    to_transport = asyncio.Queue[_Message | _Cancel]()
+    from_transport = asyncio.Queue[_Message | _Cancel]()
+    transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor.create(reader, writer, _Cancel) as executor:
+    async with Executor.create(transport, _Cancel) as executor:
         async with Query(_RequestB(id=1, data="hello world"), _method_b).execute(executor) as execution:
             typing.assert_type(execution.response, typing.Awaitable[_ResponseB])
             typing.assert_type(execution.notifications, typing.AsyncIterator[typing.Never])
 
 
 async def test_executor_types_no_notification() -> None:
-    reader = _get_mock_reader(asyncio.Queue())
-    writer = _get_mock_writer(asyncio.Queue())
+    to_transport = asyncio.Queue[_Message | _Cancel]()
+    from_transport = asyncio.Queue[_Message | _Cancel]()
+    transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor.create(reader, writer, _Cancel) as executor:
+    async with Executor.create(transport, _Cancel) as executor:
         async with Query(_RequestC(id=1, data="hello world"), _method_c).execute(executor) as execution:
             typing.assert_type(execution.response, typing.Awaitable[typing.Never])
             typing.assert_type(execution.notifications, typing.AsyncIterator[_NotificationC])
 
 
 async def test_executor_rpc() -> None:
-    read_queue = asyncio.Queue[_Message]()
-    write_queue = asyncio.Queue[_Message]()
-    reader = _get_mock_reader(read_queue)
-    writer = _get_mock_writer(write_queue)
+    to_transport = asyncio.Queue[_Message | _Cancel]()
+    from_transport = asyncio.Queue[_Message | _Cancel]()
+    transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor.create(reader, writer, _Cancel) as executor:
+    async with Executor.create(transport, _Cancel) as executor:
         async with Query(_RequestA(id=2, data="hello world"), _method_a).execute(executor) as execution:
-            assert await write_queue.get() == _RequestA(id=2, data="hello world")
+            assert await from_transport.get() == _RequestA(id=2, data="hello world")
 
-            await read_queue.put(_ResponseB(id=1, data="other request"))
-            await read_queue.put(_ResponseA(id=2, data="hi there"))
+            await to_transport.put(_ResponseB(id=1, data="other request"))
+            await to_transport.put(_ResponseA(id=2, data="hi there"))
             async with asyncio.timeout(0.1):
                 assert await execution.response == _ResponseA(id=2, data="hi there")
 
@@ -119,18 +122,17 @@ async def test_executor_rpc() -> None:
 
 
 async def test_executor_notifications() -> None:
-    read_queue = asyncio.Queue[_Message]()
-    write_queue = asyncio.Queue[_Message]()
-    reader = _get_mock_reader(read_queue)
-    writer = _get_mock_writer(write_queue)
+    to_transport = asyncio.Queue[_Message | _Cancel]()
+    from_transport = asyncio.Queue[_Message | _Cancel]()
+    transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor.create(reader, writer, _Cancel) as executor:
+    async with Executor.create(transport, _Cancel) as executor:
         async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
-            assert await write_queue.get() == _RequestA(id=1, data="hello world")
+            assert await from_transport.get() == _RequestA(id=1, data="hello world")
 
-            await read_queue.put(_NotificationA(id=1, data="hi there"))
-            await read_queue.put(_NotificationC(id=2, data="other request"))
-            await read_queue.put(_NotificationA(id=1, data="hello there"))
+            await to_transport.put(_NotificationA(id=1, data="hi there"))
+            await to_transport.put(_NotificationC(id=2, data="other request"))
+            await to_transport.put(_NotificationA(id=1, data="hello there"))
 
             notification_messages = [await anext(execution.notifications) for _ in range(2)]
             assert notification_messages == [
@@ -144,83 +146,79 @@ async def test_executor_notifications() -> None:
 
 
 async def test_executor_cancellation_explicit_by_client() -> None:
-    read_queue = asyncio.Queue[_Message]()
-    write_queue = asyncio.Queue[_Message]()
-    reader = _get_mock_reader(read_queue)
-    writer = _get_mock_writer(write_queue)
+    to_transport = asyncio.Queue[_Message | _Cancel]()
+    from_transport = asyncio.Queue[_Message | _Cancel]()
+    transport = _QueueTransport(to_transport, from_transport)
 
     with pytest.raises(asyncio.CancelledError):
-        async with Executor.create(reader, writer, _Cancel) as executor:
+        async with Executor.create(transport, _Cancel) as executor:
             async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
-                assert await write_queue.get() == _RequestA(id=1, data="hello world")
+                assert await from_transport.get() == _RequestA(id=1, data="hello world")
                 execution.cancel()
                 await asyncio.Future()
 
-        assert await write_queue.get() == _Cancel(
+        assert await from_transport.get() == _Cancel(
             id=1, code=0, message="Request cancelled by client: Cancelled by user (request 1)"
         )
 
 
 async def test_executor_cancellation_on_program_cancellation_by_client() -> None:
-    read_queue = asyncio.Queue[_Message]()
-    write_queue = asyncio.Queue[_Message]()
-    reader = _get_mock_reader(read_queue)
-    writer = _get_mock_writer(write_queue)
+    to_transport = asyncio.Queue[_Message | _Cancel]()
+    from_transport = asyncio.Queue[_Message | _Cancel]()
+    transport = _QueueTransport(to_transport, from_transport)
 
     with contextlib.suppress(asyncio.CancelledError):
-        async with Executor.create(reader, writer, _Cancel) as executor:
+        async with Executor.create(transport, _Cancel) as executor:
             async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as _:
-                assert await write_queue.get() == _RequestA(id=1, data="hello world")
+                assert await from_transport.get() == _RequestA(id=1, data="hello world")
                 raise asyncio.CancelledError()
 
-    assert await write_queue.get() == _Cancel(
+    assert await from_transport.get() == _Cancel(
         id=1, code=0, message="Request cancelled by client: Program cancellation (request 1)"
     )
 
 
 async def test_executor_cancellation_on_error_by_client() -> None:
-    read_queue = asyncio.Queue[_Message]()
-    write_queue = asyncio.Queue[_Message]()
-    reader = _get_mock_reader(read_queue)
-    writer = _get_mock_writer(write_queue)
+    to_transport = asyncio.Queue[_Message | _Cancel]()
+    from_transport = asyncio.Queue[_Message | _Cancel]()
+    transport = _QueueTransport(to_transport, from_transport)
 
     with contextlib.suppress(asyncio.CancelledError):
-        async with Executor.create(reader, writer, _Cancel) as executor:
+        async with Executor.create(transport, _Cancel) as executor:
             async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as _:
-                assert await write_queue.get() == _RequestA(id=1, data="hello world")
+                assert await from_transport.get() == _RequestA(id=1, data="hello world")
                 raise Exception("Some generic exception")
 
-    assert await write_queue.get() == _Cancel(
+    assert await from_transport.get() == _Cancel(
         id=1, code=0, message="Request cancelled by client: General failure (request 1)"
     )
 
 
 async def test_executor_cancellation_by_server() -> None:
-    read_queue = asyncio.Queue[_Message | _Cancel]()
-    write_queue = asyncio.Queue[_Message]()
-    reader = _get_mock_reader(read_queue)
-    writer = _get_mock_writer(write_queue)
+    to_transport = asyncio.Queue[_Message | _Cancel]()
+    from_transport = asyncio.Queue[_Message | _Cancel]()
+    transport = _QueueTransport(to_transport, from_transport)
 
     # when awaiting the response
     with pytest.raises(asyncio.CancelledError):
-        async with Executor.create(reader, writer, _Cancel) as executor:
+        async with Executor.create(transport, _Cancel) as executor:
             async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
-                assert await write_queue.get() == _RequestA(id=1, data="hello world")
-                await read_queue.put(_Cancel(id=1, code=0, message="Canceled by test"))
+                assert await from_transport.get() == _RequestA(id=1, data="hello world")
+                await to_transport.put(_Cancel(id=1, code=0, message="Canceled by test"))
                 await execution.response
 
     # when awaiting notifications
     with pytest.raises(asyncio.CancelledError):
-        async with Executor.create(reader, writer, _Cancel) as executor:
+        async with Executor.create(transport, _Cancel) as executor:
             async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
-                assert await write_queue.get() == _RequestA(id=1, data="hello world")
-                await read_queue.put(_Cancel(id=1, code=0, message="Canceled by test"))
+                assert await from_transport.get() == _RequestA(id=1, data="hello world")
+                await to_transport.put(_Cancel(id=1, code=0, message="Canceled by test"))
                 await anext(execution.notifications)
 
     # when not awaiting anything
     with pytest.raises(asyncio.CancelledError):
-        async with Executor.create(reader, writer, _Cancel) as executor:
+        async with Executor.create(transport, _Cancel) as executor:
             async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
-                assert await write_queue.get() == _RequestA(id=1, data="hello world")
-                await read_queue.put(_Cancel(id=1, code=0, message="Canceled by test"))
+                assert await from_transport.get() == _RequestA(id=1, data="hello world")
+                await to_transport.put(_Cancel(id=1, code=0, message="Canceled by test"))
                 await asyncio.Future()  # wait for the cancellation message to process

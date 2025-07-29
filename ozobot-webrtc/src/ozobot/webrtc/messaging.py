@@ -73,7 +73,10 @@ class MessagingChannelFactory:
 
     @contextlib.asynccontextmanager
     async def _create(
-        self, name: str, *, declare: bool,
+        self,
+        name: str,
+        *,
+        declare: bool,
     ) -> typing.AsyncIterator[tuple[aiormq.abc.AbstractChannel, str]]:
         logger.debug("Opening communication channel", name=name)
         channel = await self._connection.channel()

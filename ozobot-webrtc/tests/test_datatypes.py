@@ -1,12 +1,8 @@
-from ozobot.webrtc.aiortc_wrapper import IceCandidate
-from ozobot.webrtc.aiortc_wrapper import SessionDescription
 import json
-from unittest.mock import Mock, seal
 
 import pydantic
 import pytest
-from aio_pika.abc import AbstractMessage
-
+from ozobot.webrtc.aiortc_wrapper import IceCandidate, SessionDescription
 from ozobot.webrtc.datatypes import (
     ConnectionClosedBody,
     HandshakeRequestBody,
@@ -19,7 +15,6 @@ from ozobot.webrtc.datatypes import (
     parse_message,
     parse_message_body,
 )
-# from ozobot.webrtc.libdatachannel import Candidate, Description, DescriptionType
 
 
 def test_handshake_request_parse() -> None:
@@ -147,9 +142,6 @@ def test_unknown_type_parse() -> None:
 
 
 def test_parse_message() -> None:
-    message = Mock(spec=AbstractMessage)
-    message.body = b'{"type": "connectionClosed"}'
-    message.reply_to = "someQueue"
-    seal(message)
+    body = b'{"type": "connectionClosed"}'
 
-    assert parse_message(message) == Message(body=ConnectionClosedBody(), reply_to="someQueue")
+    assert parse_message(body, reply_to="someQueue") == Message(body=ConnectionClosedBody(), reply_to="someQueue")

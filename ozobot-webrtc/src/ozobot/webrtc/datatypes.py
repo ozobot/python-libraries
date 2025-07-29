@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Annotated, Literal, TypedDict, TypeIs
 
-import aio_pika
 from ozobot.webrtc.connection import IceCandidate, SessionDescription
 from ozobot.webrtc.exceptions import UnknownSdpTypeError
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator
