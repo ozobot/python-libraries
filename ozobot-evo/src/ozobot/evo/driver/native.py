@@ -11,6 +11,7 @@ from ozobot.evo.conversions import (
     intersection_direction_to_protocol,
     led_to_protocol,
 )
+from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.exceptions import OzobotProtocolCommandError
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 from ozobot.linefollower.driver import Deserializable, Direction, LEDMask, MemoryProperty, Serializable
@@ -76,8 +77,11 @@ class NativeDriver:
         ):
             await self._handle_events("PlayTone", evts)
 
-    async def execute_file(self, filename: str) -> None:
-        async with self._control.ExecuteFile(self._control.get_next_request_id(), filename) as (resp, evts):
+    async def play_audio(self, audio_name: str) -> None:
+        filename = map_audio_name_to_filename(audio_name)
+        filepath = f"/system/audio/{filename}.wav"
+
+        async with self._control.ExecuteFile(self._control.get_next_request_id(), filepath) as (resp, evts):
             self._handle_response("ExecuteFile", resp)
             await self._handle_events("ExecuteFile", evts)
 

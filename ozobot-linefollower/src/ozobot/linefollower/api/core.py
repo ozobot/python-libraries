@@ -19,29 +19,6 @@ from ozobot.linefollower.api.watchers import WatcherSubscription
 from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample, TNote
 from ozobot.linefollower.driver import Driver, MemoryProperty
 
-_map_audioname_filename = {
-    "happy": "01010100",
-    "sad": "01010110",
-    "surprised": "01010170",
-    "laugh": "01010250",
-    "black": "01040200",
-    "red": "01040201",
-    "green": "01040202",
-    "blue": "01040204",
-    "cyan": "01040206",
-    "magenta": "01040205",
-    "yellow": "01040203",
-    "white": "01040207",
-    "forward": "01040101",
-    "backward": "01040108",
-    "left": "01040102",
-    "right": "01040104",
-    "num0": "01040000",
-    # numbers
-    **{f"num{i}": f"010400{format(i, 'x').rjust(2, '0').upper()}" for i in range(99)},
-    "minus": "010400FF",
-}
-
 
 class FileNotFoundError(EvoError):
     def __init__(self, audio_name: str) -> None:
@@ -171,15 +148,8 @@ class Evo:
         return int(frequency)
 
     async def play_audio(self, name: str) -> None:
-        filename = self._map_audio_name_to_filename(name)
-        await self._driver.execute_file(f"/system/audio/{filename}.wav")
-
-    @staticmethod
-    def _map_audio_name_to_filename(audio_name: str) -> str:
-        filename = _map_audioname_filename.get(audio_name, None)
-        if not filename:
-            raise FileNotFoundError(audio_name)
-        return filename
+        logger.debug("Playing audio file", name=name)
+        await self._driver.play_audio(name)
 
     async def set_led(self, mask: LEDMask, color: Color) -> None:
         logger.debug("Setting LED", mask=mask, color=color)
