@@ -23,6 +23,7 @@ only-include = ["src/ozobot"]
 
 [tool.uv.sources]
 ozobot-ble = { workspace = true }
+ozobot-common = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

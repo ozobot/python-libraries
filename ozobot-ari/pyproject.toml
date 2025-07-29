@@ -26,6 +26,9 @@ only-include = ["src/ozobot"]
 
 [tool.uv.sources]
 ozobot-ble = { workspace = true }
+ozobot-common = { workspace = true }
+ozobot-jsonrpc = { workspace = true }
+ozobot-webrtc = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

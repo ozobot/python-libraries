@@ -71,15 +71,15 @@ wheels = [
 
 [[package]]
 name = "aiormq"
-version = "6.8.1"
+version = "6.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pamqp" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a4/79/5397756a8782bf3d0dce392b48260c3ec81010f16bef8441ff03505dccb4/aiormq-6.8.1.tar.gz", hash = "sha256:a964ab09634be1da1f9298ce225b310859763d5cf83ef3a7eae1a6dc6bd1da1a", size = 30528 }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/95/feddc2fd77f995837ee8909794101ce5c9c6e7bb399d4e60d5d16f04d74a/aiormq-6.9.0.tar.gz", hash = "sha256:1c31f2098ad2beee6e95d0ad969c836876c1e3113e8c67142eb58565fedcab4c", size = 30526 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/be/1a613ae1564426f86650ff58c351902895aa969f7e537e74bfd568f5c8bf/aiormq-6.8.1-py3-none-any.whl", hash = "sha256:5da896c8624193708f9409ffad0b20395010e2747f22aa4150593837f40aa017", size = 31174 },
+    { url = "https://files.pythonhosted.org/packages/c9/35/85c151d382c327182c160f5814416276012941afe378101bd254f946bc60/aiormq-6.9.0-py3-none-any.whl", hash = "sha256:e1d88db819d197646cabaea6d6b53497a5ba358a5b6ae8f45f61dcb446821fa6", size = 31781 },
 ]
 
 [[package]]
@@ -443,15 +443,21 @@ name = "ozobot-ari"
 version = "0.1.0"
 source = { editable = "ozobot-ari" }
 dependencies = [
-    { name = "bleak" },
+    { name = "loguru" },
     { name = "ozobot-ble" },
+    { name = "ozobot-common" },
+    { name = "ozobot-jsonrpc" },
+    { name = "ozobot-webrtc" },
     { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "bleak", specifier = ">=0.22.3" },
+    { name = "loguru" },
     { name = "ozobot-ble", editable = "ozobot-ble" },
+    { name = "ozobot-common", editable = "ozobot-common" },
+    { name = "ozobot-jsonrpc", editable = "ozobot-jsonrpc" },
+    { name = "ozobot-webrtc", editable = "ozobot-webrtc" },
     { name = "pydantic", specifier = ">=2.11.7" },
 ]
 
@@ -488,20 +494,32 @@ name = "ozobot-evo"
 version = "0.1.0"
 source = { editable = "ozobot-evo" }
 dependencies = [
-    { name = "bleak" },
+    { name = "loguru" },
     { name = "ozobot-ble" },
+    { name = "ozobot-common" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "bleak", specifier = ">=0.22.3" },
+    { name = "loguru" },
     { name = "ozobot-ble", editable = "ozobot-ble" },
+    { name = "ozobot-common", editable = "ozobot-common" },
 ]
 
 [[package]]
 name = "ozobot-jsonrpc"
 version = "0.1.0"
 source = { editable = "ozobot-jsonrpc" }
+dependencies = [
+    { name = "loguru" },
+    { name = "ozobot-common" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "loguru" },
+    { name = "ozobot-common", editable = "ozobot-common" },
+]
 
 [[package]]
 name = "ozobot-library"
@@ -536,14 +554,18 @@ dependencies = [
     { name = "aiohttp" },
     { name = "aiormq" },
     { name = "aiortc" },
+    { name = "loguru" },
+    { name = "ozobot-common" },
     { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.12.13" },
-    { name = "aiormq" },
+    { name = "aiormq", specifier = ">=6.9.0" },
     { name = "aiortc", specifier = ">=1.13.0" },
+    { name = "loguru" },
+    { name = "ozobot-common", editable = "ozobot-common" },
     { name = "pydantic", specifier = ">=2" },
 ]
 
