@@ -3,8 +3,8 @@ from __future__ import annotations
 import typing
 
 from ozobot.common.algebraic import ActorDispatcher
-from ozobot.evo.api.core import Evo
-from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, EventWatcher
+from ozobot.linefollower.api.core import Evo
+from ozobot.linefollower.api.data_access import DataAccessRead, DataWatcher, EventWatcher
 from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample, TNote
 
 _evo_dispatcher = ActorDispatcher()

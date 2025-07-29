@@ -6,8 +6,6 @@ import math
 import typing
 
 from loguru import logger
-from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
-from ozobot.evo.api.watchers import WatcherSubscription
 from ozobot.evo.conversions import (
     battery_state_from_protocol,
     color_code_from_protocol,
@@ -16,6 +14,8 @@ from ozobot.evo.conversions import (
 )
 from ozobot.evo.exceptions import EvoError
 from ozobot.evo.protocol import Types, VirtualMemory
+from ozobot.linefollower.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.watchers import WatcherSubscription
 from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample, TNote
 from ozobot.linefollower.driver import Driver, MemoryProperty
 

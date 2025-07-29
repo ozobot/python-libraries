@@ -1,8 +1,8 @@
 from unittest.mock import AsyncMock, Mock, sentinel
 
-from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
-from ozobot.evo.api.sync import SyncDataAccessRead
 from ozobot.evo.protocol import Types
+from ozobot.linefollower.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.sync import SyncDataAccessRead
 from ozobot.linefollower.datatypes import Sample
 
 

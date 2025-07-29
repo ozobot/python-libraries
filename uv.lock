@@ -10,6 +10,7 @@ members = [
     "ozobot-evo",
     "ozobot-jsonrpc",
     "ozobot-library",
+    "ozobot-linefollower",
     "ozobot-webrtc",
 ]
 
@@ -544,6 +545,21 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-mypy" },
     { name = "pytest-ruff" },
+]
+
+[[package]]
+name = "ozobot-linefollower"
+version = "0.1.0"
+source = { editable = "ozobot-linefollower" }
+dependencies = [
+    { name = "loguru" },
+    { name = "ozobot-common" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "loguru" },
+    { name = "ozobot-common", editable = "ozobot-common" },
 ]
 
 [[package]]

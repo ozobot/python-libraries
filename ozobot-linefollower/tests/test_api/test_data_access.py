@@ -3,9 +3,9 @@ import datetime
 import typing
 from unittest.mock import AsyncMock, Mock, sentinel
 
-from ozobot.evo.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
-from ozobot.evo.api.watchers import WatcherSubscription
 from ozobot.evo.protocol import Types
+from ozobot.linefollower.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.watchers import WatcherSubscription
 from ozobot.linefollower.datatypes import Sample
 from ozobot.linefollower.driver import Driver
 

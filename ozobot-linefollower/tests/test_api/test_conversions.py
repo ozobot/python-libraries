@@ -2,14 +2,14 @@ import pytest
 from ozobot.evo.conversions import (
     battery_state_from_protocol,
     color_code_from_protocol,
-    intersection_bitmap_from_protocol,
     intersection_direction_to_protocol,
+    intersection_bitmap_from_protocol,
     led_to_protocol,
     line_color_from_protocol,
     surface_color_from_protocol,
 )
+from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask
 
 
 def test_battery_state_from_protocol() -> None:

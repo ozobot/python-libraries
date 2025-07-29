@@ -11,11 +11,9 @@ from ozobot.evo.conversions import (
     intersection_direction_to_protocol,
     led_to_protocol,
 )
-from ozobot.evo.driver.driver import Deserializable, MemoryProperty, Serializable
 from ozobot.evo.exceptions import OzobotProtocolCommandError
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
-
-from .driver import Direction, LEDMask
+from ozobot.linefollower.driver import Deserializable, Direction, LEDMask, MemoryProperty, Serializable
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
 _CHARACTERISTIC_UUID = UUID("8903136c-5f13-4548-a885-c58779136802")

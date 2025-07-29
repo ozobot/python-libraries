@@ -1,0 +1,28 @@
+[project]
+name = "ozobot-linefollower"
+version = "0.1.0"
+description = "Ozobot base line following robot library"
+readme = "README.md"
+authors = [
+    { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "ozobot-common",
+    "loguru",
+]
+
+[tool.hatch.build.targets.sdist]
+sources = ["src"]
+only-include = ["src/ozobot"]
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+only-include = ["src/ozobot"]
+
+[tool.uv.sources]
+ozobot-common = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

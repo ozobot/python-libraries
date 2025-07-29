@@ -1,6 +1,7 @@
 import sys
 
-from .driver import Driver, LEDMask
+from ozobot.linefollower.driver import Driver, LEDMask
+
 from .native import NativeDriver
 from .web import WebDriver
 

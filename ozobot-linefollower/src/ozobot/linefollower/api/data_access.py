@@ -3,8 +3,8 @@ import contextlib
 import typing
 
 from ozobot.common.broadcast import BroadcastManager
-from ozobot.evo.api.watchers import WatcherSubscription
 from ozobot.evo.conversions import sample_from_protocol
+from ozobot.linefollower.api.watchers import WatcherSubscription
 from ozobot.linefollower.datatypes import Sample
 from ozobot.linefollower.driver import Deserializable, Driver, MemoryProperty
 

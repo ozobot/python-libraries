@@ -1,8 +1,8 @@
 import typing
 
-from ozobot.evo.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask, Sample
 from ozobot.evo.exceptions import OzobotDataTypeError
 from ozobot.evo.protocol import Types
+from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask, Sample
 
 
 class _HasTimestamp(typing.Protocol):

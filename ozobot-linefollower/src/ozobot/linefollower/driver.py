@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import AsyncContextManager, Protocol, Self
 
-from ozobot.evo.api.watchers import WatcherSubscription
-from ozobot.evo.datatypes import Direction, LEDMask
+from ozobot.linefollower.api.watchers import WatcherSubscription
+from ozobot.linefollower.datatypes import Direction, LEDMask
 
 
 class Deserializable(Protocol):

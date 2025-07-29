@@ -3,9 +3,9 @@ import typing
 from unittest.mock import ANY, Mock, patch, sentinel
 
 import pytest
-from ozobot.evo.datatypes import LEDMask, Direction
 from ozobot.evo.driver.native import NativeDriver
 from ozobot.evo.protocol import Types
+from ozobot.linefollower.datatypes import Direction, LEDMask
 
 
 def _get_async_control():
