@@ -2,43 +2,25 @@ from __future__ import annotations
 
 import typing
 
-from ozobot.common.algebraic import ActorDispatcher
-from ozobot.linefollower.api.core import Evo
-from ozobot.linefollower.api.data_access import DataAccessRead, DataWatcher, EventWatcher
-from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample, TNote
-
-_evo_dispatcher = ActorDispatcher()
+from ozobot.common.algebraic import ActorDispatcher, dispatcher
+from ozobot.linefollower.api.core import LineFollower
+from ozobot.linefollower.datatypes import Color, Direction, LEDMask, Sample, TNote
+from ozobot.linefollower.driver import ReadableRegion, ReadableWatchableRegion, VirtualMemoryRegions
 
 
-class _ProxyDataAccessRead[T, U]:
-    def __init__(self, dispatcher: ActorDispatcher, value_type: type[DataAccessRead[typing.Any, U]], name: str) -> None:
+class _ProxyDataAccessRead[T]:
+    def __init__(self, dispatcher: ActorDispatcher, value_type: type[ReadableRegion[T]], name: str) -> None:
         self._dispatcher = dispatcher
         self._value_type = value_type
         self._name = name
 
-    async def read(self) -> Sample[U]:
+    async def read(self) -> Sample[T]:
         obj = self._dispatcher.get_property(self._value_type, self._name)
         return await obj.read()
 
 
-class _ProxyDataWatcher[T, U]:
-    def __init__(self, dispatcher: ActorDispatcher, value_type: type[DataWatcher[typing.Any, U]], name: str) -> None:
-        self._dispatcher = dispatcher
-        self._value_type = value_type
-        self._name = name
-
-    async def read(self) -> Sample[U]:
-        obj = self._dispatcher.get_property(self._value_type, self._name)
-        return await obj.read()
-
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
-        obj = self._dispatcher.get_property(self._value_type, self._name)
-        async with obj.watch() as reader:
-            yield reader
-
-
-class _ProxyEventWatcher[T]:
-    def __init__(self, dispatcher: ActorDispatcher, value_type: type[EventWatcher[T]], name: str) -> None:
+class _ProxyDataWatcher[T]:
+    def __init__(self, dispatcher: ActorDispatcher, value_type: type[ReadableWatchableRegion[T]], name: str) -> None:
         self._dispatcher = dispatcher
         self._value_type = value_type
         self._name = name
@@ -53,48 +35,53 @@ class _ProxyEventWatcher[T]:
             yield reader
 
 
-battery = _ProxyDataAccessRead[typing.Any, BatteryState](_evo_dispatcher, DataAccessRead, "_property_battery")
-color_codes = _ProxyDataWatcher[typing.Any, ColorCode](_evo_dispatcher, DataWatcher, "_watcher_color_codes")
-line_color = _ProxyDataWatcher[typing.Any, Color](_evo_dispatcher, DataWatcher, "_watcher_line_color")
-surface_color = _ProxyDataWatcher[typing.Any, Color](_evo_dispatcher, DataWatcher, "_watcher_surface_color")
-intersection = _ProxyEventWatcher(_evo_dispatcher, EventWatcher, "_intersection")
+class _ProxyVirtualMemoryRegions:
+    def __getattr__(self, name: str) -> typing.Any:
+        memory = dispatcher.get_property(object, "memory")
+        if hasattr(memory, name):
+            return getattr(memory, name)
+
+        raise AttributeError(f"'memory' has no attribute '{name}'")
+
+
+memory: VirtualMemoryRegions = _ProxyVirtualMemoryRegions()
 
 
 async def move(distance_m: float, speed_mps: float) -> None:
-    await _evo_dispatcher.acall(Evo.move, distance_m, speed_mps)
+    await dispatcher.acall(LineFollower.move, distance_m, speed_mps)
 
 
 async def rotate(angle_deg: float, angular_speed_degps: float) -> None:
-    await _evo_dispatcher.acall(Evo.rotate, angle_deg, angular_speed_degps)
+    await dispatcher.acall(LineFollower.rotate, angle_deg, angular_speed_degps)
 
 
 async def set_velocity(linear_mps: float, angular_degps: float, duration_s: float) -> None:
-    await _evo_dispatcher.acall(Evo.set_velocity, linear_mps, angular_degps, duration_s)
+    await dispatcher.acall(LineFollower.set_velocity, linear_mps, angular_degps, duration_s)
 
 
 async def emit_tone(frequency_hz: int, duration_s: float, volume: int) -> None:
-    await _evo_dispatcher.acall(Evo.emit_tone, frequency_hz, duration_s, volume)
+    await dispatcher.acall(LineFollower.emit_tone, frequency_hz, duration_s, volume)
 
 
 async def emit_note(note: TNote, octave: int, duration_s: float, volume: int) -> None:
-    await _evo_dispatcher.acall(Evo.emit_note, note, octave, duration_s, volume)
+    await dispatcher.acall(LineFollower.emit_note, note, octave, duration_s, volume)
 
 
 async def play_audio(name: str) -> None:
-    await _evo_dispatcher.acall(Evo.play_audio, name)
+    await dispatcher.acall(LineFollower.play_audio, name)
 
 
 async def set_led(mask: LEDMask, color: Color) -> None:
-    await _evo_dispatcher.acall(Evo.set_led, mask, color)
+    await dispatcher.acall(LineFollower.set_led, mask, color)
 
 
 async def follow_line(direction: Direction) -> None:
-    await _evo_dispatcher.acall(Evo.follow_line, direction)
+    await dispatcher.acall(LineFollower.follow_line, direction)
 
 
 async def align_with_line(direction: Direction) -> None:
-    await _evo_dispatcher.acall(Evo.align_with_line, direction)
+    await dispatcher.acall(LineFollower.align_with_line, direction)
 
 
 async def set_follow_line_speed(speed_mps: float) -> None:
-    await _evo_dispatcher.acall(Evo.set_follow_line_speed, speed_mps)
+    await dispatcher.acall(LineFollower.set_follow_line_speed, speed_mps)

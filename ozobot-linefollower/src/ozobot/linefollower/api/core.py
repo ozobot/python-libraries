@@ -1,99 +1,19 @@
 from __future__ import annotations
 
-import contextlib
-import datetime
 import math
-import typing
 
 from loguru import logger
-from ozobot.evo.conversions import (
-    battery_state_from_protocol,
-    color_code_from_protocol,
-    line_color_from_protocol,
-    surface_color_from_protocol,
-)
-from ozobot.evo.exceptions import EvoError
-from ozobot.evo.protocol import Types, VirtualMemory
-from ozobot.linefollower.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
-from ozobot.linefollower.api.watchers import WatcherSubscription
-from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample, TNote
-from ozobot.linefollower.driver import Driver, MemoryProperty
+from ozobot.linefollower.datatypes import Color, Direction, LEDMask, TNote
+from ozobot.linefollower.driver import Driver
 
 
-class FileNotFoundError(EvoError):
-    def __init__(self, audio_name: str) -> None:
-        super().__init__(f"Audio file not found: {audio_name}")
-
-
-class Evo:
-    @property
-    def battery(self) -> DataAccessRead[Types.Battery, BatteryState]:
-        return self._property_battery
-
-    @property
-    def color_codes(self) -> DataWatcher[Types.ColorCode, ColorCode]:
-        return self._watcher_color_codes
-
-    @property
-    def line_color(self) -> DataWatcher[Types.LineColor, Color]:
-        return self._watcher_line_color
-
-    @property
-    def surface_color(self) -> DataWatcher[Types.SurfaceColor, Color]:
-        return self._watcher_surface_color
-
-    @property
-    def intersection(self) -> EventWatcher[Direction]:
-        return self._intersection
-
+class LineFollower:
     def __init__(
         self,
         driver: Driver,
-        watchers: tuple[
-            WatcherSubscription[Types.ColorCode],
-            WatcherSubscription[Types.LineColor],
-            WatcherSubscription[Types.SurfaceColor],
-        ],
     ) -> None:
         self._driver = driver
-        self._watcher_color_codes = DataWatcher(
-            self._driver, VirtualMemory.colorCode, watchers[0], color_code_from_protocol
-        )
-        self._watcher_line_color = DataWatcher(
-            self._driver, VirtualMemory.lineColor, watchers[1], line_color_from_protocol
-        )
-        self._watcher_surface_color = DataWatcher(
-            self._driver, VirtualMemory.surfaceColor, watchers[2], surface_color_from_protocol
-        )
-        self._property_battery = DataAccessRead[Types.Battery, BatteryState](
-            driver, VirtualMemory.batteryState, battery_state_from_protocol
-        )
-        self._intersection_queue = EventWatcherQueue[Direction](Sample(Direction(0), 0))
-        self._intersection = EventWatcher(self._intersection_queue)
-
-    @classmethod
-    @contextlib.asynccontextmanager
-    async def open(cls, driver: Driver) -> typing.AsyncIterator[Evo]:
-        config = (
-            VirtualMemory.colorCode,
-            VirtualMemory.lineColor,
-            VirtualMemory.surfaceColor,
-        )
-
-        async with driver.watch(
-            typing.cast(tuple[MemoryProperty[Types.ColorCode | Types.LineColor | Types.SurfaceColor], ...], config)
-        ) as watchers:
-            yield Evo(
-                driver,
-                typing.cast(
-                    tuple[
-                        WatcherSubscription[Types.ColorCode],
-                        WatcherSubscription[Types.LineColor],
-                        WatcherSubscription[Types.SurfaceColor],
-                    ],
-                    watchers,
-                ),
-            )
+        self.memory = driver.memory
 
     async def move(self, distance_m: float, speed_mps: float) -> None:
         logger.debug("Moving", distance=distance_m, speed=speed_mps)
@@ -160,17 +80,11 @@ class Evo:
 
     async def follow_line(self, direction: Direction) -> None:
         logger.debug("Following line", direction=direction)
-        intersection = await self._driver.line_navigation(direction, follow=True)
-        timestamp = datetime.datetime.now()
-        sample = Sample(intersection, timestamp)
-        await self._intersection_queue.write(sample)
+        await self._driver.line_navigation(direction, follow=True)
 
     async def align_with_line(self, direction: Direction) -> None:
         logger.debug("Aligning with line", direTction=direction)
-        intersection = await self._driver.line_navigation(direction, follow=False)
-        timestamp = datetime.datetime.now()
-        sample = Sample(intersection, timestamp)
-        await self._intersection_queue.write(sample)
+        await self._driver.line_navigation(direction, follow=False)
 
     async def set_follow_line_speed(self, speed_mps: float) -> None:
         logger.debug("Setting line following speed", speed=speed_mps)

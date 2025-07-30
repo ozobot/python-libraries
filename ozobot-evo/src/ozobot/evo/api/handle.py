@@ -20,8 +20,8 @@ class EvoHandle:
         Driver = get_driver()
         async with Driver.open(address=self.address, id_prefix=self.id_prefix, name=self.name) as driver:
             await driver.stop_all()
-            async with Evo.open(driver) as evo:
-                yield evo
+            evo = Evo(driver)
+            yield evo
 
 
 @dataclass(frozen=True, kw_only=True)

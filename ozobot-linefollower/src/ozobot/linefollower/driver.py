@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import AsyncContextManager, Protocol, Self
+from typing import AsyncContextManager, AsyncIterator, Protocol, Self
 
-from ozobot.linefollower.api.watchers import WatcherSubscription
-from ozobot.linefollower.datatypes import Direction, LEDMask
+from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample
 
 
 class Deserializable(Protocol):
@@ -15,12 +14,20 @@ class Serializable(Protocol):
     def serialize(self) -> bytes: ...
 
 
-class MemoryProperty[T](Protocol):
-    address: int
-    type: type[T]
+class ReadableRegion[T](Protocol):
+    async def read(self) -> Sample[T]: ...
 
-    @property
-    def size(self) -> int: ...
+
+class ReadableWatchableRegion[T](ReadableRegion[T], Protocol):
+    def watch(self) -> AsyncContextManager[AsyncIterator[Sample[T]]]: ...
+
+
+class VirtualMemoryRegions(Protocol):
+    battery: ReadableRegion[BatteryState]
+    color_code: ReadableWatchableRegion[ColorCode]
+    line_color: ReadableWatchableRegion[Color]
+    surface_color: ReadableWatchableRegion[Color]
+    intersection: ReadableWatchableRegion[Direction]
 
 
 class Driver(Protocol):
@@ -31,6 +38,9 @@ class Driver(Protocol):
         id_prefix: str | None = None,
         name: str | None = None,
     ) -> AsyncContextManager[Driver]: ...
+
+    @property
+    def memory(self) -> VirtualMemoryRegions: ...
 
     async def move(self, distance_m: float, speed_ms: float) -> None: ...
 
@@ -49,11 +59,3 @@ class Driver(Protocol):
     async def follow_speed(self, speed_mps: float) -> None: ...
 
     async def stop_all(self) -> None: ...
-
-    def watch[T: Deserializable](
-        self, config: tuple[MemoryProperty[T], ...]
-    ) -> AsyncContextManager[tuple[WatcherSubscription[T], ...]]: ...
-
-    async def mem_read[T: Deserializable](self, prop: MemoryProperty[T]) -> T: ...
-
-    async def mem_write[T: Serializable](self, prop: MemoryProperty[T], value: T) -> None: ...

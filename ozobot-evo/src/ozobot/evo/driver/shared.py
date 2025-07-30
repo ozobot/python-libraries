@@ -1,3 +1,5 @@
+from ozobot.linefollower.exceptions import FileNotFoundError
+
 _map_audioname_filename = {
     "happy": "01010100",
     "sad": "01010110",
@@ -20,6 +22,7 @@ _map_audioname_filename = {
     **{f"num{i}": f"010400{format(i, 'x').rjust(2, '0').upper()}" for i in range(99)},
     "minus": "010400FF",
 }
+
 
 def map_audio_name_to_filename(audio_name: str) -> str:
     filename = _map_audioname_filename.get(audio_name, None)

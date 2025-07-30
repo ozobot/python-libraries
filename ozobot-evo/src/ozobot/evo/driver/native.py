@@ -1,23 +1,31 @@
 from __future__ import annotations
 
 import contextlib
+import datetime
 import typing
 from uuid import UUID
 
-from ozobot.ble.connection import Characteristic, open_client
-from ozobot.evo.api.watchers import EvoWatcher, WatcherSubscription
-from ozobot.evo.conversions import (
-    intersection_bitmap_from_protocol,
-    intersection_direction_to_protocol,
-    led_to_protocol,
-)
+from ozobot.ble.connection import open_client
+from ozobot.evo import conversions
+from ozobot.evo.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.exceptions import OzobotProtocolCommandError
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
-from ozobot.linefollower.driver import Deserializable, Direction, LEDMask, MemoryProperty, Serializable
+from ozobot.linefollower.api.watchers import LineFollowerWatcher, WatcherSubscription
+from ozobot.linefollower.conversions import sample_from_protocol
+from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
+from ozobot.linefollower.driver import Deserializable, VirtualMemoryRegions
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
 _CHARACTERISTIC_UUID = UUID("8903136c-5f13-4548-a885-c58779136802")
+
+
+class _HasTimestamp(typing.Protocol):
+    timestamp: int
+
+
+class _TimestampAndDeserializable(_HasTimestamp, Deserializable, typing.Protocol):
+    pass
 
 
 class _HasExecutionState(typing.Protocol):
@@ -34,9 +42,107 @@ class _HasResult(typing.Protocol):
     result: Types.IOResult
 
 
+class MemoryProperty[T](typing.Protocol):
+    address: int
+    type: type[T]
+
+    @property
+    def size(self) -> int: ...
+
+
+type _TWatchers = tuple[
+    WatcherSubscription[Types.ColorCode],
+    WatcherSubscription[Types.LineColor],
+    WatcherSubscription[Types.SurfaceColor],
+]
+
+
+class NativeMemoryRegions(VirtualMemoryRegions):
+    def __init__(self, control: AsyncControl, watchers: _TWatchers) -> None:
+        color_code_watcher, line_color_watcher, surface_color_watcher = watchers
+
+        self.intersection_queue = EventWatcherQueue(Sample(Direction(0), 0))
+        self.intersection = EventWatcher(self.intersection_queue)
+
+        self.battery = NativeDataAccessRead(
+            control, VirtualMemory.batteryState, conversions.battery_state_from_protocol
+        )
+        self.color_code = NativeDataWatcher(
+            control, VirtualMemory.colorCode, color_code_watcher, conversions.color_code_from_protocol
+        )
+        self.line_color = NativeDataWatcher(
+            control, VirtualMemory.lineColor, line_color_watcher, conversions.line_color_from_protocol
+        )
+        self.surface_color = NativeDataWatcher(
+            control, VirtualMemory.surfaceColor, surface_color_watcher, conversions.surface_color_from_protocol
+        )
+
+
+class NativeDataAccessRead[T: _TimestampAndDeserializable, U]:
+    def __init__(
+        self, control: AsyncControl, property: MemoryProperty[T], from_protocol: typing.Callable[[T], U]
+    ) -> None:
+        self._control = control
+        self._property = property
+        self._from_protocol = from_protocol
+
+    async def read(self) -> Sample[U]:
+        ret = await self._control.MemRead(self._property.address, self._property.size)
+        val = self._property.type.deserialize(bytes(ret.data))
+        return sample_from_protocol(val, self._from_protocol)
+
+
+class NativeDataWatcher[T: _TimestampAndDeserializable, U]:
+    def __init__(
+        self,
+        control: AsyncControl,
+        property: MemoryProperty[T],
+        watcher: WatcherSubscription[T],
+        from_protocol: typing.Callable[[T], U],
+    ) -> None:
+        self._watcher = watcher
+        self._reader = NativeDataAccessRead(control, property, from_protocol)
+        self._from_protocol = from_protocol
+
+    async def read(self) -> Sample[U]:
+        return await self._reader.read()
+
+    @contextlib.asynccontextmanager
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
+        async with self._watcher.watch() as reader:
+
+            async def _reader_converted() -> typing.AsyncIterator[Sample[U]]:
+                async for r in reader:
+                    yield sample_from_protocol(r, self._from_protocol)
+
+            yield _reader_converted()
+
+
+@contextlib.asynccontextmanager
+async def create_memory_regions_structure(control: AsyncControl) -> typing.AsyncIterator[NativeMemoryRegions]:
+    config = (
+        VirtualMemory.colorCode,
+        VirtualMemory.lineColor,
+        VirtualMemory.surfaceColor,
+    )
+
+    watcher = LineFollowerWatcher(control)
+
+    # Until typing allows tuple mapping, we need to do the casts below. See: https://github.com/python/typing/issues/1383
+    type TExpectedInput = tuple[MemoryProperty[Types.ColorCode | Types.LineColor | Types.SurfaceColor]]
+    type TExpectedOutput = tuple[
+        WatcherSubscription[Types.ColorCode],
+        WatcherSubscription[Types.LineColor],
+        WatcherSubscription[Types.SurfaceColor],
+    ]
+    async with watcher.watch(typing.cast(TExpectedInput, config)) as subscriptions:
+        yield NativeMemoryRegions(control, typing.cast(TExpectedOutput, subscriptions))
+
+
 class NativeDriver:
-    def __init__(self, characteristic: Characteristic) -> None:
-        self._control = AsyncControl(characteristic)
+    def __init__(self, control: AsyncControl, memory: NativeMemoryRegions) -> None:
+        self._control = control
+        self.memory = memory
 
     @classmethod
     @contextlib.asynccontextmanager
@@ -48,7 +154,9 @@ class NativeDriver:
     ) -> typing.AsyncIterator[NativeDriver]:
         async with open_client(address=address, id_prefix=id_prefix, name=name) as client:
             char = client.get_characteristic(_SERVICE_UUID, _CHARACTERISTIC_UUID)
-            yield cls(char)
+            control = AsyncControl(char)
+            async with create_memory_regions_structure(control) as memory:
+                yield cls(control, memory)
 
     async def move(self, distance_m: float, speed_ms: float) -> None:
         async with self._control.MoveStraight(self._control.get_next_request_id(), distance_m, speed_ms) as (
@@ -86,12 +194,12 @@ class NativeDriver:
             await self._handle_events("ExecuteFile", evts)
 
     async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None:
-        protocol_mask = led_to_protocol(mask)
+        protocol_mask = conversions.led_to_protocol(mask)
         response = await self._control.SetLED(protocol_mask, red, green, blue, 255)
         self._handle_response("SetLED", response)
 
     async def line_navigation(self, direction: Direction, follow: bool) -> Direction:
-        direction_protocol = intersection_direction_to_protocol(direction)
+        direction_protocol = conversions.intersection_direction_to_protocol(direction)
 
         action = Types.LineNavigationAction.Follow if follow else Types.LineNavigationAction.DoNotFollow
         async with self._control.LineNavigation(self._control.get_next_request_id(), direction_protocol, action) as (
@@ -100,11 +208,16 @@ class NativeDriver:
         ):
             event = await self._handle_events("LineNavigation", evts)
 
-        return intersection_bitmap_from_protocol(event.intersection)
+        intersection = conversions.intersection_bitmap_from_protocol(event.intersection)
+        timestamp = datetime.datetime.now()
+        sample = Sample(intersection, timestamp)
+        await self.memory.intersection_queue.write(sample)
+
+        return intersection
 
     async def follow_speed(self, speed_mps: float) -> None:
         config = VirtualMemory.lineNavigationSpeed
-        await self.mem_write(config, Types.S8_24(speed_mps))
+        await self._control.MemWrite(config.address, config.size, Types.S8_24(speed_mps).serialize())
 
     async def stop_all(self) -> None:
         await self._control.StopExecution(0)
@@ -131,21 +244,3 @@ class NativeDriver:
                 )
 
         raise OzobotProtocolCommandError(function_name, "empty", description="no command end state received")
-
-    @contextlib.asynccontextmanager
-    async def watch[T: Deserializable](
-        self, config: tuple[MemoryProperty[T], ...]
-    ) -> typing.AsyncIterator[tuple[WatcherSubscription[T], ...]]:
-        watcher = EvoWatcher(self._control)
-        async with watcher.watch(config) as subscriptions:
-            yield subscriptions
-
-    async def mem_read[T: Deserializable](self, config: MemoryProperty[T]) -> T:
-        response = await self._control.MemRead(config.address, config.size)
-        self._handle_response("MemRead", response)
-        return config.type.deserialize(bytes(response.data))
-
-    async def mem_write[T: Serializable](self, config: MemoryProperty[T], value: T) -> None:
-        raw_value = value.serialize()
-        response = await self._control.MemWrite(config.address, config.size, raw_value)
-        self._handle_response("MemWrite", response)

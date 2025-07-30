@@ -1,36 +1,19 @@
-from unittest.mock import AsyncMock, Mock, sentinel
+import datetime
+from unittest.mock import sentinel
 
-from ozobot.evo.protocol import Types
-from ozobot.linefollower.api.data_access import DataAccessRead, DataWatcher, EventWatcher, EventWatcherQueue
 from ozobot.linefollower.api.sync import SyncDataAccessRead
 from ozobot.linefollower.datatypes import Sample
 
 
-def test_data_reader_read() -> None:
-    subs_mock = Mock(mem_read=AsyncMock(return_value=Types.Battery(1, 2, 3, 100)))
-    watcher = DataAccessRead[Types.Battery, int](subs_mock, sentinel.watcher, lambda b: b.voltage)
-    sync_watcher = SyncDataAccessRead(watcher)
+class _ReadableRegion:
+    async def read(self) -> Sample[int]:
+        return Sample(sentinel.value1, 0)
+
+
+def test_data_read() -> None:
+    sync_watcher = SyncDataAccessRead(_ReadableRegion())
 
     sample = sync_watcher.read()
     assert isinstance(sample, Sample)
-    assert sample.data == 1
-
-
-def test_sync_watcher_read() -> None:
-    driver_mock = Mock(mem_read=AsyncMock(return_value=Types.Battery(1, 2, 3, 100)))
-    watcher = DataWatcher[Types.Battery, int](driver_mock, sentinel.property, sentinel.watcher, lambda b: b.voltage)
-    sync_watcher = SyncDataAccessRead(watcher)
-
-    sample = sync_watcher.read()
-    assert isinstance(sample, Sample)
-    assert sample.data == 1
-
-
-def test_fake_watcher_read() -> None:
-    q = EventWatcherQueue(Sample(1, 0))
-    watcher = EventWatcher[int](q)
-    sync_watcher = SyncDataAccessRead(watcher)
-
-    sample = sync_watcher.read()
-    assert isinstance(sample, Sample)
-    assert sample.data == 1
+    assert sample.data == sentinel.value1
+    assert sample.timestamp == datetime.datetime.fromtimestamp(0)

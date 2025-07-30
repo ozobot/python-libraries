@@ -163,7 +163,7 @@ class WatcherAllocator:
         return watcher_id, region_id
 
 
-class EvoWatcher:
+class LineFollowerWatcher:
     def __init__(self, control: AsyncControl) -> None:
         self._control = control
         self._watcher_enabled = False

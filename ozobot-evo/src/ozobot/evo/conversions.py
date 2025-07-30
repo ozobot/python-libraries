@@ -2,11 +2,7 @@ import typing
 
 from ozobot.evo.exceptions import OzobotDataTypeError
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask, Sample
-
-
-class _HasTimestamp(typing.Protocol):
-    timestamp: int
+from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask
 
 
 def battery_state_from_protocol(state: Types.Battery) -> BatteryState:
@@ -132,10 +128,3 @@ def intersection_bitmap_from_protocol(intersection_mask: Types.IntersectionBitma
                 typing.assert_never(dir)
 
     return intersection
-
-
-def sample_from_protocol[T: _HasTimestamp, U](protocol_data: T, convertor: typing.Callable[[T], U]) -> Sample[U]:
-    return Sample(
-        convertor(protocol_data),
-        protocol_data.timestamp,
-    )
