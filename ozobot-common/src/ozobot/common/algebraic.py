@@ -99,3 +99,6 @@ class ActorDispatcher:
                     return actor, getattr(actor, name)
 
         raise SuitableActorNotFoundError(f"missing callable {name}")
+
+
+dispatcher = ActorDispatcher()
