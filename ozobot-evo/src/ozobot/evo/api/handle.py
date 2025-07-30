@@ -3,9 +3,10 @@ import typing
 from dataclasses import dataclass
 
 from ozobot.evo.driver import get_driver
+from ozobot.common.sync import as_sync_context_manager
 
 from .core import Evo
-from .sync import EvoSync, as_sync_context_manager
+from .sync import EvoSync
 
 
 @dataclass(frozen=True, kw_only=True)
