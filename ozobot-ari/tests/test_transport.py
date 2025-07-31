@@ -28,9 +28,7 @@ async def test_serializing_transport_context() -> None:
     from_transport = asyncio.Queue[str]()
     transport = SerializingTransportLayer(_QueueTransport(to_transport, from_transport))
 
-    tone_req = request.PlayToneRequest(
-        id=1, params=request.PlayToneRequestParams(frequency=1, volume=2, duration=3, sampling_rate=4)
-    )
+    tone_req = request.PlayToneRequest(id=1, params=request.PlayToneRequestParams(frequency=1, volume=2, duration=3))
     await transport.write(tone_req)
 
     sound_req = request.PlaySoundRequest(id=2, params=request.PlaySoundRequestParams(name="name", loop=False, volume=1))
@@ -41,7 +39,7 @@ async def test_serializing_transport_context() -> None:
         await from_transport.get(),
     ]
     assert requests_sent == [
-        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":1,"duration":3,"volume":2,"samplingRate":4}}',
+        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":1,"duration":3,"volume":2.0}}',
         '{"id":2,"jsonrpc":"2.0","method":"PlaySound","params":{"name":"name","loop":false,"volume":1}}',
     ]
 
@@ -92,16 +90,11 @@ async def test_serializing_transport_deregister_after_response() -> None:
     from_transport = asyncio.Queue[str]()
     transport = SerializingTransportLayer(_QueueTransport(to_transport, from_transport))
 
-    req = request.PlayToneRequest(
-        id=1, params=request.PlayToneRequestParams(frequency=1, volume=2, duration=3, sampling_rate=4)
-    )
+    req = request.PlayToneRequest(id=1, params=request.PlayToneRequestParams(frequency=1, volume=2, duration=3))
     await transport.write(req)
 
     req_sent = await from_transport.get()
-    assert (
-        req_sent
-        == '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":1,"duration":3,"volume":2,"samplingRate":4}}'
-    )
+    assert req_sent == '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":1,"duration":3,"volume":2.0}}'
 
     r = response.PlayToneResponse(id=1, result=response.PlayToneResponseBody(type="success"))
     await to_transport.put(serialize(r))
