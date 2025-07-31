@@ -162,14 +162,17 @@ class WebsocketTransport(asyncio.transports.Transport):
 
 class WebsocketTransportFactory(aiormq.TransportFactory):
     async def create(
-        self, url: URL, ssl_context_provider: aiormq.SSLContextProvider, **kwargs: dict[str, typing.Any]
+        self, url: URL, **kwargs: dict[str, typing.Any]
     ) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
         loop = asyncio.get_event_loop()
         reader = asyncio.StreamReader()
         protocol = asyncio.StreamReaderProtocol(reader)
+
         if url.scheme == "wss":
+            ssl_context_provider = typing.cast(aiormq.SSLContextProvider, kwargs.get("ssl_context_provider"))
             ssl_context = await ssl_context_provider.get_context()
         else:
+            _ = kwargs.pop("ssl_context_provider", None)
             ssl_context = None
         transport = WebsocketTransport(loop, protocol, url, ssl_context=ssl_context, extra=kwargs)
         writer = asyncio.StreamWriter(transport, protocol, reader, loop)
