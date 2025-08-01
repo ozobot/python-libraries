@@ -37,6 +37,8 @@ class LEDMask(enum.Flag):
     FRONT_RIGHT = enum.auto()
     FRONT_RIGHT_CENTER = enum.auto()
     TOP = enum.auto()
+    BACK = enum.auto()
+    BUTTON = enum.auto()
 
 
 class Direction(enum.Flag):

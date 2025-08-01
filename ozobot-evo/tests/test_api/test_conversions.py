@@ -66,6 +66,8 @@ def test_line_color_from_protocol(protocol_color: Types.LineColorEnum, library_c
         (Types.LEDsMask.front_right_center, LEDMask.FRONT_RIGHT_CENTER),
         (Types.LEDsMask.front_center, LEDMask.FRONT_CENTER),
         (Types.LEDsMask.top, LEDMask.TOP),
+        (Types.LEDsMask.button, LEDMask.BUTTON),
+        (Types.LEDsMask.back, LEDMask.BACK),
     ],
     ids=lambda x: repr(x),
 )

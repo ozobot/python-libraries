@@ -83,6 +83,10 @@ def led_to_protocol(mask: LEDMask) -> Types.LEDsMask:
                 protocol_mask |= Types.LEDsMask.front_right
             case LEDMask.TOP:
                 protocol_mask |= Types.LEDsMask.top
+            case LEDMask.BACK:
+                protocol_mask |= Types.LEDsMask.back
+            case LEDMask.BUTTON:
+                protocol_mask |= Types.LEDsMask.button
             case _:
                 typing.assert_never(led)
 
