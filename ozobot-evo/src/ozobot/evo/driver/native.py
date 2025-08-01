@@ -198,7 +198,7 @@ class NativeDriver:
         response = await self._control.SetLED(protocol_mask, red, green, blue, 255)
         self._handle_response("SetLED", response)
 
-    async def line_navigation(self, direction: Direction, follow: bool) -> Direction:
+    async def line_navigation(self, direction: Direction, follow: bool) -> None:
         direction_protocol = conversions.intersection_direction_to_protocol(direction)
 
         action = Types.LineNavigationAction.Follow if follow else Types.LineNavigationAction.DoNotFollow
@@ -212,8 +212,6 @@ class NativeDriver:
         timestamp = datetime.datetime.now()
         sample = Sample(intersection, timestamp)
         await self.memory.intersection_queue.write(sample)
-
-        return intersection
 
     async def follow_speed(self, speed_mps: float) -> None:
         config = VirtualMemory.lineNavigationSpeed

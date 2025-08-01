@@ -1,4 +1,5 @@
 import contextlib
+import datetime
 import typing
 from unittest.mock import ANY, AsyncMock, Mock, patch, sentinel
 
@@ -87,6 +88,7 @@ async def test_command_with_events(
     cmd_mock.assert_called_once_with(sentinel.request_id, *rpc_parameters)
 
 
+@patch("ozobot.evo.driver.native.datetime", Mock(datetime=Mock(now=Mock(return_value=datetime.datetime.fromtimestamp(0)))))
 async def test_line_navigation() -> None:
     cmd_mock = Mock(
         return_value=_create_command(
@@ -107,12 +109,11 @@ async def test_line_navigation() -> None:
     memory = AsyncMock()
     driver = NativeDriver(control, memory)
 
-    result = await driver.line_navigation(Direction.LEFT, False)
+    await driver.line_navigation(Direction.LEFT, False)
     cmd_mock.assert_called_once_with(
         sentinel.request_id, Types.IntersectionDirection.Left, Types.LineNavigationAction.DoNotFollow
     )
-    memory.intersection_queue.write.assert_called_once()
-    assert result == Direction.LEFT | Direction.STRAIGHT
+    memory.intersection_queue.write.assert_called_once_with(Sample(Direction.LEFT | Direction.STRAIGHT, 0))
 
 
 @pytest.mark.parametrize(
