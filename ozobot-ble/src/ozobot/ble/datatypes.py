@@ -5,11 +5,12 @@ from dataclasses import dataclass
 
 from bleak import AdvertisementData, BLEDevice
 
-TProductName = typing.Literal["evo", "jot15b"]
+TProductName = typing.Literal["evo", "jot15b", "ari"]
 
 _products: dict[int, TProductName] = {
     0: "evo",
     4: "jot15b",
+    5: "ari",
 }
 
 
@@ -32,7 +33,6 @@ class DeviceDescription:
         if manufacturer_data and manufacturer_data[0] == PACKET_ID and len(manufacturer_data) > 24:
             device_id = manufacturer_data[1:17].hex().upper()
             product = _products.get(manufacturer_data[22], None)
-
             version = (
                 int(manufacturer_data[23]) & 0b0111_1111,
                 int(manufacturer_data[24]),
