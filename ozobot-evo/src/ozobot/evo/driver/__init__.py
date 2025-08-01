@@ -1,14 +1,12 @@
 import sys
 
-from ozobot.linefollower.driver import Driver, LEDMask
-
 from .native import NativeDriver
 from .web import WebDriver
 
-__all__ = ["get_driver", "LEDMask"]
+__all__ = ["get_driver"]
 
 
-def get_driver() -> type[Driver]:
+def get_driver() -> type[NativeDriver]:
     if sys.platform == "emscripten":
         return WebDriver
     else:
