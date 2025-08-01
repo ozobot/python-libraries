@@ -1,6 +1,7 @@
 import typing
 
 from ozobot.ari.protocol import types
+from ozobot.ari.protocol.types import TDirection
 from ozobot.linefollower.datatypes import Direction, LEDMask
 
 
@@ -17,26 +18,26 @@ def led_to_protocol(mask: LEDMask) -> types.Lights:
     )
 
 
-def intersection_direction_to_protocol(direction: Direction) -> types.Intersection:
+def intersection_direction_to_protocol(direction: Direction) -> TDirection:
     if not len(direction) == 1:
         raise ValueError("Direction attribute needs to define exactly one direction")
 
     match direction:
         case Direction.LEFT:
-            return types.Intersection(left=True)
+            return "Left"
         case Direction.RIGHT:
-            return types.Intersection(right=True)
+            return "Right"
         case Direction.STRAIGHT:
-            return types.Intersection(straight=True)
+            return "Straight"
         case Direction.BACKWARD:
-            return types.Intersection(backward=True)
+            return "Backward"
         case _:
             typing.assert_never(direction)
 
 
 def intersection_bitmap_from_protocol(intersection_mask: types.Intersection) -> Direction:
     intersection = Direction(0)
-    
+
     if intersection_mask.backward:
         intersection |= Direction.BACKWARD
     if intersection_mask.straight:

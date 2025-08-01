@@ -6,31 +6,31 @@ from .base import Model, Response
 
 
 class MoveStraightResponseBody(Model):
-    type: L["success"] | str
+    type: L["finished"] | str
 
 
 class RotateResponseBody(Model):
-    type: L["success"] | str
+    type: L["finished"] | str
 
 
 class VelocityResponseBody(Model):
-    type: L["success"] | str
+    type: L["finished"] | str
 
 
 class SetLEDResponseBody(Model):
-    type: L["success"] | str
+    type: L["finished"] | str
 
 
 class PlayToneResponseBody(Model):
-    type: L["success"] | str
+    type: L["finished"] | str
 
 
 class PlaySoundResponseBody(Model):
-    type: L["success"] | str
+    type: L["finished"] | str
 
 
 class LineNavigationResponseBody(Model):
-    type: L["success"] | str
+    type: L["finished"] | str
 
 
 class MoveStraightResponse(Response):

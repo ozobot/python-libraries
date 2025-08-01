@@ -88,7 +88,9 @@ async def test_command_with_events(
     cmd_mock.assert_called_once_with(sentinel.request_id, *rpc_parameters)
 
 
-@patch("ozobot.evo.driver.native.datetime", Mock(datetime=Mock(now=Mock(return_value=datetime.datetime.fromtimestamp(0)))))
+@patch(
+    "ozobot.evo.driver.native.datetime", Mock(datetime=Mock(now=Mock(return_value=datetime.datetime.fromtimestamp(0))))
+)
 async def test_line_navigation() -> None:
     cmd_mock = Mock(
         return_value=_create_command(
