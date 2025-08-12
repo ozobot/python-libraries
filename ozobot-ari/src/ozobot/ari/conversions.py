@@ -1,8 +1,9 @@
+from ozobot.linefollower.datatypes import ColorCode
 import typing
 
 from ozobot.ari.protocol import types
-from ozobot.ari.protocol.types import TDirection
-from ozobot.linefollower.datatypes import Direction, LEDMask
+from ozobot.ari.protocol.types import TDirection, TNamedColor
+from ozobot.linefollower.datatypes import Color, Colors, Direction, LEDMask
 
 
 def led_to_protocol(mask: LEDMask) -> types.Lights:
@@ -48,3 +49,31 @@ def intersection_bitmap_from_protocol(intersection_mask: types.Intersection) -> 
         intersection |= Direction.RIGHT
 
     return intersection
+
+
+def color_from_protocol(color: TNamedColor) -> Color:
+    match color:
+        case "green":
+            return Colors.GREEN
+        case "black":
+            return Colors.BLACK
+        case "red":
+            return Colors.RED
+        case "blue":
+            return Colors.BLUE
+        case "white":
+            return Colors.WHITE
+        case "cyan":
+            return Colors.CYAN
+        case "magenta":
+            return Colors.MAGENTA
+        case "yellow":
+            return Colors.YELLOW
+        case "unknown":
+            return Colors.UNKNOWN
+        case _:
+            typing.assert_never(color)
+
+
+def color_code_from_protocol(color_code: list[TNamedColor]) -> ColorCode:
+    return ColorCode(colors=tuple(color_from_protocol(c) for c in color_code))

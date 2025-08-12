@@ -20,7 +20,7 @@ class MalformedMessageError(TransportError):
 
 
 class AriProtocolError(OzobotError): ...
-    
+
 
 class AriProtocolCommandError(AriProtocolError):
     def __init__(self, command: str, return_value: str, *, description: str | None = None) -> None:
@@ -31,4 +31,15 @@ class AriProtocolCommandError(AriProtocolError):
 
         super().__init__(f"Ari protocol command failed: {command} {details}")
 
-    
+
+class DriverError(OzobotError): ...
+
+
+class MemoryWriteUnsuccessfulError(DriverError):
+    def __init__(self, name: str, reason: str) -> None:
+        super().__init__(f"Could not write virtual memory value: '{reason}' on {name}'")
+
+
+class MemoryReadUnsuccessfulError(DriverError):
+    def __init__(self, name: str, reason: str) -> None:
+        super().__init__(f"Could not read virtual memory: '{reason}' on '{name}'")

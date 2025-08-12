@@ -1,4 +1,4 @@
-from ozobot.ari.protocol import base, notification, request, response
+from ozobot.ari.protocol import base, notification, request, response, memread, memwrite
 import typing
 from ozobot.jsonrpc.executor import Method
 
@@ -46,6 +46,21 @@ TIME_OF_FLIGHT = Method.without_response(
 )
 
 
+MEM_READ = Method.without_notifications(
+    request=memread.MemReadRequest,
+    response=memread.MemReadResponse,
+)
+
+MEM_WRITE = Method.without_notifications(
+    request=memwrite.MemWriteRequest,
+    response=memwrite.MemWriteResponse,
+)
+
+WATCH = Method.without_response(
+    request=memread.WatchRequest,
+    notification=memread.WatchNotification,
+)
+
 REQUEST_METHODS = {
     typing.cast(type[base.Request], m.request): typing.cast(Method[base.Request, base.Response, base.Notification], m)
     for m in (
@@ -57,5 +72,8 @@ REQUEST_METHODS = {
         PLAY_TONE,
         PLAY_SOUND,
         TIME_OF_FLIGHT,
+        MEM_READ,
+        MEM_WRITE,
+        WATCH,
     )
 }

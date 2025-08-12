@@ -2,21 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import datetime
 import typing
 from uuid import UUID
 
 from ozobot.ari import conversions
-from ozobot.ari.exceptions import AriProtocolCommandError
-
-from ozobot.ari.protocol import base, methods, notification, request, types, response
+from ozobot.ari.exceptions import AriProtocolCommandError, MemoryReadUnsuccessfulError, MemoryWriteUnsuccessfulError
+from ozobot.ari.protocol import base, memread, memwrite, methods, notification, request, types
+from ozobot.ari.protocol.memread import MemReadResponseBody
+from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
-from ozobot.linefollower.api.watchers import LineFollowerWatcher, WatcherSubscription
+from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
-from ozobot.linefollower.driver import Deserializable, VirtualMemoryRegions
+from ozobot.linefollower.datatypes import ColorCode, Direction, LEDMask, Sample
+from ozobot.linefollower.driver import VirtualMemoryRegions
 from ozobot.webrtc import messaging
 from ozobot.webrtc.connection import Channel
 from ozobot.webrtc.signaling import negotiation, token
@@ -27,21 +27,9 @@ _ROUTING_KEY_SERVICE_UUID = UUID(
 _ROUTING_KEY_CHARACTERISTIC_UUID = UUID("6b63040a-520e-4d24-0000-65c78f1d0001")
 
 
-# class _HasTimestamp(typing.Protocol):
-#     timestamp: int
-
-
-# class _TimestampAndDeserializable(_HasTimestamp, Deserializable, typing.Protocol):
-#     pass
-
-
-# class _HasExecutionState(typing.Protocol):
-#     executionState: Types.ExecutionStateEnum
-
-
-# @typing.runtime_checkable
-# class _HasCallStatus(typing.Protocol):
-#     callStatus: Types.CallStatus
+@typing.runtime_checkable
+class _HasTimestamp(typing.Protocol):
+    timestamp: int
 
 
 class _HasResultType(typing.Protocol):
@@ -54,106 +42,125 @@ class _HasResult(typing.Protocol):
     def result(self) -> _HasResultType: ...
 
 
-# class MemoryProperty[T](typing.Protocol):
-#     address: int
-#     xtype: type[T]
+class NativeMemoryRegions(VirtualMemoryRegions):
+    def __init__(self, executor: Executor, request_id: _RequestIdCounter) -> None:
+        self.intersection_queue = EventWatcherQueue(Sample.now(Direction(0)))
+        self.intersection = EventWatcher(self.intersection_queue)
 
-#     @property
-#     def size(self) -> int: ...
+        self.color_code_queue = EventWatcherQueue(Sample.now(ColorCode(colors=tuple())))
+        self.color_code = EventWatcher(self.color_code_queue)
 
+        self.line_following_speed = NativeDataAccessReadWrite(
+            executor,
+            request_id,
+            "lineFollowingSpeed",
+            response_type=memread.MemReadResponseLinearVelocity,
+            from_protocol=lambda r: r.velocity,
+            to_protocol=lambda v: memwrite.MemWriteRequestLineFollowingSpeedParams(value=v),
+        )
 
-# type _TWatchers = tuple[
-#     WatcherSubscription[Types.ColorCode],
-#     WatcherSubscription[Types.LineColor],
-#     WatcherSubscription[Types.SurfaceColor],
-# ]
-
-
-# class NativeMemoryRegions(VirtualMemoryRegions):
-#     def __init__(self, control: AsyncControl, watchers: _TWatchers) -> None:
-#         color_code_watcher, line_color_watcher, surface_color_watcher = watchers
-
-#         self.intersection_queue = EventWatcherQueue(Sample(Direction(0), 0))
-#         self.intersection = EventWatcher(self.intersection_queue)
-
-#         self.battery = NativeDataAccessRead(
-#             control, VirtualMemory.batteryState, conversions.battery_state_from_protocol
-#         )
-#         self.color_code = NativeDataWatcher(
-#             control, VirtualMemory.colorCode, color_code_watcher, conversions.color_code_from_protocol
-#         )
-#         self.line_color = NativeDataWatcher(
-#             control, VirtualMemory.lineColor, line_color_watcher, conversions.line_color_from_protocol
-#         )
-#         self.surface_color = NativeDataWatcher(
-#             control, VirtualMemory.surfaceColor, surface_color_watcher, conversions.surface_color_from_protocol
-#         )
+        self.surface_color = NativeDataAccessRead(
+            executor,
+            request_id,
+            "surfaceColor",
+            response_type=memread.MemReadResponseSurfaceColor,
+            from_protocol=lambda resp: conversions.color_from_protocol(resp.color),
+        )
+        self.line_color = NativeDataAccessRead(
+            executor,
+            request_id,
+            "lineColor",
+            response_type=memread.MemReadResponseLineColor,
+            from_protocol=lambda resp: conversions.color_from_protocol(resp.color),
+        )
 
 
-# class NativeDataAccessRead[T: _TimestampAndDeserializable, U]:
-#     def __init__(
-#         self, control: AsyncControl, property: MemoryProperty[T], from_protocol: typing.Callable[[T], U]
-#     ) -> None:
-#         self._control = control
-#         self._property = property
-#         self._from_protocol = from_protocol
+class _RequestIdCounter:
+    def __init__(self) -> None:
+        self._next_request_id = 0
 
-#     async def read(self) -> Sample[U]:
-#         ret = await self._control.MemRead(self._property.address, self._property.size)
-#         val = self._property.type.deserialize(bytes(ret.data))
-#         return sample_from_protocol(val, self._from_protocol)
+    def get_next(self) -> int:
+        rid = self._next_request_id
+        self._next_request_id += 1
+        return rid
 
 
-# class NativeDataWatcher[T: _TimestampAndDeserializable, U]:
-#     def __init__(
-#         self,
-#         control: AsyncControl,
-#         property: MemoryProperty[T],
-#         watcher: WatcherSubscription[T],
-#         from_protocol: typing.Callable[[T], U],
-#     ) -> None:
-#         self._watcher = watcher
-#         self._reader = NativeDataAccessRead(control, property, from_protocol)
-#         self._from_protocol = from_protocol
+class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
+    def __init__(
+        self,
+        executor: Executor,
+        id_counter: _RequestIdCounter,
+        name: str,
+        *,
+        response_type: type[TProtoFrom],
+        from_protocol: typing.Callable[[TProtoFrom], TLib],
+    ) -> None:
+        self._executor = executor
+        self._name = name
+        self._type = response_type
+        self._from_protocol = from_protocol
+        self._request_id_counter = id_counter
 
-#     async def read(self) -> Sample[U]:
-#         return await self._reader.read()
+    async def read(self) -> Sample[TLib]:
+        req = memread.MemReadRequest(
+            id=self._request_id_counter.get_next(),
+            params=memread.MemReadRequestParams(segment=self._name),
+        )
+        async with Query(req, methods.MEM_READ).execute(self._executor) as q:
+            resp = await q.response
+            return self._convert_from_protocol(resp.result)
 
-#     @contextlib.asynccontextmanager
-#     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
-#         async with self._watcher.watch() as reader:
+    @contextlib.asynccontextmanager
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[TLib]]]:
+        req = memread.WatchRequest(
+            id=self._request_id_counter.get_next(),
+            params=memread.MemReadRequestParams(segment=self._name),
+        )
+        async with Query(req, methods.WATCH).execute(self._executor) as q:
+            yield self._watch_iter(q.notifications)
 
-#             async def _reader_converted() -> typing.AsyncIterator[Sample[U]]:
-#                 async for r in reader:
-#                     yield sample_from_protocol(r, self._from_protocol)
+    async def _watch_iter(
+        self, iter: typing.AsyncIterator[memread.WatchNotification]
+    ) -> typing.AsyncIterator[Sample[TLib]]:
+        async for val in iter:
+            yield self._convert_from_protocol(val.notification)
 
-#             yield _reader_converted()
-
-
-# @contextlib.asynccontextmanager
-# async def create_memory_regions_structure(control: AsyncControl) -> typing.AsyncIterator[NativeMemoryRegions]:
-#     config = (
-#         VirtualMemory.colorCode,
-#         VirtualMemory.lineColor,
-#         VirtualMemory.surfaceColor,
-#     )
-
-#     watcher = LineFollowerWatcher(control)
-
-#     # Until typing allows tuple mapping, we need to do the casts below. See: https://github.com/python/typing/issues/1383
-#     type TExpectedInput = tuple[MemoryProperty[Types.ColorCode | Types.LineColor | Types.SurfaceColor]]
-#     type TExpectedOutput = tuple[
-#         WatcherSubscription[Types.ColorCode],
-#         WatcherSubscription[Types.LineColor],
-#         WatcherSubscription[Types.SurfaceColor],
-#     ]
-#     async with watcher.watch(typing.cast(TExpectedInput, config)) as subscriptions:
-#         yield NativeMemoryRegions(control, typing.cast(TExpectedOutput, subscriptions))
+    def _convert_from_protocol(self, val: MemReadResponseBody) -> Sample[TLib]:
+        if isinstance(val, self._type):
+            if isinstance(val, _HasTimestamp):
+                return sample_from_protocol(val, self._from_protocol)
+            else:
+                return Sample.now(self._from_protocol(val))
+        else:
+            raise MemoryReadUnsuccessfulError(self._name, "unexpected type received")
 
 
-class _EmptyMemory:
-    def __getattr__(self, name):
-        raise NotImplementedError("Memory attributes not yet implemented")
+class NativeDataAccessReadWrite[TProtoFrom: MemReadResponseBody, TProtoTo: MemWriteRequestParams, TLib](
+    NativeDataAccessRead[TProtoFrom, TLib]
+):
+    def __init__(
+        self,
+        executor: Executor,
+        id_counter: _RequestIdCounter,
+        name: str,
+        *,
+        response_type: type[TProtoFrom],
+        from_protocol: typing.Callable[[TProtoFrom], TLib],
+        to_protocol: typing.Callable[[TLib], TProtoTo],
+    ) -> None:
+        super().__init__(executor, id_counter, name, response_type=response_type, from_protocol=from_protocol)
+        self._to_protocol = to_protocol
+
+    async def write(self, value: TLib) -> None:
+        request_params = self._to_protocol(value)
+        req = memwrite.MemWriteRequest(
+            id=self._request_id_counter.get_next(),
+            params=request_params,
+        )
+        async with Query(req, methods.MEM_WRITE).execute(self._executor) as q:
+            resp = await q.response
+            if not resp.result.success:
+                raise MemoryWriteUnsuccessfulError(self._name, "failure reported")
 
 
 async def _get_routing_key_from_ble(
@@ -183,8 +190,8 @@ async def _create_webrtc_channel(connection_key: str) -> Channel:
 class NativeDriver:
     def __init__(self, executor: Executor) -> None:
         self._executor = executor
-        self._next_request_id = 0
-        self.memory = typing.cast(VirtualMemoryRegions, _EmptyMemory())
+        self._request_id = _RequestIdCounter()
+        self.memory = NativeMemoryRegions(executor, self._request_id)
 
     @classmethod
     @contextlib.asynccontextmanager
@@ -214,14 +221,9 @@ class NativeDriver:
         async with Executor.create(transport, base.Cancellation) as ex:
             yield cls(ex)
 
-    def _get_next_request_id(self) -> int:
-        rid = self._next_request_id
-        self._next_request_id += 1
-        return rid
-
     async def move(self, distance_m: float, speed_ms: float) -> None:
         req = request.MoveStraightRequest(
-            id=self._get_next_request_id(),
+            id=self._request_id.get_next(),
             params=request.MoveStraightRequestParams(distance=distance_m, speed=speed_ms),
         )
         async with Query(req, methods.MOVE_STRAIGHT).execute(self._executor) as q:
@@ -229,7 +231,7 @@ class NativeDriver:
 
     async def rotate(self, angle_rad: float, angular_speed_radps: float) -> None:
         req = request.RotateRequest(
-            id=self._get_next_request_id(),
+            id=self._request_id.get_next(),
             params=request.RotateRequestParams(angle=angle_rad, speed=angular_speed_radps),
         )
         async with Query(req, methods.ROTATE).execute(self._executor) as q:
@@ -237,7 +239,7 @@ class NativeDriver:
 
     async def velocity(self, linear_mps: float, angular_radps: float, duration_ms: int) -> None:
         req = request.VelocityRequest(
-            id=self._get_next_request_id(),
+            id=self._request_id.get_next(),
             params=request.VelocityRequestParams(
                 linear_speed=linear_mps, rotation_speed=angular_radps, expiration=duration_ms / 1000
             ),
@@ -247,7 +249,7 @@ class NativeDriver:
 
     async def play_tone(self, frequency_hz: int, duration_ms: int, volume: int) -> None:
         req = request.PlayToneRequest(
-            id=self._get_next_request_id(),
+            id=self._request_id.get_next(),
             params=request.PlayToneRequestParams(frequency=frequency_hz, duration=duration_ms / 1000, volume=volume),
         )
         async with Query(req, methods.PLAY_TONE).execute(self._executor) as q:
@@ -255,7 +257,7 @@ class NativeDriver:
 
     async def play_audio(self, audio_name: str) -> None:
         req = request.PlaySoundRequest(
-            id=self._get_next_request_id(),
+            id=self._request_id.get_next(),
             params=request.PlaySoundRequestParams(name=audio_name, loop=False, volume=1.0),
         )
         async with Query(req, methods.PLAY_SOUND).execute(self._executor) as q:
@@ -265,7 +267,7 @@ class NativeDriver:
         lights = conversions.led_to_protocol(mask)
         color = types.Color(red=red, green=green, blue=blue)
         req = request.SetLEDRequest(
-            id=self._get_next_request_id(), params=request.SetLEDRequestParams(lights=lights, color=color)
+            id=self._request_id.get_next(), params=request.SetLEDRequestParams(lights=lights, color=color)
         )
         async with Query(req, methods.SET_LED).execute(self._executor) as q:
             await self._handle_response("SetLED", q.response)
@@ -274,7 +276,7 @@ class NativeDriver:
         direction_protocol = conversions.intersection_direction_to_protocol(direction)
         follow_arg = "Follow" if follow else "DoNotFollow"
         req = request.LineNavigationRequest(
-            id=self._get_next_request_id(),
+            id=self._request_id.get_next(),
             params=request.LineNavigationRequestParams(
                 direction=direction_protocol, follow=follow_arg, detect_color_codes=True
             ),
@@ -292,21 +294,15 @@ class NativeDriver:
         async for msg in it:
             match msg.result:
                 case types.Intersection():
-                    # TODO: write intersection to event queue
-                    # intersection = conversions.intersection_bitmap_from_protocol(event.intersection)
-                    # timestamp = datetime.datetime.now()
-                    # sample = Sample(intersection, timestamp)
-                    # await self.memory.intersection_queue.write(sample)
-                    pass
+                    intersection = conversions.intersection_bitmap_from_protocol(msg.result)
+                    sample_intersection = Sample.now(intersection)
+                    await self.memory.intersection_queue.write(sample_intersection)
                 case notification.LineNavigationColorNotificationBody():
-                    # TODO: write color code to event queue
-                    pass
+                    color_code = conversions.color_code_from_protocol(msg.result.colors)
+                    sample_color_code = Sample.now(color_code)
+                    await self.memory.color_code_queue.write(sample_color_code)
                 case _:
                     typing.assert_never(msg.result)
-
-    # async def follow_speed(self, speed_mps: float) -> None:
-    #     config = VirtualMemory.lineNavigationSpeed
-    #     await self._control.MemWrite(config.address, config.size, Types.S8_24(speed_mps).serialize())
 
     async def _handle_response(self, function_name: str, resp: typing.Awaitable[_HasResult]) -> None:
         val = await resp

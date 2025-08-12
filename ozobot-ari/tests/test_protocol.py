@@ -1,5 +1,5 @@
 import pytest
-from ozobot.ari.protocol import base, notification, request, response, serialization, types
+from ozobot.ari.protocol import base, notification, request, response, serialization, types, memread, memwrite
 from ozobot.ari.protocol.methods import REQUEST_METHODS
 from ozobot.ari.protocol.serialization import deserialize
 from pydantic.type_adapter import TypeAdapter
@@ -68,10 +68,10 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         notification.LineNavigationNotification(
             id=1,
             result=notification.LineNavigationColorNotificationBody(
-                color_code=["red", "green", "red"],
+                colors=["red", "green", "red"],
             ),
         ),
-        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"color_code": ["red", "green", "red"]}}',
+        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"colors": ["red", "green", "red"]}}',
         request.LineNavigationRequest,
     ),
     (
@@ -134,6 +134,315 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         ),
         '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"distance":1.0,"deviation":2.0,"ambientRate":3.0,"signalRate":4.0,"activeCount":5,"timestamp":6}}',
         request.TimeOfFlightRequest,
+    ),
+    (
+        memread.MemReadRequest(id=1, params=memread.MemReadRequestParams(segment="someSegment")),
+        '{"id": 1,"jsonrpc":"2.0","params":{"segment":"someSegment"}}',
+        None,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseColorSensor(
+                red=120,
+                green=65,
+                blue=200,
+                mixed=75,
+                color=127,
+                has_light_source=True,
+                saturation_analog=False,
+                saturation_digital=True,
+                is_valid=True,
+                timestamp=1627849200,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"color","red":120,"green":65,"blue":200,"mixed":75,"color":127,"hasLightSource":true,"saturationAnalog":false,"saturationDigital":true,"isValid":true,"timestamp":1627849200}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseLineSensorsCalibration(
+                black=[1, 2, 3],
+                white=[4, 5, 6],
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineSensorsCalibration","black":[1,2,3],"white":[4,5,6]}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseLineSensors(
+                position=1.0,
+                width=2.0,
+                under_left=True,
+                under_right=False,
+                under_all=True,
+                active_sensors=[True, False],
+                timestamp=123,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineSensors","position":1.0,"width":2.0,"underLeft":true,"underRight":false,"underAll":true,"activeSensors":[true,false],"timestamp":123}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseLineSensorsRaw(
+                sensors=[10, 20, 30],
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineSensorsRaw","sensors":[10,20,30]}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponsePickup(
+                is_picked_up=True,
+                timestamp=456,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"pickup","isPickedUp":true,"timestamp":456}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponsePosition(
+                origin_count=5,
+                x=1.1,
+                y=2.2,
+                angle_x=0.3,
+                angle_y=0.4,
+                timestamp=789,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"position","originCount":5,"x":1.1,"y":2.2,"angleX":0.3,"angleY":0.4,"timestamp":789}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseProximity(
+                value=10,
+                timestamp=101,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"proximity","value":10,"timestamp":101}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseReadIr(
+                message=5,
+                intensity=10,
+                timestamp=202,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"readIr","message":5,"intensity":10,"timestamp":202}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseSentIr(
+                message=6,
+                active=False,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"sentIr","message":6,"active":false}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseVersion(
+                ir=types.VersionPair(
+                    bundled=types.Version(version="1.0", hash="abc"),
+                    current=types.Version(version="1.1", hash="def"),
+                ),
+                sensor=types.VersionPair(
+                    bundled=types.Version(version="2.0", hash="ghi"),
+                    current=types.Version(version="2.1", hash="jkl"),
+                ),
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"version","ir":{"bundled":{"version":"1.0","hash":"abc"},"current":{"version":"1.1","hash":"def"}},"sensor":{"bundled":{"version":"2.0","hash":"ghi"},"current":{"version":"2.1","hash":"jkl"}}}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseWheels(
+                count_left=100,
+                count_right=200,
+                timestamp=303,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"wheels","countLeft":100,"countRight":200,"timestamp":303}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseHardwareState(
+                sensor="sensor1",
+                ir="ir1",
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"state","sensor":"sensor1","ir":"ir1"}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseLog(
+                level=2,
+                message="log message",
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"log","level":2,"message":"log message"}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponsePickupADC(
+                adc=[10, 20, 30],
+                timestamp=404,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"pickupADC","adc":[10,20,30],"timestamp":404}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseLineColor(
+                color="Red",
+                light_source=True,
+                timestamp=505,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineColor","color":"Red","lightSource":true,"timestamp":505}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseSurfaceColor(
+                color="Blue",
+                counter=7,
+                light_source=False,
+                timestamp=606,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"surfaceColor","color":"Blue","counter":7,"lightSource":false,"timestamp":606}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseEncoderDACReference(
+                reference=[0.1, 0.2, 0.3],
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"encoderDACReference","reference":[0.1,0.2,0.3]}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseEncoderDACReferenceRange(
+                ranges=[
+                    memread.FloatRange(start=0.0, end=1.0),
+                    memread.FloatRange(start=1.0, end=2.0),
+                ],
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"encoderDACReferenceRange","ranges":[{"start":0.0,"end":1.0},{"start":1.0,"end":2.0}]}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseLinearVelocity(
+                velocity=3.14,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"linearVelocity","velocity":3.14}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseEncoderDACReference(
+                reference=[0.1, 0.2, 0.3],
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"encoderDACReference","reference":[0.1,0.2,0.3]}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseLinearVelocity(
+                velocity=3.14,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"linearVelocity","velocity":3.14}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponseColorSensorCalibration(
+                red=memread.FloatRange(start=0.0, end=1.0),
+                green=memread.FloatRange(start=1.0, end=2.0),
+                blue=memread.FloatRange(start=2.0, end=3.0),
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"colorSensorCalibration","red":{"start":0.0,"end":1.0},"green":{"start":1.0,"end":2.0},"blue":{"start":2.0,"end":3.0}}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memread.MemReadResponse(
+            id=1,
+            result=memread.MemReadResponsePickupThreshold(
+                threshold=10,
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"pickupThreshold","threshold":10}}',
+        memread.MemReadRequest,
+    ),
+    (
+        memwrite.MemWriteRequest(
+            id=1, params=memwrite.MemWriteRequestIrLeftParams(segment="irLeft", active=True, message=42)
+        ),
+        '{"id":1,"jsonrpc":"2.0","method":"MemWrite","params":{"segment":"irLeft","active":true,"message":42}}',
+        None,
+    ),
+    (
+        memwrite.MemWriteRequest(
+            id=1, params=memwrite.MemWriteRequestIrRightParams(segment="irRight", active=False, message=43)
+        ),
+        '{"id":1,"jsonrpc":"2.0","method":"MemWrite","params":{"segment":"irRight","active":false,"message":43}}',
+        None,
+    ),
+    (
+        memwrite.MemWriteRequest(
+            id=1, params=memwrite.MemWriteRequestLineFollowingSpeedParams(segment="lineFollowingSpeed", value=1.5)
+        ),
+        '{"id":1,"jsonrpc":"2.0","method":"MemWrite","params":{"segment":"lineFollowingSpeed","value":1.5}}',
+        None,
+    ),
+    (
+        memwrite.MemWriteResponse(id=1, result=memwrite.MemWriteResponseBody(type="finished", success=True)),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"finished","success":true}}',
+        memwrite.MemWriteRequest,
     ),
 )
 

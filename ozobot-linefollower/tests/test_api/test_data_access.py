@@ -1,4 +1,4 @@
-from ozobot.evo.api.data_access import EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.datatypes import Sample
 
 

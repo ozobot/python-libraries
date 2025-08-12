@@ -6,10 +6,10 @@ from uuid import UUID
 
 from ozobot.ble.connection import open_client
 from ozobot.evo import conversions
-from ozobot.evo.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.exceptions import OzobotProtocolCommandError
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
+from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.api.watchers import LineFollowerWatcher, WatcherSubscription
 from ozobot.linefollower.conversions import sample_from_protocol
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample

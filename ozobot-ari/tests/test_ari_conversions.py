@@ -1,7 +1,9 @@
 import pytest
 from ozobot.ari import conversions
+from ozobot.ari.conversions import color_code_from_protocol, color_from_protocol
 from ozobot.ari.protocol import types
-from ozobot.linefollower.datatypes import LEDMask, Direction
+from ozobot.ari.protocol.types import TNamedColor
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask
 
 
 @pytest.mark.parametrize(
@@ -48,3 +50,28 @@ def test_intersection_direction_to_protocol(direction: Direction, protocol_direc
 )
 def test_intersection_bitmap_from_protocol(intersection: types.Intersection, expected_direction: Direction) -> None:
     assert conversions.intersection_bitmap_from_protocol(intersection) == expected_direction
+
+
+@pytest.mark.parametrize(
+    ["color", "protocol_color"],
+    argvalues=[
+        (Colors.BLACK, "black"),
+        (Colors.RED, "red"),
+        (Colors.GREEN, "green"),
+        (Colors.BLUE, "blue"),
+        (Colors.WHITE, "white"),
+        (Colors.CYAN, "cyan"),
+        (Colors.MAGENTA, "magenta"),
+        (Colors.YELLOW, "yellow"),
+        (Colors.UNKNOWN, "unknown"),
+    ],
+    ids=lambda x: repr(x),
+)
+def test_color_from_protocol(color: Color, protocol_color: TNamedColor) -> None:
+    assert color_from_protocol(protocol_color) == color
+
+
+def test_color_code_from_protocol() -> None:
+    assert color_code_from_protocol(["red", "black", "blue"]) == ColorCode(
+        colors=(Colors.RED, Colors.BLACK, Colors.BLUE)
+    )

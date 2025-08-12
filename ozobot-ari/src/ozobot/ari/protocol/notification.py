@@ -15,7 +15,7 @@ class MotionNotification(Notification):
 
 
 class LineNavigationColorNotificationBody(Model):
-    color_code: list[TNamedColor]
+    colors: list[TNamedColor]
 
 
 class LineNavigationNotification(Notification):

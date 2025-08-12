@@ -1,18 +1,17 @@
-from av.error import NotImplementedError
 import asyncio
 import contextlib
-import datetime
 import typing
-from unittest.mock import ANY, AsyncMock, Mock, patch, sentinel
+from unittest.mock import Mock, patch
 
 import pytest
 from ozobot.ari.driver.native import NativeDriver
-from ozobot.ari.protocol import request, types, methods
-from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
+from ozobot.ari.protocol import memread, memwrite, methods, notification, request, types
+from ozobot.linefollower.datatypes import ColorCode, Colors, Direction, LEDMask, Sample
 
 
-def _create_query():
+def _create_query(response=None, notifications=None):
     query_mock = Mock()
+    evt = asyncio.Event()
 
     class _MockQuery:
         def __init__(self, *args, **kwargs):
@@ -20,12 +19,23 @@ def _create_query():
 
         @contextlib.asynccontextmanager
         async def execute(self, *args, **kwargs):
-            async def _coro():
-                return Mock(result=Mock(type="finished"))
+            async def _resp():
+                if notifications:
+                    await evt.wait()
+                if response:
+                    result = response
+                else:
+                    result = Mock(type="finished")
 
-            yield Mock(
-                response=_coro(),
-            )
+                return Mock(result=result)
+
+            async def _notifications():
+                for n in notifications:
+                    yield n
+
+                evt.set()
+
+            yield Mock(response=_resp(), notifications=_notifications() if notifications else None)
 
     return _MockQuery, query_mock
 
@@ -121,15 +131,27 @@ async def test_command_with_response(
     [(True, "Follow"), (False, "DoNotFollow")],
     ids=lambda x: repr(x),
 )
-@patch(
-    "ozobot.evo.driver.native.datetime", Mock(datetime=Mock(now=Mock(return_value=datetime.datetime.fromtimestamp(0))))
-)
+@patch("ozobot.linefollower.datatypes.Sample.now", lambda d: Sample(d, 0))
 async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
-    query_cls, query_cls_mock = _create_query()
+    query_cls, query_cls_mock = _create_query(
+        notifications=[
+            notification.LineNavigationNotification(id=0, result=types.Intersection(backward=True)),
+            notification.LineNavigationNotification(
+                id=0, result=notification.LineNavigationColorNotificationBody(colors=["red", "black", "blue"])
+            ),
+        ]
+    )
     with patch("ozobot.ari.driver.native.Query", query_cls):
         driver = NativeDriver(Mock())
 
-        await driver.line_navigation(Direction.LEFT, follow_bool)
+        async with driver.memory.intersection.watch() as intersection_it, driver.memory.color_code.watch() as cc_it:
+            await driver.line_navigation(Direction.LEFT, follow_bool)
+
+            assert await anext(intersection_it) == Sample(Direction.BACKWARD, 0)
+            assert await anext(cc_it) == Sample(
+                ColorCode(colors=(Colors.RED, Colors.BLACK, Colors.BLUE)),
+                0,
+            )
 
         query_cls_mock.assert_called_once_with(
             request.LineNavigationRequest(
@@ -140,9 +162,6 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
             ),
             methods.LINE_NAVIGATION,
         )
-
-    # TODO: test intersecion and color code reading
-    # memory.intersection_queue.write.assert_called_once_with(Sample(Direction.LEFT | Direction.STRAIGHT, 0))
 
 
 async def test_request_id_counter() -> None:
@@ -190,53 +209,76 @@ async def test_set_led(command_lights: LEDMask, rpc_lights: types.Lights) -> Non
         )
 
 
+@patch("ozobot.linefollower.datatypes.Sample.now", lambda d: Sample(d, 0))
 async def test_native_data_access_read() -> None:
-    raise NotImplementedError("no vmem support yet")
-    # cmd_mock = AsyncMock(
-    #     return_value=Mock(data=Types.Battery(voltage=1, remainingPower=2, fields=0, timestamp=0).serialize())
-    # )
-    # control = AsyncMock(MemRead=cmd_mock)
-    # property = Mock(type=Types.Battery)
-    # da = NativeDataAccessRead(control, property, lambda v: v.voltage)
+    query_cls, query_cls_mock = _create_query(response=memread.MemReadResponseLinearVelocity(velocity=1.23))
+    with patch("ozobot.ari.driver.native.Query", query_cls):
+        driver = NativeDriver(Mock())
 
-    # ret = await da.read()
-    # assert isinstance(ret, Sample)
-    # assert ret.data == 1
+        assert await driver.memory.line_following_speed.read() == Sample(1.23, 0)
 
-    # cmd_mock.assert_called_once_with(property.address, property.size)
+        query_cls_mock.assert_called_with(
+            memread.MemReadRequest(
+                id=0,
+                params=memread.MemReadRequestParams(
+                    segment="lineFollowingSpeed",
+                ),
+            ),
+            methods.MEM_READ,
+        )
 
 
-async def test_native_data_watcher() -> None:
-    raise NotImplementedError("no vmem support yet")
-    # @contextlib.asynccontextmanager
-    # async def _watch() -> typing.AsyncIterator[Types.Battery]:
-    #     async def _iter():
-    #         yield Types.Battery(voltage=10, remainingPower=2, fields=0, timestamp=0)
-    #         yield Types.Battery(voltage=20, remainingPower=2, fields=0, timestamp=0)
+async def test_native_data_access_write() -> None:
+    query_cls, query_cls_mock = _create_query()
+    with patch("ozobot.ari.driver.native.Query", query_cls):
+        driver = NativeDriver(Mock())
 
-    #     yield _iter()
+        await driver.memory.line_following_speed.write(1.23)
 
-    # cmd_mock = AsyncMock(
-    #     return_value=Mock(data=Types.Battery(voltage=1, remainingPower=2, fields=0, timestamp=0).serialize())
-    # )
-    # control = AsyncMock(
-    #     MemRead=cmd_mock,
-    # )
-    # property = Mock(type=Types.Battery)
-    # watcher = Mock(watch=_watch)
-    # da = NativeDataWatcher(control, property, watcher, lambda v: v.voltage)
+        query_cls_mock.assert_called_with(
+            memwrite.MemWriteRequest(
+                id=0,
+                params=memwrite.MemWriteRequestLineFollowingSpeedParams(
+                    segment="lineFollowingSpeed",
+                    value=1.23,
+                ),
+            ),
+            methods.MEM_WRITE,
+        )
 
-    # # test watching
-    # async with da.watch() as it:
-    #     samples = [await anext(it) for _ in range(2)]
 
-    #     assert all([isinstance(s, Sample) for s in samples])
-    #     values = [s.data for s in samples]
-    #     assert values == [10, 20]
+async def test_native_data_access_watch() -> None:
+    query_cls, query_cls_mock = _create_query(
+        notifications=[
+            memread.WatchNotification(
+                id=0, notification=memread.MemReadResponseLineColor(color="Red", light_source=True, timestamp=0)
+            ),
+            memread.WatchNotification(
+                id=0, notification=memread.MemReadResponseLineColor(color="Blue", light_source=True, timestamp=1)
+            ),
+            memread.WatchNotification(
+                id=0, notification=memread.MemReadResponseLineColor(color="Green", light_source=True, timestamp=2)
+            ),
+        ],
+    )
+    with patch("ozobot.ari.driver.native.Query", query_cls):
+        driver = NativeDriver(Mock())
 
-    # # test reading
-    # ret = await da.read()
-    # assert isinstance(ret, Sample)
-    # assert ret.data == 1
+        async with driver.memory.line_color.watch() as it:
+            notifications = [await anext(it) for _ in range(3)]
 
-    # cmd_mock.assert_called_once_with(property.address, property.size)
+        assert notifications == [
+            Sample(Colors.RED, 0),
+            Sample(Colors.BLUE, 1),
+            Sample(Colors.GREEN, 2),
+        ]
+
+        query_cls_mock.assert_called_with(
+            memread.WatchRequest(
+                id=0,
+                params=memread.MemReadRequestParams(
+                    segment="lineColor",
+                ),
+            ),
+            methods.WATCH,
+        )

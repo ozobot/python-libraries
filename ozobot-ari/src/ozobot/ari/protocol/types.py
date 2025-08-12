@@ -39,6 +39,21 @@ class Color(Model):
     alpha: int | None = 255
 
 
-type TNamedColor = typing.Literal["green", "black", "red", "blue", "white"]
+class Version(Model):
+    version: str
+    hash: str
+
+
+class VersionPair(Model):
+    bundled: Version
+    current: Version
+
+
+class FloatRange(Model):
+    start: float
+    end: float
+
+
+type TNamedColor = typing.Literal["green", "black", "red", "blue", "white", "unknown"]
 
 type TDirection = typing.Literal["Straight", "Backward", "Left", "Right"]

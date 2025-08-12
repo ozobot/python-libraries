@@ -51,9 +51,9 @@ class Direction(enum.Flag):
 TNote: typing.TypeAlias = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ColorCode:
-    numerical_value: int
+    colors: tuple[Color, ...]
 
 
 class Sample[T]:

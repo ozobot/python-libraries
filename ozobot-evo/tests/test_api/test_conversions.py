@@ -12,7 +12,9 @@ from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, L
 
 
 def test_color_code_from_protocol() -> None:
-    assert color_code_from_protocol(Types.ColorCode(1, 0)) == ColorCode(1)
+    assert color_code_from_protocol(Types.ColorCode(0b100_000 | 0b001, 0)) == ColorCode(
+        colors=(Colors.RED, Colors.BLUE)
+    )
 
 
 @pytest.mark.parametrize(

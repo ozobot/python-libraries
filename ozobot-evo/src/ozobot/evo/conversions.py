@@ -5,10 +5,29 @@ from ozobot.evo.protocol import Types
 from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask
 
 
+def _color_from_color_code_number(num: int) -> Color:
+    if num == 0:
+        return Colors.BLACK
+    elif num == 1:
+        return Colors.RED
+    elif num == 2:
+        return Colors.GREEN
+    elif num == 4:
+        return Colors.BLUE
+    else:
+        return Colors.UNKNOWN
+
+
 def color_code_from_protocol(color_code: Types.ColorCode) -> ColorCode:
     if not isinstance(color_code, Types.ColorCode):
         raise OzobotDataTypeError(Types.ColorCode, type(color_code))
-    return ColorCode(color_code.code)
+    colors: list[Color] = []
+    num = color_code.code
+    while num > 0:
+        mod = num & 0b111
+        num = num >> 3
+        colors.append(_color_from_color_code_number(mod))
+    return ColorCode(colors=tuple(colors))
 
 
 def surface_color_from_protocol(surface_color: Types.SurfaceColor) -> Color:
