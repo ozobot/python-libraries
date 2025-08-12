@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import AsyncContextManager, AsyncIterator, Protocol, Self
 
-from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Direction, LEDMask, Sample
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample
 
 
 class Deserializable(Protocol):
@@ -18,12 +18,16 @@ class ReadableRegion[T](Protocol):
     async def read(self) -> Sample[T]: ...
 
 
+class ReadableWritableRegion[T](ReadableRegion, Protocol):
+    async def write(self, data: T) -> None: ...
+
+
 class ReadableWatchableRegion[T](ReadableRegion[T], Protocol):
     def watch(self) -> AsyncContextManager[AsyncIterator[Sample[T]]]: ...
 
 
 class VirtualMemoryRegions(Protocol):
-    battery: ReadableRegion[BatteryState]
+    line_following_speed: ReadableWritableRegion[float]
     color_code: ReadableWatchableRegion[ColorCode]
     line_color: ReadableWatchableRegion[Color]
     surface_color: ReadableWatchableRegion[Color]
@@ -55,5 +59,3 @@ class Driver(Protocol):
     async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None: ...
 
     async def line_navigation(self, direction: Direction, follow: bool) -> None: ...
-
-    async def follow_speed(self, speed_mps: float) -> None: ...

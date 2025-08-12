@@ -2,14 +2,7 @@ import typing
 
 from ozobot.evo.exceptions import OzobotDataTypeError
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask
-
-
-def battery_state_from_protocol(state: Types.Battery) -> BatteryState:
-    if not isinstance(state, Types.Battery):
-        raise OzobotDataTypeError(Types.Battery, type(state))
-
-    return BatteryState(state.voltage, state.remainingPower, state.fields & Types.BatteryFieldsEnum.Charging)
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask
 
 
 def color_code_from_protocol(color_code: Types.ColorCode) -> ColorCode:

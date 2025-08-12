@@ -19,7 +19,6 @@ class SyncDataAccessRead[T]:
 class _SyncMemoryRegions:
     def __init__(self, linefollower_async: LineFollower) -> None:
         self.intersection = SyncDataAccessRead(linefollower_async.memory.intersection)
-        self.battery = SyncDataAccessRead(linefollower_async.memory.battery)
         self.color_code = SyncDataAccessRead(linefollower_async.memory.color_code)
         self.line_color = SyncDataAccessRead(linefollower_async.memory.line_color)
         self.surface_color = SyncDataAccessRead(linefollower_async.memory.surface_color)
@@ -61,7 +60,3 @@ class LineFollowerSync:
     @as_sync
     async def align_with_line(self, direction: Direction) -> None:
         await self._linefollower.align_with_line(direction)
-
-    @as_sync
-    async def set_follow_line_speed(self, speed_mps: float) -> None:
-        await self._linefollower.set_follow_line_speed(speed_mps)

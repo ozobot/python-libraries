@@ -190,21 +190,6 @@ async def test_set_led(command_lights: LEDMask, rpc_lights: types.Lights) -> Non
         )
 
 
-async def test_follow_speed() -> None:
-    raise NotImplementedError("no vmem support yet")
-    # cmd_mock = AsyncMock(
-    #     return_value=_create_command(
-    #         response={"callStatus": Types.CallStatus.CallSuccess},
-    #     )
-    # )
-    # control = Mock(MemWrite=cmd_mock)
-    # memory = NativeMemoryRegions(control, (Mock(),) * 3)
-    # driver = NativeDriver(control, memory)
-
-    # await driver.follow_speed(0.1)
-    # cmd_mock.assert_called_once_with(ANY, ANY, Types.S8_24(0.1).serialize())
-
-
 async def test_native_data_access_read() -> None:
     raise NotImplementedError("no vmem support yet")
     # cmd_mock = AsyncMock(

@@ -148,20 +148,6 @@ async def test_set_led(command_direction: LEDMask, rpc_direction: Types.LEDsMask
     cmd_mock.assert_called_once_with(rpc_direction, 0, 100, 200, 255)
 
 
-async def test_follow_speed() -> None:
-    cmd_mock = AsyncMock(
-        return_value=_create_command(
-            response={"callStatus": Types.CallStatus.CallSuccess},
-        )
-    )
-    control = Mock(MemWrite=cmd_mock)
-    memory = NativeMemoryRegions(control, (Mock(),) * 3)
-    driver = NativeDriver(control, memory)
-
-    await driver.follow_speed(0.1)
-    cmd_mock.assert_called_once_with(ANY, ANY, Types.S8_24(0.1).serialize())
-
-
 async def test_native_data_access_read() -> None:
     cmd_mock = AsyncMock(
         return_value=Mock(data=Types.Battery(voltage=1, remainingPower=2, fields=0, timestamp=0).serialize())

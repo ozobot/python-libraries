@@ -24,10 +24,6 @@ class _HasTimestamp(typing.Protocol):
     timestamp: int
 
 
-# class _Deserializable(_HasTimestamp, Deserializable, typing.Protocol):
-#     pass
-
-
 class _DeserializeAndSerializable(Deserializable, Serializable, typing.Protocol):
     pass
 
@@ -68,8 +64,11 @@ class NativeMemoryRegions(VirtualMemoryRegions):
         self.intersection_queue = EventWatcherQueue(Sample(Direction(0), 0))
         self.intersection = EventWatcher(self.intersection_queue)
 
-        self.battery = NativeDataAccessRead(
-            control, VirtualMemory.batteryState, conversions.battery_state_from_protocol
+        self.line_following_speed = NativeDataAccessReadWrite(
+            control,
+            VirtualMemory.lineNavigationSpeed,
+            lambda s8_24: float(s8_24),
+            lambda fl: Types.S8_24(fl),
         )
         self.color_code = NativeDataWatcher(
             control, VirtualMemory.colorCode, color_code_watcher, conversions.color_code_from_protocol
@@ -237,10 +236,6 @@ class NativeDriver:
         intersection = conversions.intersection_bitmap_from_protocol(event.intersection)
         sample = Sample.now(intersection)
         await self.memory.intersection_queue.write(sample)
-
-    async def follow_speed(self, speed_mps: float) -> None:
-        config = VirtualMemory.lineNavigationSpeed
-        await self._control.MemWrite(config.address, config.size, Types.S8_24(speed_mps).serialize())
 
     async def stop_all(self) -> None:
         await self._control.StopExecution(0)

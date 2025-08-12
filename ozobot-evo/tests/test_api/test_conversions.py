@@ -1,6 +1,5 @@
 import pytest
 from ozobot.evo.conversions import (
-    battery_state_from_protocol,
     color_code_from_protocol,
     intersection_bitmap_from_protocol,
     intersection_direction_to_protocol,
@@ -9,14 +8,7 @@ from ozobot.evo.conversions import (
     surface_color_from_protocol,
 )
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import BatteryState, Color, ColorCode, Colors, Direction, LEDMask
-
-
-def test_battery_state_from_protocol() -> None:
-    assert battery_state_from_protocol(Types.Battery(1, 2, Types.BatteryFieldsEnum.Charging, 0)) == BatteryState(
-        1, 2, True
-    )
-    assert battery_state_from_protocol(Types.Battery(1, 2, Types.BatteryFieldsEnum(0), 0)) == BatteryState(1, 2, False)
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask
 
 
 def test_color_code_from_protocol() -> None:

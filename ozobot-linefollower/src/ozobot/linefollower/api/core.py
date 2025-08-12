@@ -85,7 +85,3 @@ class LineFollower:
     async def align_with_line(self, direction: Direction) -> None:
         logger.debug("Aligning with line", direTction=direction)
         await self._driver.line_navigation(direction, follow=False)
-
-    async def set_follow_line_speed(self, speed_mps: float) -> None:
-        logger.debug("Setting line following speed", speed=speed_mps)
-        await self._driver.follow_speed(speed_mps)

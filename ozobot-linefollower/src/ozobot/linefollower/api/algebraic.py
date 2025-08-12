@@ -81,7 +81,3 @@ async def follow_line(direction: Direction) -> None:
 
 async def align_with_line(direction: Direction) -> None:
     await dispatcher.acall(LineFollower.align_with_line, direction)
-
-
-async def set_follow_line_speed(speed_mps: float) -> None:
-    await dispatcher.acall(LineFollower.set_follow_line_speed, speed_mps)

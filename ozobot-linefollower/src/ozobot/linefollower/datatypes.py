@@ -56,13 +56,6 @@ class ColorCode:
     numerical_value: int
 
 
-@dataclass(frozen=True)
-class BatteryState:
-    voltage: float
-    remaining_power: int
-    charging: bool
-
-
 class Sample[T]:
     @classmethod
     def now(cls, data: T) -> Sample[T]:
