@@ -1,10 +1,15 @@
 import contextlib
 import typing
-from unittest.mock import ANY, AsyncMock, Mock, patch, sentinel
+from unittest.mock import AsyncMock, Mock, patch, sentinel
 
 import pytest
-from ozobot.evo.driver.native import NativeDataAccessRead, NativeDataWatcher, NativeDriver, NativeMemoryRegions
-from ozobot.evo.protocol import Types
+from ozobot.evo.driver.native import (
+    NativeDataAccessRead,
+    NativeDataAccessReadWrite,
+    NativeDataWatcher,
+    NativeDriver,
+)
+from ozobot.evo.protocol import Types, VirtualMemory
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
 
 
@@ -170,6 +175,21 @@ async def test_native_data_access_read() -> None:
     assert ret.data == 1
 
     cmd_mock.assert_called_once_with(property.address, property.size)
+
+
+async def test_native_data_access_write() -> None:
+    cmd_mock = AsyncMock()
+    control = AsyncMock(MemWrite=cmd_mock)
+    property = VirtualMemory.lineNavigationSpeed
+    da = NativeDataAccessReadWrite(
+        control,
+        property,
+        lambda s8_24: float(s8_24),
+        lambda fl: Types.S8_24(fl),
+    )
+
+    await da.write(1.23)
+    cmd_mock.assert_called_once_with(property.address, property.size, Types.S8_24(1.23).serialize())
 
 
 async def test_native_data_watcher() -> None:
