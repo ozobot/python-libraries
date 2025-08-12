@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import datetime
 import typing
 from uuid import UUID
 
@@ -209,8 +208,7 @@ class NativeDriver:
             event = await self._handle_events("LineNavigation", evts)
 
         intersection = conversions.intersection_bitmap_from_protocol(event.intersection)
-        timestamp = datetime.datetime.now()
-        sample = Sample(intersection, timestamp)
+        sample = Sample.now(intersection)
         await self.memory.intersection_queue.write(sample)
 
     async def follow_speed(self, speed_mps: float) -> None:

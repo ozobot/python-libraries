@@ -64,6 +64,10 @@ class BatteryState:
 
 
 class Sample[T]:
+    @classmethod
+    def now(cls, data: T) -> Sample[T]:
+        return Sample(data, datetime.datetime.now())
+
     def __init__(self, data: T, timestamp: datetime.datetime | float) -> None:
         self.data = data
         self.timestamp = (
