@@ -101,7 +101,7 @@ class Query[TReq: _AbstractJsonRpcMessage, TRes: _AbstractJsonRpcMessage, TNotif
                 if isinstance(err, CancelledByClientError):
                     await executor._send_cancellation_message(message_id, reason)
                 logger.debug("Request cancelled", id=message_id, reason=reason)
-                raise asyncio.CancelledError(reason)
+                raise asyncio.CancelledError(reason) from None
             except asyncio.InvalidStateError:
                 pass  # this means there was no exception set
 

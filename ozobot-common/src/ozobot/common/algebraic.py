@@ -11,7 +11,8 @@ from ozobot.common.exceptions import (
 
 class ActorDispatcher:
     def __init__(self) -> None:
-        self._stack = contextvars.ContextVar[list[typing.Any]]("stack", default=[])
+        default: tuple[typing.Any, ...] = tuple()
+        self._stack = contextvars.ContextVar[tuple[typing.Any]]("stack", default=default)
         self._actors: dict[str, typing.Any] = {}
 
     def add(self, name: str, actor: typing.Any) -> None:
@@ -26,7 +27,7 @@ class ActorDispatcher:
                 raise ActorNotFoundError(name)
 
         actor_objects = [self._actors[name] for name in names]
-        new_stack = list(reversed(actor_objects)) + self._stack.get()
+        new_stack = tuple(reversed(actor_objects)) + self._stack.get()
         context_token = self._stack.set(new_stack)
 
         try:
@@ -50,7 +51,7 @@ class ActorDispatcher:
             for obj in valid_actor_objects:
                 new_stack.remove(obj)
 
-        context_token = self._stack.set(new_stack)
+        context_token = self._stack.set(tuple(new_stack))
 
         try:
             yield

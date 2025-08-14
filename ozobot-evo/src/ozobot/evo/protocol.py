@@ -4088,7 +4088,7 @@ class PacketTypes:
 
         def serialize(self) -> bytes:
             vla_data = serialize_array(self.data, Types.u8)
-            assert len(vla_data) == getattr(self, 'length')
+            assert len(vla_data) == self.length
             buffer = memoryview(bytearray(5+len(vla_data)))
             buffer[0:2] = Types.u16.serialize(self.message_id)
             buffer[2:3] = Types.IOResult.serialize(self.result)
@@ -4136,7 +4136,7 @@ class PacketTypes:
 
         def serialize(self) -> bytes:
             vla_data = serialize_array(self.data, Types.u8)
-            assert len(vla_data) == getattr(self, 'length')
+            assert len(vla_data) == self.length
             buffer = memoryview(bytearray(8+len(vla_data)))
             buffer[0:2] = Types.u16.serialize(self.message_id)
             buffer[2:6] = Types.addr_t.serialize(self.addr)

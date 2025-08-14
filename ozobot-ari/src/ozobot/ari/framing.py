@@ -26,7 +26,7 @@ class FrameDecoder:
 
     def feed(self, data: bytes) -> typing.Iterator[bytes]:
         packets: list[bytes] = []
-        for index, byte in enumerate(data):
+        for byte in data:
             if self._state == _State.INIT:
                 # Init state throws away all suffixes of partially-received packets.
                 if byte == self.FRAME_FLAG:

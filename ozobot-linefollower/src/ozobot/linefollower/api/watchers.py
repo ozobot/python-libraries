@@ -191,7 +191,7 @@ class LineFollowerWatcher:
             async with self._enable_watchers(watcher_ids):
                 subscriptions = [
                     await exit_stack.enter_async_context(WatcherSubscription.run(watcher, allocations, allocation))
-                    for watcher, allocation in zip(watchers, allocations)
+                    for watcher, allocation in zip(watchers, allocations, strict=False)
                 ]
                 yield tuple(subscriptions)
 

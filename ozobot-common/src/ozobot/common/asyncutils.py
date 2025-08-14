@@ -19,7 +19,7 @@ class CancellableTaskGroup(asyncio.TaskGroup):
             return await super().__aexit__(exc_type, exc_value, traceback)
         except* self._TaskGroupCancelledError:
             if not self._suppress_cancellation_error:
-                raise asyncio.CancelledError()
+                raise asyncio.CancelledError() from None
 
     def cancel_quietly(self) -> None:
         self._suppress_cancellation_error = True
