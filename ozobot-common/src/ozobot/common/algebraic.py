@@ -1,4 +1,3 @@
-from ozobot.common.exceptions import SuitableActorNotFoundError
 import contextlib
 import contextvars
 import typing
@@ -6,6 +5,7 @@ import typing
 from ozobot.common.exceptions import (
     ActorAlreadyExistsError,
     ActorNotFoundError,
+    SuitableActorNotFoundError,
 )
 
 

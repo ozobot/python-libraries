@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from loguru import logger
 from ozobot.common.broadcast import BroadcastManager
-from ozobot.evo.protocol import AsyncControl, Types, PacketTypes, VirtualMemory
+from ozobot.evo.protocol import AsyncControl, PacketTypes, Types, VirtualMemory
 
 
 class _Deserializable(typing.Protocol):

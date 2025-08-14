@@ -1,6 +1,6 @@
-from builtins import RuntimeError
 import asyncio
 import typing
+from builtins import RuntimeError
 
 
 async def async_iterator_never() -> typing.AsyncGenerator[typing.Never]:

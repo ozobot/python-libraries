@@ -1,8 +1,8 @@
-from ozobot.webrtc.aiortc_wrapper import ReadyState
 import asyncio
 
+from ozobot.webrtc.aiortc_wrapper import ReadyState
 from ozobot.webrtc.datatypes import Message
-from ozobot.webrtc.signaling.negotiation import SignalingCaller, SignalingCallee
+from ozobot.webrtc.signaling.negotiation import SignalingCallee, SignalingCaller
 
 from .testutils import create_channel_factory
 

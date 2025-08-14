@@ -1,7 +1,7 @@
-from ozobot.webrtc.exceptions import CouldNotGetSignalingTokenError
 import typing
 
 import aiohttp
+from ozobot.webrtc.exceptions import CouldNotGetSignalingTokenError
 
 TOKEN_ENDPOINT_URL = "https://editor.ozobot.com/api/token?kind=amqp"
 

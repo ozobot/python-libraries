@@ -2,7 +2,6 @@ import contextlib
 import typing
 
 import pytest
-
 from ozobot.common.rpc import RpcCall, RpcCallReentryError
 
 

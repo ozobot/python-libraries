@@ -1,9 +1,8 @@
-from ozobot.common.asyncutils import CancellableTaskGroup
 import asyncio
 import typing
 
 import pytest
-from ozobot.common.asyncutils import async_iterator_never
+from ozobot.common.asyncutils import CancellableTaskGroup, async_iterator_never
 
 
 async def _infinite():

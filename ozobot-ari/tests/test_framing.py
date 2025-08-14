@@ -1,4 +1,5 @@
-from ozobot.ari.framing import encode_frame, FrameDecoder as Decoder
+from ozobot.ari.framing import FrameDecoder as Decoder
+from ozobot.ari.framing import encode_frame
 
 
 def test_frame_simple():

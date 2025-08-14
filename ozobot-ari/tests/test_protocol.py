@@ -1,5 +1,5 @@
 import pytest
-from ozobot.ari.protocol import base, notification, request, response, serialization, types, memread, memwrite
+from ozobot.ari.protocol import base, memread, memwrite, notification, request, response, serialization, types
 from ozobot.ari.protocol.methods import REQUEST_METHODS
 from ozobot.ari.protocol.serialization import deserialize
 from pydantic.type_adapter import TypeAdapter

@@ -1,4 +1,3 @@
-from ozobot.ble.exceptions import NoFilterSpecifiedError
 import contextlib
 import typing
 from unittest.mock import AsyncMock, Mock, patch, sentinel
@@ -6,13 +5,14 @@ from uuid import UUID
 
 import pytest
 from ozobot.ble.connection import (
-    Client,
     Characteristic,
+    Client,
     DeviceDescription,
     DeviceNotFoundError,
     open_client,
     scan_devices,
 )
+from ozobot.ble.exceptions import NoFilterSpecifiedError
 
 
 async def _mock_advertisement_data() -> typing.AsyncGenerator[tuple[Mock, Mock], None]:

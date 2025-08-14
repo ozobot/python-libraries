@@ -1,10 +1,11 @@
-from typing import Annotated, Literal as L
+from typing import Annotated
+from typing import Literal as L
 
 from pydantic import BeforeValidator
 from pydantic.functional_serializers import PlainSerializer
 
 from .base import Model, Notification, Request, Response
-from .types import FloatRange, VersionPair, TNamedColor
+from .types import FloatRange, TNamedColor, VersionPair
 
 
 class MemReadResponseColorSensor(Model):

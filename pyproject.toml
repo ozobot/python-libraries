@@ -44,6 +44,12 @@ plugins = ["pydantic.mypy"]
 [tool.ruff]
 line-length=120
 
+[tool.ruff.lint]
+select = [
+    # isort
+    "I",
+]
+
 [tool.pytest.ini_options]
 required_plugins = ["pytest-asyncio", "pytest-mypy", "pytest-ruff"]
 addopts = """

@@ -9,7 +9,6 @@ import typing
 import aiormq
 import pydantic
 import websockets
-
 from loguru import logger
 from ozobot.webrtc.datatypes import (
     Message,

@@ -8,12 +8,14 @@ import dataclasses
 import enum
 import struct
 import typing
+
 from loguru import logger
+from ozobot.common.convert import deserialize_array, serialize_array
 from ozobot.common.crc import crc32
-from ozobot.common.convert import serialize_array, deserialize_array
 from ozobot.common.rlock import RLock
 from ozobot.common.rpc import RpcCall
 from ozobot.common.types import s8_24_deserialize, s8_24_serialize
+
 __all__ = ["AsyncControl", "Types"]
 
 

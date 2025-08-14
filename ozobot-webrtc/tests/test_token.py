@@ -1,5 +1,6 @@
-import pytest
 import typing
+
+import pytest
 from aiohttp import web
 from ozobot.webrtc.exceptions import CouldNotGetSignalingTokenError
 from ozobot.webrtc.signaling.token import get_jwt_token

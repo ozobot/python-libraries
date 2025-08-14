@@ -2,7 +2,6 @@ import asyncio
 import typing
 
 import pytest
-
 from ozobot.webrtc.exceptions import QueueReaderConcurrentUseNotSupportedError, QueueReaderNotEnteredError
 from ozobot.webrtc.utils import QueueReader
 

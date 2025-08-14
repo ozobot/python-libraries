@@ -1,6 +1,7 @@
 import typing
 
 import pydantic
+
 from .base import Model
 
 
