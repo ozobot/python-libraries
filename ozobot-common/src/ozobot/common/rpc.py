@@ -9,7 +9,7 @@ class RpcCallReentryError(Exception):
 class RpcCall[TResponse, TEvent]:
     def __init__(
         self,
-        rpc: typing.AsyncContextManager[tuple[TResponse, typing.AsyncGenerator[TEvent, None]]],
+        rpc: typing.AsyncContextManager[tuple[TResponse, typing.AsyncGenerator[TEvent]]],
     ) -> None:
         self._rpc = rpc
         self._used = False

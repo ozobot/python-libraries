@@ -102,7 +102,7 @@ def serialize_array[T: _Serializable](
     :param size:     Size of final bytes buffer. Raises :py:meth:`ProtocolSizeError`
                      when size does not match to serialized data.
     """
-    if issubclass(member_type, (bytes, str)):
+    if issubclass(member_type, bytes | str):
         if isinstance(array, str | bytes):
             # Convert str to ASCIIZ
             data = str2asciiz(array, size)

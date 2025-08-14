@@ -15,7 +15,7 @@ from ozobot.ble.connection import (
 from ozobot.ble.exceptions import NoFilterSpecifiedError
 
 
-async def _mock_advertisement_data() -> typing.AsyncGenerator[tuple[Mock, Mock], None]:
+async def _mock_advertisement_data() -> typing.AsyncGenerator[tuple[Mock, Mock]]:
     dev_1 = Mock(
         address="11:22:33:44:55:66",
     )
@@ -73,7 +73,7 @@ async def test_scan_devices() -> None:
 
 
 @contextlib.asynccontextmanager
-async def _scan_devices() -> typing.AsyncGenerator[tuple[DeviceDescription, Mock], None]:
+async def _scan_devices() -> typing.AsyncGenerator[tuple[DeviceDescription, Mock]]:
     desc1 = DeviceDescription(
         name="EVO-123456",
         address="11:22:33:44:55:66",

@@ -28,7 +28,7 @@ class DeviceDescription:
         VENDOR_ID: int = int("03eb", 16)
         PACKET_ID: int = 0
 
-        manufacturer_data = adv_data.manufacturer_data.get(VENDOR_ID, bytes())
+        manufacturer_data = adv_data.manufacturer_data.get(VENDOR_ID, b"")
 
         if manufacturer_data and manufacturer_data[0] == PACKET_ID and len(manufacturer_data) > 24:
             device_id = manufacturer_data[1:17].hex().upper()

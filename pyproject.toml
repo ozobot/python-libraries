@@ -46,6 +46,10 @@ line-length=120
 
 [tool.ruff.lint]
 select = [
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
     # isort
     "I",
 ]

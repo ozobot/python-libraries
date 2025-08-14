@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
-from typing import Any, AsyncIterator, Iterable
+from collections.abc import AsyncIterator, Iterable
+from typing import Any
 from unittest.mock import AsyncMock, seal
 
 from ozobot.webrtc.datatypes import Message, MessageBody

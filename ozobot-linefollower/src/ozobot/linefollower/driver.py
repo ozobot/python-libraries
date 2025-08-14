@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import AsyncContextManager, AsyncIterator, Protocol, Self
+from collections.abc import AsyncIterator
+from contextlib import AbstractAsyncContextManager
+from typing import Protocol, Self
 
 from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample
 
@@ -23,7 +25,7 @@ class ReadableWritableRegion[T](ReadableRegion, Protocol):
 
 
 class ReadableWatchableRegion[T](ReadableRegion[T], Protocol):
-    def watch(self) -> AsyncContextManager[AsyncIterator[Sample[T]]]: ...
+    def watch(self) -> AbstractAsyncContextManager[AsyncIterator[Sample[T]]]: ...
 
 
 class VirtualMemoryRegions(Protocol):
@@ -41,7 +43,7 @@ class Driver(Protocol):
         address: str | None = None,
         id_prefix: str | None = None,
         name: str | None = None,
-    ) -> AsyncContextManager[Driver]: ...
+    ) -> AbstractAsyncContextManager[Driver]: ...
 
     @property
     def memory(self) -> VirtualMemoryRegions: ...

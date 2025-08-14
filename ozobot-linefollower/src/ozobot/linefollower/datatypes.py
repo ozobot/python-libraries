@@ -48,7 +48,7 @@ class Direction(enum.Flag):
     STRAIGHT = enum.auto()
 
 
-TNote: typing.TypeAlias = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
+type TNote = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
 
 
 @dataclass(frozen=True, kw_only=True)

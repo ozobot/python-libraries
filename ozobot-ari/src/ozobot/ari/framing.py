@@ -53,7 +53,7 @@ class FrameDecoder:
                 if byte == self.FRAME_FLAG:
                     # Received end of frame, move the buffer as a complete packet and reset
                     packets.append(self._buffer)
-                    self._buffer = bytes()
+                    self._buffer = b""
                     self._state = _State.IDLE
                 elif byte == self.FRAME_ESCAPE:
                     # Escape encountered, mark that and continue
