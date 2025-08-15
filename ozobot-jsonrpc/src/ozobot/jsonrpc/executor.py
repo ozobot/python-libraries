@@ -10,9 +10,6 @@ from ozobot.common.asyncutils import CancellableTaskGroup, async_iterator_never
 from ozobot.common.broadcast import BroadcastManager
 from ozobot.jsonrpc.exceptions import CancelledByClientError, CancelledByServerError
 
-CANCELLATION_JSONRPC_TYPE = "com/ozobot/jsonrpc/2.0/cancellation"
-NOTIFICATION_JSONRPC_TYPE = "com/ozobot/jsonrpc/2.0/notification"
-
 type _TMessageId = int
 
 
@@ -26,7 +23,7 @@ class _AbstractJsonRpcMessage(typing.Protocol):
 
 class _AbstractJsonRpcCancellationMessage(_AbstractJsonRpcMessage, typing.Protocol):
     @property
-    def code(self) -> int: ...
+    def code(self) -> int | None: ...
 
     @property
     def message(self) -> str | None: ...

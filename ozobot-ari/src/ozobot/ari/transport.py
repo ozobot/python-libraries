@@ -4,7 +4,7 @@ import typing
 import pydantic
 from ozobot.ari.exceptions import DuplicateMessageIdError, MalformedMessageError, UnknownMessageIdError
 from ozobot.ari.framing import FrameDecoder, encode_frame
-from ozobot.ari.protocol.base import Cancellation, Message, Notification, Request, Response
+from ozobot.ari.protocol.base import CANCELLATION_MESSAGE_LABEL, Cancellation, Message, Notification, Request, Response
 from ozobot.ari.protocol.methods import REQUEST_METHODS
 from ozobot.ari.protocol.serialization import (
     MessageTypeAdapter,
@@ -39,21 +39,19 @@ class SerializingTransportLayer:
     async def read(self) -> typing.AsyncIterator[Message]:
         async for data in self._transport.read():
             parsed = json.loads(data)
-            try:
-                id_raw = parsed.get("id", None)
-                msg_id = int(id_raw)
-            except ValueError:
-                msg_id = None
-
+            msg_id = parsed.get("id", None)
             has_id = msg_id is not None
             is_request = "method" in parsed and "params" in parsed
             err_if_failure = None
+            is_cancellation = parsed.get("jsonrpc", None) == CANCELLATION_MESSAGE_LABEL
 
             if not has_id:
                 # if there is no ID, we'll just parse the message as the base type to get a consistent pydantic error
                 parser = pydantic.TypeAdapter(Message)
             elif is_request:
                 parser = MessageTypeAdapter
+            elif is_cancellation:
+                parser = pydantic.TypeAdapter(Cancellation)
             elif msg_id not in self._context:
                 if msg_id:
                     err_if_failure = UnknownMessageIdError(msg_id)
