@@ -13,6 +13,11 @@ class Color:
     green: float
     blue: float
 
+    def __post_init__(self) -> None:
+        for name, value in zip(["red", "green", "blue"], [self.red, self.green, self.blue], strict=True):
+            if value < 0 or value > 1:
+                raise ValueError(f"Color component out of bounds [0, 1]: {name}={value}")
+
     @property
     def is_unknown(self) -> bool:
         return math.isnan(self.red) or math.isnan(self.green) or math.isnan(self.blue)
@@ -20,13 +25,13 @@ class Color:
 
 class Colors:
     BLACK = Color(0, 0, 0)
-    RED = Color(255, 0, 0)
-    GREEN = Color(0, 255, 0)
-    BLUE = Color(0, 0, 255)
-    WHITE = Color(255, 255, 255)
-    CYAN = Color(0, 255, 255)
-    MAGENTA = Color(255, 0, 255)
-    YELLOW = Color(255, 255, 0)
+    RED = Color(1.0, 0, 0)
+    GREEN = Color(0, 1.0, 0)
+    BLUE = Color(0, 0, 1.0)
+    WHITE = Color(1.0, 1.0, 1.0)
+    CYAN = Color(0, 1.0, 1.0)
+    MAGENTA = Color(1.0, 0, 1.0)
+    YELLOW = Color(1.0, 1.0, 0)
     UNKNOWN = Color(float("nan"), float("nan"), float("nan"))
 
 
