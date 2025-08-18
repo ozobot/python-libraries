@@ -20,13 +20,13 @@ class Color:
 
 class Colors:
     BLACK = Color(0, 0, 0)
-    RED = Color(1, 0, 0)
-    GREEN = Color(0, 1, 0)
-    BLUE = Color(0, 0, 1)
-    WHITE = Color(1, 1, 1)
-    CYAN = Color(0, 1, 1)
-    MAGENTA = Color(1, 0, 1)
-    YELLOW = Color(1, 1, 0)
+    RED = Color(255, 0, 0)
+    GREEN = Color(0, 255, 0)
+    BLUE = Color(0, 0, 255)
+    WHITE = Color(255, 255, 255)
+    CYAN = Color(0, 255, 255)
+    MAGENTA = Color(255, 0, 255)
+    YELLOW = Color(255, 255, 0)
     UNKNOWN = Color(float("nan"), float("nan"), float("nan"))
 
 
