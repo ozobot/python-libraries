@@ -35,6 +35,20 @@ def intersection_direction_to_protocol(direction: Direction) -> TDirection:
             typing.assert_never(direction)
 
 
+def intersection_direction_from_protocol(direction: TDirection) -> Direction:
+    match direction:
+        case "Left":
+            return Direction.LEFT
+        case "Right":
+            return Direction.RIGHT
+        case "Straight":
+            return Direction.STRAIGHT
+        case "Backward":
+            return Direction.BACKWARD
+        case _:
+            typing.assert_never(direction)
+
+
 def intersection_bitmap_from_protocol(intersection_mask: types.Intersection) -> Direction:
     intersection = Direction(0)
 
@@ -72,6 +86,21 @@ def color_from_protocol(color: TNamedColor) -> Color:
             return Colors.UNKNOWN
         case _:
             typing.assert_never(color)
+
+
+def color_to_protocol(color: Color) -> TNamedColor:
+    if color == Colors.GREEN:
+        return "green"
+    elif color == Colors.BLACK:
+        return "black"
+    elif color == Colors.RED:
+        return "red"
+    elif color == Colors.BLUE:
+        return "blue"
+    elif color == Colors.WHITE:
+        return "white"
+    else:
+        return "unknown"
 
 
 def color_code_from_protocol(color_code: list[TNamedColor]) -> ColorCode:

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Literal as L
 
+from ozobot.ari.protocol.types import TNamedColor, TUserIoPrompt
+
 from .base import Model, Request
 from .types import Color, Lights, TDirection
 
@@ -87,3 +89,34 @@ class TimeOfFlightRequestParams(Model):
 class TimeOfFlightRequest(Request):
     method: L["TimeOfFlight"] = "TimeOfFlight"
     params: TimeOfFlightRequestParams
+
+
+class UserIoPrintRequestParams(Model):
+    message: str
+
+
+class UserIoPrintRequest(Request):
+    method: L["UserIoPrint"] = "UserIoPrint"
+    params: UserIoPrintRequestParams
+
+
+class UserIoAlertRequestParams(Model):
+    message: str
+    cancellable: bool
+
+
+class UserIoAlertRequest(Request):
+    method: L["UserIoAlert"] = "UserIoAlert"
+    params: UserIoAlertRequestParams
+
+
+class UserIoPromptRequestParams(Model):
+    message: str
+    cancellable: bool
+    type: TUserIoPrompt
+    options: list[str | int | float | bool | TNamedColor | TDirection]
+
+
+class UserIoPromptRequest(Request):
+    method: L["UserIoPrompt"] = "UserIoPrompt"
+    params: UserIoPromptRequestParams

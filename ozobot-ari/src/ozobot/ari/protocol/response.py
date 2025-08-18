@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Literal as L
 
+from ozobot.ari.protocol.types import TDirection, TNamedColor
+
 from .base import Model, Response
 
 
@@ -33,6 +35,46 @@ class LineNavigationResponseBody(Model):
     type: L["finished"] | str
 
 
+class UserIoPromptStringResponseBody(Model):
+    type: L["string"] = "string"
+    value: str
+
+
+class UserIoPromptNumberResponseBody(Model):
+    type: L["number"] = "number"
+    value: float | int
+
+
+class UserIoPromptBooleanResponseBody(Model):
+    type: L["boolean"] = "boolean"
+    value: bool
+
+
+class UserIoPromptSurfaceColorResponseBody(Model):
+    type: L["surfaceColor"] = "surfaceColor"
+    value: TNamedColor
+
+
+class UserIoPromptLineColorResponseBody(Model):
+    type: L["lineColor"] = "lineColor"
+    value: TNamedColor
+
+
+class UserIoPromptDirectionResponseBody(Model):
+    type: L["direction"] = "direction"
+    value: TDirection
+
+
+type UserIoPromptResponseBody = (
+    UserIoPromptStringResponseBody
+    | UserIoPromptNumberResponseBody
+    | UserIoPromptBooleanResponseBody
+    | UserIoPromptSurfaceColorResponseBody
+    | UserIoPromptLineColorResponseBody
+    | UserIoPromptDirectionResponseBody
+)
+
+
 class MoveStraightResponse(Response):
     result: MoveStraightResponseBody
 
@@ -59,3 +101,15 @@ class PlayToneResponse(Response):
 
 class PlaySoundResponse(Response):
     result: PlaySoundResponseBody
+
+
+class UserIoPrintResponse(Response):
+    result: bool
+
+
+class UserIoAlertResponse(Response):
+    result: bool
+
+
+class UserIoPromptResponse(Response):
+    result: UserIoPromptResponseBody

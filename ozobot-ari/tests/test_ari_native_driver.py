@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 from ozobot.ari.driver.native import NativeDriver
-from ozobot.ari.protocol import memread, memwrite, methods, notification, request, types
-from ozobot.linefollower.datatypes import ColorCode, Colors, Direction, LEDMask, Sample
+from ozobot.ari.protocol import memread, memwrite, methods, notification, request, response, types
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, Sample
 
 
 def _create_query(response=None, notifications=None):
@@ -110,6 +110,26 @@ async def test_open_connection_key() -> None:
                     id=0, params=request.PlaySoundRequestParams(name="happy", loop=False, volume=1)
                 ),
                 methods.PLAY_SOUND,
+            ),
+        ),
+        (
+            "user_io_print",
+            "UserIoPrint",
+            ["Hello World"],
+            (
+                request.UserIoPrintRequest(id=0, params=request.UserIoPrintRequestParams(message="Hello World")),
+                methods.USER_IO_PRINT,
+            ),
+        ),
+        (
+            "user_io_alert",
+            "UserIoAlert",
+            ["Alert Message"],
+            (
+                request.UserIoAlertRequest(
+                    id=0, params=request.UserIoAlertRequestParams(message="Alert Message", cancellable=False)
+                ),
+                methods.USER_IO_ALERT,
             ),
         ),
     ],
@@ -244,6 +264,90 @@ async def test_native_data_access_write() -> None:
                 ),
             ),
             methods.MEM_WRITE,
+        )
+
+
+@pytest.mark.parametrize(
+    ["prompt_type", "options", "protocol_options", "response_body", "expected_result"],
+    [
+        (
+            str,
+            ["option1", "option2"],
+            ["option1", "option2"],
+            response.UserIoPromptStringResponseBody(value="option1"),
+            "option1",
+        ),
+        (
+            int,
+            [1, 2, 3],
+            [1, 2, 3],
+            response.UserIoPromptNumberResponseBody(value=2),
+            2,
+        ),
+        (
+            float,
+            [1.5, 2.5, 3.5],
+            [1.5, 2.5, 3.5],
+            response.UserIoPromptNumberResponseBody(value=2.5),
+            2.5,
+        ),
+        (
+            bool,
+            [True, False],
+            [True, False],
+            response.UserIoPromptBooleanResponseBody(value=True),
+            True,
+        ),
+        (
+            Color,
+            [Color(red=255, green=0, blue=0), Color(red=0, green=255, blue=0)],
+            ["red", "green"],
+            response.UserIoPromptSurfaceColorResponseBody(value="red"),
+            Color(red=255, green=0, blue=0),
+        ),
+        (
+            Direction,
+            [Direction.LEFT, Direction.RIGHT],
+            ["Left", "Right"],
+            response.UserIoPromptDirectionResponseBody(value="Left"),
+            Direction.LEFT,
+        ),
+    ],
+)
+async def test_user_io_prompt(
+    prompt_type: type,
+    options: list[typing.Any],
+    protocol_options: list[typing.Any],
+    response_body: typing.Any,
+    expected_result: typing.Any,
+) -> None:
+    query_cls, query_cls_mock = _create_query(response=response_body)
+    with patch("ozobot.ari.driver.native.Query", query_cls):
+        driver = NativeDriver(Mock())
+
+        result = await driver.user_io_prompt("Choose an option", prompt_type, options)
+        assert result == expected_result
+
+        # Determine expected type name
+        if prompt_type == str:
+            type_name = "string"
+        elif prompt_type in (int, float):
+            type_name = "number"
+        elif prompt_type == bool:
+            type_name = "boolean"
+        elif prompt_type == Color:
+            type_name = "surfaceColor"
+        elif prompt_type == Direction:
+            type_name = "direction"
+
+        query_cls_mock.assert_called_once_with(
+            request.UserIoPromptRequest(
+                id=0,
+                params=request.UserIoPromptRequestParams(
+                    message="Choose an option", type=type_name, options=protocol_options, cancellable=False
+                ),
+            ),
+            methods.USER_IO_PROMPT,
         )
 
 

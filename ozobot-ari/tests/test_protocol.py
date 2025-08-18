@@ -444,6 +444,68 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         '{"id":1,"jsonrpc":"2.0","result":{"type":"finished","success":true}}',
         memwrite.MemWriteRequest,
     ),
+    (
+        request.UserIoPrintRequest(id=1, params=request.UserIoPrintRequestParams(message="Hello, world!")),
+        '{"id":1,"jsonrpc":"2.0","method":"UserIoPrint","params":{"message":"Hello, world!"}}',
+        None,
+    ),
+    (
+        response.UserIoPrintResponse(id=1, result=True),
+        '{"id":1,"jsonrpc":"2.0","result":true}',
+        request.UserIoPrintRequest,
+    ),
+    (
+        request.UserIoAlertRequest(
+            id=1, params=request.UserIoAlertRequestParams(message="This is an alert", cancellable=True)
+        ),
+        '{"id":1,"jsonrpc":"2.0","method":"UserIoAlert","params":{"message":"This is an alert","cancellable":"true"}}',
+        None,
+    ),
+    (
+        response.UserIoAlertResponse(id=1, result=True),
+        '{"id":1,"jsonrpc":"2.0","result":true}',
+        request.UserIoAlertRequest,
+    ),
+    (
+        request.UserIoPromptRequest(
+            id=1,
+            params=request.UserIoPromptRequestParams(
+                message="Select a string:", type="string", cancellable=True, options=["hello", "world"]
+            ),
+        ),
+        '{"id":1,"jsonrpc":"2.0","method":"UserIoPrompt","params":{"message":"Select a string:","type":"string","cancellable":true,"options":["hello","world"]}}',
+        None,
+    ),
+    (
+        response.UserIoPromptResponse(id=1, result=response.UserIoPromptStringResponseBody(value="test string")),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"string","value":"test string"}}',
+        request.UserIoPromptRequest,
+    ),
+    (
+        response.UserIoPromptResponse(id=1, result=response.UserIoPromptNumberResponseBody(value=42.5)),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"number","value":42.5}}',
+        request.UserIoPromptRequest,
+    ),
+    (
+        response.UserIoPromptResponse(id=1, result=response.UserIoPromptBooleanResponseBody(value=True)),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"boolean","value":true}}',
+        request.UserIoPromptRequest,
+    ),
+    (
+        response.UserIoPromptResponse(id=1, result=response.UserIoPromptSurfaceColorResponseBody(value="red")),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"surfaceColor","value":"red"}}',
+        request.UserIoPromptRequest,
+    ),
+    (
+        response.UserIoPromptResponse(id=1, result=response.UserIoPromptLineColorResponseBody(value="blue")),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineColor","value":"blue"}}',
+        request.UserIoPromptRequest,
+    ),
+    (
+        response.UserIoPromptResponse(id=1, result=response.UserIoPromptDirectionResponseBody(value="Straight")),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"direction","value":"Straight"}}',
+        request.UserIoPromptRequest,
+    ),
 )
 
 

@@ -3,19 +3,29 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import typing
+from builtins import issubclass
 from uuid import UUID
 
+from loguru import logger
 from ozobot.ari import conversions
-from ozobot.ari.exceptions import AriProtocolCommandError, MemoryReadUnsuccessfulError, MemoryWriteUnsuccessfulError
-from ozobot.ari.protocol import base, memread, memwrite, methods, notification, request, types
+from ozobot.ari.exceptions import (
+    AriProtocolCommandError,
+    MemoryReadUnsuccessfulError,
+    MemoryWriteUnsuccessfulError,
+    UnexpectedUserIoPromptOptionTypeError,
+    UnexpectedUserIoPromptResponseReceivedError,
+    UnexpectedUserIoPromptTypeError,
+)
+from ozobot.ari.protocol import base, memread, memwrite, methods, notification, request, response, types
 from ozobot.ari.protocol.memread import MemReadResponseBody
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
+from ozobot.ari.protocol.types import TDirection, TNamedColor, TUserIoPrompt
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import ColorCode, Direction, LEDMask, Sample
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample
 from ozobot.linefollower.driver import VirtualMemoryRegions
 from ozobot.webrtc import messaging
 from ozobot.webrtc.connection import Channel
@@ -303,6 +313,94 @@ class NativeDriver:
                     await self.memory.color_code_queue.write(sample_color_code)
                 case _:
                     typing.assert_never(msg.result)
+
+    async def user_io_print(self, message: str) -> None:
+        req = request.UserIoPrintRequest(
+            id=self._request_id.get_next(),
+            params=request.UserIoPrintRequestParams(message=message),
+        )
+        async with Query(req, methods.USER_IO_PRINT).execute(self._executor) as q:
+            _ = await q.response
+
+    async def user_io_alert(self, message: str, *, cancellable: bool = False) -> None:
+        req = request.UserIoAlertRequest(
+            id=self._request_id.get_next(),
+            params=request.UserIoAlertRequestParams(message=message, cancellable=cancellable),
+        )
+        async with Query(req, methods.USER_IO_ALERT).execute(self._executor) as q:
+            _ = await q.response
+
+    async def user_io_prompt[T: (str, float, int, bool, Color, Direction)](
+        self,
+        message: str,
+        _type: type[T],
+        options: list[T],
+        *,
+        cancellable: bool = False,
+    ) -> T:
+        for opt in options:
+            if not isinstance(opt, _type):
+                raise UnexpectedUserIoPromptOptionTypeError(opt, _type)
+
+        type_name = self._type_name_from_type(_type)
+
+        protocol_options: list[str | float | int | bool | TNamedColor | TDirection] = []
+        for opt in options:
+            if isinstance(opt, Color):
+                protocol_options.append(conversions.color_to_protocol(opt))
+            elif isinstance(opt, Direction):
+                protocol_options.append(conversions.intersection_direction_to_protocol(opt))
+            else:
+                protocol_options.append(opt)
+
+        req = request.UserIoPromptRequest(
+            id=self._request_id.get_next(),
+            params=request.UserIoPromptRequestParams(
+                message=message, type=type_name, options=protocol_options, cancellable=cancellable
+            ),
+        )
+
+        async with Query(req, methods.USER_IO_PROMPT).execute(self._executor) as q:
+            resp = await q.response
+            match resp.result, _type:
+                case response.UserIoPromptStringResponseBody(), t if isinstance(resp.result.value, t):
+                    return resp.result.value
+                case response.UserIoPromptNumberResponseBody(), t if issubclass(t, int):
+                    num_int = int(resp.result.value)
+                    if isinstance(num_int, _type):
+                        return num_int
+                case response.UserIoPromptNumberResponseBody(), t if issubclass(t, float):
+                    num_float = float(resp.result.value)
+                    if isinstance(num_float, _type):
+                        return num_float
+                case response.UserIoPromptBooleanResponseBody(), t if isinstance(resp.result.value, t):
+                    return resp.result.value
+                case response.UserIoPromptSurfaceColorResponseBody() | response.UserIoPromptLineColorResponseBody(), _:
+                    color = conversions.color_from_protocol(resp.result.value)
+                    if isinstance(color, _type):
+                        return color
+                case response.UserIoPromptDirectionResponseBody(), _:
+                    direction = conversions.intersection_direction_from_protocol(resp.result.value)
+                    if isinstance(direction, _type):
+                        return direction
+                case _ as r, _ as t:
+                    logger.debug("User IO prompt response not recognized", response=r, expected_type=t)
+
+            raise UnexpectedUserIoPromptResponseReceivedError(resp.result.value, _type)
+
+    def _type_name_from_type(self, _type: type[str | int | float | bool | Color | Direction]) -> TUserIoPrompt:
+        if _type == str:
+            return "string"
+        elif _type == int or _type == float:
+            return "number"
+        elif _type == bool:
+            return "boolean"
+        elif _type == Color:
+            return "surfaceColor"
+        elif _type == Direction:
+            return "direction"
+        else:
+            raise UnexpectedUserIoPromptTypeError(_type)
 
     async def _handle_response(self, function_name: str, resp: typing.Awaitable[_HasResult]) -> None:
         val = await resp

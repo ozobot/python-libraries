@@ -46,6 +46,21 @@ TIME_OF_FLIGHT = Method.without_response(
     notification=notification.TimeOfFlightNotification,
 )
 
+USER_IO_PRINT = Method.without_notifications(
+    request=request.UserIoPrintRequest,
+    response=response.UserIoPrintResponse,
+)
+
+USER_IO_ALERT = Method.without_notifications(
+    request=request.UserIoAlertRequest,
+    response=response.UserIoAlertResponse,
+)
+
+USER_IO_PROMPT = Method.without_notifications(
+    request=request.UserIoPromptRequest,
+    response=response.UserIoPromptResponse,
+)
+
 
 MEM_READ = Method.without_notifications(
     request=memread.MemReadRequest,
@@ -73,6 +88,9 @@ REQUEST_METHODS = {
         PLAY_TONE,
         PLAY_SOUND,
         TIME_OF_FLIGHT,
+        USER_IO_PRINT,
+        USER_IO_ALERT,
+        USER_IO_PROMPT,
         MEM_READ,
         MEM_WRITE,
         WATCH,
