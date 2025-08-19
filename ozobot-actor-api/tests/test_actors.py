@@ -2,7 +2,7 @@ import asyncio
 import typing
 
 import pytest
-from ozobot.common.actors import ActorDispatcher
+from ozobot.actors.actors import ActorDispatcher
 from ozobot.common.exceptions import ActorAlreadyExistsError, ActorNotFoundError, SuitableActorNotFoundError
 
 
