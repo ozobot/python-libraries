@@ -1,3 +1,3 @@
-from ozobot.linefollower.api import algebraic
+from ozobot.linefollower.api import actors
 
-__all__ = ["algebraic"]
+__all__ = ["actors"]

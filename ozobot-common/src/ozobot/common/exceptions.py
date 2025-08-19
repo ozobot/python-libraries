@@ -28,25 +28,25 @@ class OzobotError(Exception):
         return f"{name}({', '.join(args)})"
 
 
-class AlgebraicError(Exception):
-    """Base exception for algebraic errors."""
+class ActorError(Exception):
+    """Base exception for actor errors."""
 
 
-class ActorNotFoundError(AlgebraicError):
+class ActorNotFoundError(ActorError):
     def __init__(self, actor: str):
         super().__init__(f"Actor not found: {actor}")
 
 
-class SuitableActorNotFoundError(AlgebraicError):
+class SuitableActorNotFoundError(ActorError):
     def __init__(self, description: str):
         super().__init__(f"No suitable actor found: {description}")
 
 
-class ActorAlreadyExistsError(AlgebraicError):
+class ActorAlreadyExistsError(ActorError):
     def __init__(self, actor: str):
         super().__init__(f"Actor already exists: {actor}")
 
 
-class CorruptedStateError(AlgebraicError):
+class CorruptedStateError(ActorError):
     def __init__(self):
         super().__init__("Corrupted state: actor stack mismatch")
