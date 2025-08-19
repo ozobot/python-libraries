@@ -192,11 +192,7 @@ class Session:
 
     async def read(self) -> typing.AsyncIterator[bytes]:
         while True:
-            try:
-                data = bytes(await self._read_queue.get())
-            except asyncio.CancelledError:
-                return
-            yield data
+            yield bytes(await self._read_queue.get())
 
     async def write(self, data: bytes) -> None:
         logger.debug("Writting data", len=len(data), bytes=data)

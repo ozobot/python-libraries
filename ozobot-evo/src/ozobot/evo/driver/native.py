@@ -184,39 +184,47 @@ class NativeDriver:
                 yield cls(control, memory)
 
     async def move(self, distance_m: float, speed_ms: float) -> None:
-        async with self._control.MoveStraight(self._control.get_next_request_id(), distance_m, speed_ms) as (
+        request_id = self._control.get_next_request_id()
+        async with self._control.MoveStraight(request_id, distance_m, speed_ms) as (
             resp,
             evts,
         ):
-            await self._handle_events("MoveStraight", evts)
+            async with self._cancellation(request_id=request_id):
+                await self._handle_events("MoveStraight", evts)
 
     async def rotate(self, angle_rad: float, angular_speed_radps: float) -> None:
-        async with self._control.Rotate(self._control.get_next_request_id(), angle_rad, angular_speed_radps) as (
+        request_id = self._control.get_next_request_id()
+        async with self._control.Rotate(request_id, angle_rad, angular_speed_radps) as (
             resp,
             evts,
         ):
-            await self._handle_events("Rotate", evts)
+            async with self._cancellation(request_id=request_id):
+                await self._handle_events("Rotate", evts)
 
     async def velocity(self, linear_mps: float, angular_radps: float, duration_ms: int) -> None:
-        async with self._control.Velocity(
-            self._control.get_next_request_id(), linear_mps, angular_radps, duration_ms
-        ) as (resp, evts):
-            await self._handle_events("Velocity", evts)
+        request_id = self._control.get_next_request_id()
+        async with self._control.Velocity(request_id, linear_mps, angular_radps, duration_ms) as (resp, evts):
+            async with self._cancellation(request_id=request_id):
+                await self._handle_events("Velocity", evts)
 
     async def play_tone(self, frequency_hz: int, duration_ms: int, volume: int) -> None:
-        async with self._control.PlayTone(self._control.get_next_request_id(), frequency_hz, duration_ms, volume) as (
+        request_id = self._control.get_next_request_id()
+        async with self._control.PlayTone(request_id, frequency_hz, duration_ms, volume) as (
             resp,
             evts,
         ):
-            await self._handle_events("PlayTone", evts)
+            async with self._cancellation(request_id=request_id):
+                await self._handle_events("PlayTone", evts)
 
     async def play_audio(self, audio_name: str) -> None:
         filename = map_audio_name_to_filename(audio_name)
         filepath = f"/system/audio/{filename}.wav"
 
-        async with self._control.ExecuteFile(self._control.get_next_request_id(), filepath) as (resp, evts):
-            self._handle_response("ExecuteFile", resp)
-            await self._handle_events("ExecuteFile", evts)
+        request_id = self._control.get_next_request_id()
+        async with self._control.ExecuteFile(request_id, filepath) as (resp, evts):
+            async with self._cancellation(request_id=request_id):
+                self._handle_response("ExecuteFile", resp)
+                await self._handle_events("ExecuteFile", evts)
 
     async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None:
         protocol_mask = conversions.led_to_protocol(mask)
@@ -227,11 +235,13 @@ class NativeDriver:
         direction_protocol = conversions.intersection_direction_to_protocol(direction)
 
         action = Types.LineNavigationAction.Follow if follow else Types.LineNavigationAction.DoNotFollow
-        async with self._control.LineNavigation(self._control.get_next_request_id(), direction_protocol, action) as (
+        request_id = self._control.get_next_request_id()
+        async with self._control.LineNavigation(request_id, direction_protocol, action) as (
             resp,
             evts,
         ):
-            event = await self._handle_events("LineNavigation", evts)
+            async with self._cancellation(request_id=request_id):
+                event = await self._handle_events("LineNavigation", evts)
 
         intersection = conversions.intersection_bitmap_from_protocol(event.intersection)
         sample = Sample.now(intersection)
@@ -239,6 +249,14 @@ class NativeDriver:
 
     async def stop_all(self) -> None:
         await self._control.StopExecution(0)
+
+    @contextlib.asynccontextmanager
+    async def _cancellation(self, *, request_id: int) -> typing.AsyncIterator[None]:
+        try:
+            yield
+        except BaseException as e:
+            await self._control.StopExecution(request_id)
+            raise e
 
     def _handle_response(self, function_name: str, response: _HasCallStatus | _HasResult) -> None:
         if isinstance(response, _HasCallStatus):
