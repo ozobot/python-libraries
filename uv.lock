@@ -4,6 +4,7 @@ requires-python = ">=3.13"
 
 [manifest]
 members = [
+    "ozobot-actor-api",
     "ozobot-ari",
     "ozobot-ble",
     "ozobot-common",
@@ -438,6 +439,32 @@ sdist = { url = "https://files.pythonhosted.org/packages/a2/6e/371856a3fb9d31ca8
 wheels = [
     { url = "https://files.pythonhosted.org/packages/79/7b/2c79738432f5c924bef5071f933bcc9efd0473bac3b4aa584a6f7c1c8df8/mypy_extensions-1.1.0-py3-none-any.whl", hash = "sha256:1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505", size = 4963 },
 ]
+
+[[package]]
+name = "ozobot-actor-api"
+version = "0.1.0"
+source = { editable = "ozobot-actor-api" }
+dependencies = [
+    { name = "loguru" },
+    { name = "ozobot-common" },
+]
+
+[package.optional-dependencies]
+ari = [
+    { name = "ozobot-ari" },
+]
+evo = [
+    { name = "ozobot-evo" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "loguru" },
+    { name = "ozobot-ari", marker = "extra == 'ari'", editable = "ozobot-ari" },
+    { name = "ozobot-common", editable = "ozobot-common" },
+    { name = "ozobot-evo", marker = "extra == 'evo'", editable = "ozobot-evo" },
+]
+provides-extras = ["ari", "evo"]
 
 [[package]]
 name = "ozobot-ari"
