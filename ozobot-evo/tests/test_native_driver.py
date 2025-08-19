@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import typing
 from unittest.mock import AsyncMock, Mock, patch, sentinel
@@ -13,30 +14,18 @@ from ozobot.evo.protocol import Types, VirtualMemory
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
 
 
-def _get_async_control():
-    return Mock(
-        get_next_request_id=Mock(return_value=sentinel.request_id),
-    )
-
-
 def _create_command(
     *,
     response: dict[str, typing.Any],
     events: list[dict[str, typing.Any]] | None = None,
 ):
-    if events:
+    async def _evts():
+        for e in events or []:
+            yield Mock(**e)
 
-        async def _evts():
-            for e in events or []:
-                yield Mock(**e)
-
-        @contextlib.asynccontextmanager
-        async def _resp():
-            yield Mock(**response), _evts()
-    else:
-
-        async def _resp():
-            return Mock(**response)
+    @contextlib.asynccontextmanager
+    async def _resp():
+        yield Mock(**response), _evts()
 
     return _resp()
 
@@ -146,6 +135,55 @@ async def test_set_led(command_direction: LEDMask, rpc_direction: Types.LEDsMask
 
     await driver.set_led(command_direction, 0, 100, 200)
     cmd_mock.assert_called_once_with(rpc_direction, 0, 100, 200, 255)
+
+
+@pytest.mark.parametrize(
+    ["function_name", "command_name", "command_parameters", "rpc_parameters"],
+    [
+        ("move", "MoveStraight", [0.2, 0.1], [0.2, 0.1]),
+        ("rotate", "Rotate", [0.1, 0.2], [0.1, 0.2]),
+        ("velocity", "Velocity", [0.1, 0.2, 3], [0.1, 0.2, 3]),
+        ("play_tone", "PlayTone", [1, 2, 3], [1, 2, 3]),
+        ("play_audio", "ExecuteFile", ["happy"], ["/system/audio/01010100.wav"]),
+        (
+            "line_navigation",
+            "LineNavigation",
+            [Direction.LEFT, False],
+            [Types.IntersectionDirection.Left, Types.LineNavigationAction.DoNotFollow],
+        ),
+    ],
+)
+async def test_cancellation(
+    function_name: str, command_name: str, command_parameters: list[typing.Any], rpc_parameters: list[typing.Any]
+) -> None:
+    @contextlib.asynccontextmanager
+    async def _resp():
+        async def _evts():
+            raise asyncio.CancelledError("test case: cancellation")
+            yield None
+
+        yield (
+            AsyncMock(side_effect=asyncio.CancelledError("test case: cancellation")),
+            _evts(),
+        )
+
+    cmd_mock = Mock(
+        return_value=_resp(),
+    )
+    stop_mock = AsyncMock()
+
+    control = Mock(
+        **{command_name: cmd_mock, "StopExecution": stop_mock},
+        get_next_request_id=lambda: sentinel.request_id,
+    )
+    driver = NativeDriver(control, Mock())
+
+    function = getattr(driver, function_name)
+    with pytest.raises(asyncio.CancelledError):
+        await function(*command_parameters)
+
+    cmd_mock.assert_called_once_with(sentinel.request_id, *rpc_parameters)
+    stop_mock.assert_called_once_with(sentinel.request_id)
 
 
 async def test_native_data_access_read() -> None:
