@@ -2,12 +2,12 @@ import typing
 from unittest.mock import Mock
 
 import pytest
-from ozobot.evo.protocol import PacketTypes
-from ozobot.linefollower.api.watchers import (
+from ozobot.evo.api.watchers import (
     WatcherAllocator,
     WatcherSubscription,
     _WatcherAllocation,
 )
+from ozobot.evo.protocol import PacketTypes
 
 
 def test_allocator() -> None:

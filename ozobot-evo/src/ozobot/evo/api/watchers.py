@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from loguru import logger
 from ozobot.common.broadcast import BroadcastManager
+from ozobot.evo.driver.responses import handle_response
 from ozobot.evo.protocol import AsyncControl, PacketTypes, Types, VirtualMemory
 
 
@@ -207,14 +208,16 @@ class LineFollowerWatcher:
             | Types.WatcherFlags.SendInitialValue
         )
         for watcher_id in watcher_ids:
-            await self._control.WatcherSetup(watcher_id, flags, 40, 200)
+            async with self._control.WatcherSetup(watcher_id, flags, 40, 200) as (resp, _):
+                handle_response("WatcherSetup", resp)
 
         try:
             yield
         finally:
             logger.debug("Deinitializing watchers", watcher_ids=watcher_ids)
             for watcher_id in watcher_ids:
-                await self._control.WatcherSetup(watcher_id, Types.WatcherFlags(0), 40, 200)
+                async with self._control.WatcherSetup(watcher_id, Types.WatcherFlags(0), 40, 200) as (resp, _):
+                    handle_response("WatcherSetup", resp)
 
     @contextlib.asynccontextmanager
     async def _subscribe[T: _Deserializable](
@@ -235,10 +238,12 @@ class LineFollowerWatcher:
             finally:
                 logger.debug("Removing watcher")
                 flags = Types.WatcherRegionFlags.DoNotSendInNotify | Types.WatcherRegionFlags.DoNotSetDirty
-                await self._control.WatcherRegionSetup(watcher_id, region_id, 0, 0, flags=flags)
+                async with self._control.WatcherRegionSetup(watcher_id, region_id, 0, 0, flags=flags) as (resp, _):
+                    handle_response("WatcherRegionSetup", resp)
 
     async def _read_watcher_info(self) -> Types.WatcherInfo:
         metadata = VirtualMemory.watchersInfo
-        reply = await self._control.MemRead(metadata.address, metadata.type.data_width)
-        data = bytes(reply.data)
+        async with self._control.MemRead(metadata.address, metadata.type.data_width) as (resp, _):
+            handle_response("MemRead", resp)
+        data = bytes(resp.data)
         return metadata.type.deserialize(data)
