@@ -125,7 +125,7 @@ async def test_line_navigation() -> None:
     ],
 )
 async def test_set_led(command_direction: LEDMask, rpc_direction: Types.LEDsMask) -> None:
-    cmd_mock = AsyncMock(
+    cmd_mock = Mock(
         return_value=_create_command(
             response={"callStatus": Types.CallStatus.CallSuccess},
         )
@@ -170,7 +170,9 @@ async def test_cancellation(
     cmd_mock = Mock(
         return_value=_resp(),
     )
-    stop_mock = AsyncMock()
+    stop_mock = Mock(
+        return_value=_resp(),
+    )
 
     control = Mock(
         **{command_name: cmd_mock, "StopExecution": stop_mock},
@@ -187,9 +189,15 @@ async def test_cancellation(
 
 
 async def test_native_data_access_read() -> None:
-    cmd_mock = AsyncMock(
-        return_value=Mock(data=Types.Battery(voltage=1, remainingPower=2, fields=0, timestamp=0).serialize())
+    cmd_mock = Mock(
+        return_value=_create_command(
+            response={
+                "callStatus": Types.CallStatus.CallSuccess,
+                "data": Types.Battery(voltage=1, remainingPower=2, fields=0, timestamp=0).serialize(),
+            },
+        )
     )
+
     control = AsyncMock(MemRead=cmd_mock)
     property = Mock(type=Types.Battery)
     da = NativeDataAccessRead(control, property, lambda v: v.voltage)
@@ -202,7 +210,14 @@ async def test_native_data_access_read() -> None:
 
 
 async def test_native_data_access_write() -> None:
-    cmd_mock = AsyncMock()
+    cmd_mock = Mock(
+        return_value=_create_command(
+            response={
+                "callStatus": Types.CallStatus.CallSuccess,
+            },
+        )
+    )
+
     control = AsyncMock(MemWrite=cmd_mock)
     property = VirtualMemory.lineNavigationSpeed
     da = NativeDataAccessReadWrite(
@@ -225,8 +240,13 @@ async def test_native_data_watcher() -> None:
 
         yield _iter()
 
-    cmd_mock = AsyncMock(
-        return_value=Mock(data=Types.Battery(voltage=1, remainingPower=2, fields=0, timestamp=0).serialize())
+    cmd_mock = Mock(
+        return_value=_create_command(
+            response={
+                "callStatus": Types.CallStatus.CallSuccess,
+                "data": Types.Battery(voltage=1, remainingPower=2, fields=0, timestamp=0).serialize(),
+            },
+        )
     )
     control = AsyncMock(
         MemRead=cmd_mock,

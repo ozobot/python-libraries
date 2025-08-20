@@ -7,8 +7,8 @@ from uuid import UUID
 from ozobot.ble.connection import open_client
 from ozobot.evo import conversions
 from ozobot.evo.api.watchers import LineFollowerWatcher, WatcherSubscription
+from ozobot.evo.driver.responses import handle_events, handle_response
 from ozobot.evo.driver.shared import map_audio_name_to_filename
-from ozobot.evo.exceptions import OzobotProtocolCommandError
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
@@ -26,20 +26,6 @@ class _HasTimestamp(typing.Protocol):
 
 class _DeserializeAndSerializable(Deserializable, Serializable, typing.Protocol):
     pass
-
-
-class _HasExecutionState(typing.Protocol):
-    executionState: Types.ExecutionStateEnum
-
-
-@typing.runtime_checkable
-class _HasCallStatus(typing.Protocol):
-    callStatus: Types.CallStatus
-
-
-@typing.runtime_checkable
-class _HasResult(typing.Protocol):
-    result: Types.IOResult
 
 
 class MemoryProperty[T](typing.Protocol):
@@ -90,8 +76,10 @@ class NativeDataAccessRead[T: Deserializable, U]:
         self._from_protocol = from_protocol
 
     async def read(self) -> Sample[U]:
-        ret = await self._control.MemRead(self._property.address, self._property.size)
-        val = self._property.type.deserialize(bytes(ret.data))
+        async with self._control.MemRead(self._property.address, self._property.size) as (resp, _):
+            handle_response("MemRead", resp)
+
+        val = self._property.type.deserialize(bytes(resp.data))
         if isinstance(val, _HasTimestamp):
             return sample_from_protocol(val, self._from_protocol)
         else:
@@ -111,7 +99,8 @@ class NativeDataAccessReadWrite[T: _DeserializeAndSerializable, U](NativeDataAcc
 
     async def write(self, data: U) -> None:
         raw_data = self._to_protocol(data).serialize()
-        _ = await self._control.MemWrite(self._property.address, self._property.size, raw_data)
+        async with self._control.MemWrite(self._property.address, self._property.size, raw_data) as (resp, _):
+            handle_response("MemWrite", resp)
 
 
 class NativeDataWatcher[T: Deserializable, U]:
@@ -190,7 +179,7 @@ class NativeDriver:
             evts,
         ):
             async with self._cancellation(request_id=request_id):
-                await self._handle_events("MoveStraight", evts)
+                await handle_events("MoveStraight", evts)
 
     async def rotate(self, angle_rad: float, angular_speed_radps: float) -> None:
         request_id = self._control.get_next_request_id()
@@ -199,13 +188,13 @@ class NativeDriver:
             evts,
         ):
             async with self._cancellation(request_id=request_id):
-                await self._handle_events("Rotate", evts)
+                await handle_events("Rotate", evts)
 
     async def velocity(self, linear_mps: float, angular_radps: float, duration_ms: int) -> None:
         request_id = self._control.get_next_request_id()
         async with self._control.Velocity(request_id, linear_mps, angular_radps, duration_ms) as (resp, evts):
             async with self._cancellation(request_id=request_id):
-                await self._handle_events("Velocity", evts)
+                await handle_events("Velocity", evts)
 
     async def play_tone(self, frequency_hz: int, duration_ms: int, volume: int) -> None:
         request_id = self._control.get_next_request_id()
@@ -214,7 +203,7 @@ class NativeDriver:
             evts,
         ):
             async with self._cancellation(request_id=request_id):
-                await self._handle_events("PlayTone", evts)
+                await handle_events("PlayTone", evts)
 
     async def play_audio(self, audio_name: str) -> None:
         filename = map_audio_name_to_filename(audio_name)
@@ -223,13 +212,13 @@ class NativeDriver:
         request_id = self._control.get_next_request_id()
         async with self._control.ExecuteFile(request_id, filepath) as (resp, evts):
             async with self._cancellation(request_id=request_id):
-                self._handle_response("ExecuteFile", resp)
-                await self._handle_events("ExecuteFile", evts)
+                handle_response("ExecuteFile", resp)
+                await handle_events("ExecuteFile", evts)
 
     async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None:
         protocol_mask = conversions.led_to_protocol(mask)
-        response = await self._control.SetLED(protocol_mask, red, green, blue, 255)
-        self._handle_response("SetLED", response)
+        async with self._control.SetLED(protocol_mask, red, green, blue, 255) as (response, _):
+            handle_response("SetLED", response)
 
     async def line_navigation(self, direction: Direction, follow: bool) -> None:
         direction_protocol = conversions.intersection_direction_to_protocol(direction)
@@ -241,42 +230,23 @@ class NativeDriver:
             evts,
         ):
             async with self._cancellation(request_id=request_id):
-                event = await self._handle_events("LineNavigation", evts)
+                event = await handle_events("LineNavigation", evts)
 
         intersection = conversions.intersection_bitmap_from_protocol(event.intersection)
         sample = Sample.now(intersection)
         await self.memory.intersection_queue.write(sample)
 
     async def stop_all(self) -> None:
-        await self._control.StopExecution(0)
+        await self._stop_execution(0)
+
+    async def _stop_execution(self, request_id: int) -> None:
+        async with self._control.StopExecution(request_id) as (resp, _):
+            pass  # there's nothing to check in the StopExecution response
 
     @contextlib.asynccontextmanager
     async def _cancellation(self, *, request_id: int) -> typing.AsyncIterator[None]:
         try:
             yield
         except BaseException as e:
-            await self._control.StopExecution(request_id)
+            await self._stop_execution(request_id)
             raise e
-
-    def _handle_response(self, function_name: str, response: _HasCallStatus | _HasResult) -> None:
-        if isinstance(response, _HasCallStatus):
-            if response.callStatus != Types.CallStatus.CallSuccess:
-                raise OzobotProtocolCommandError(function_name, response.callStatus.name, description="call failed")
-        elif isinstance(response, _HasResult):
-            if response.result != Types.IOResult.Success:
-                raise OzobotProtocolCommandError(function_name, response.result.name, description="call failed")
-
-    async def _handle_events[T: _HasExecutionState](self, function_name: str, events: typing.AsyncIterator[T]) -> T:
-        """Checks event execution state and returns an event confirming event success. Raises exception otherwise."""
-        async for event in events:
-            if event.executionState == Types.ExecutionStateEnum.FinishedNormal:
-                return event
-
-            if event.executionState != Types.ExecutionStateEnum.Running:
-                raise OzobotProtocolCommandError(
-                    function_name,
-                    event.executionState.name,
-                    description="failure execution state",
-                )
-
-        raise OzobotProtocolCommandError(function_name, "empty", description="no command end state received")

@@ -8,14 +8,11 @@ import dataclasses
 import enum
 import struct
 import typing
-
 from loguru import logger
-from ozobot.common.convert import deserialize_array, serialize_array
 from ozobot.common.crc import crc32
+from ozobot.common.convert import serialize_array, deserialize_array
 from ozobot.common.rlock import RLock
-from ozobot.common.rpc import RpcCall
 from ozobot.common.types import s8_24_deserialize, s8_24_serialize
-
 __all__ = ["AsyncControl", "Types"]
 
 
@@ -95,6 +92,7 @@ class _Session(typing.Protocol):
 
     async def write(self, data: bytes) -> None:
         ...
+type RpcCall[TResponse, TEvent] = contextlib.AbstractAsyncContextManager[tuple[TResponse, typing.AsyncIterator[TEvent]]]
 
 
 class Types:
@@ -3966,8 +3964,8 @@ class Types:
 class PacketTypes:
 
     @classmethod
-    def get_packet_type_by_message_id(cls, id: int) -> type[_PacketType] | None:
-        type_by_id: dict[int, type[_PacketType]] = {
+    def get_packet_type_by_message_id(cls, id: int) -> typing.Type[_PacketType] | None:
+        type_by_id: dict[int, typing.Type[_PacketType]] = {
             1: PacketTypes.PacketRequest_MemRead,
             2: PacketTypes.PacketResponse_MemRead,
             3: PacketTypes.PacketRequest_MemWrite,
@@ -4048,7 +4046,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 1
+            assert message_id == int(1)
             addr = Types.addr_t.deserialize(data[2:6])
             length = Types.size_t.deserialize(data[6:8])
             return cls(addr, length)
@@ -4088,7 +4086,7 @@ class PacketTypes:
 
         def serialize(self) -> bytes:
             vla_data = serialize_array(self.data, Types.u8)
-            assert len(vla_data) == self.length
+            assert len(vla_data) == getattr(self, 'length')
             buffer = memoryview(bytearray(5+len(vla_data)))
             buffer[0:2] = Types.u16.serialize(self.message_id)
             buffer[2:3] = Types.IOResult.serialize(self.result)
@@ -4099,7 +4097,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 2
+            assert message_id == int(2)
             result = Types.IOResult.deserialize(data[2:3])
             length = Types.size_t.deserialize(data[3:5])
             data = deserialize_array(Types.u8, data[5:])
@@ -4136,7 +4134,7 @@ class PacketTypes:
 
         def serialize(self) -> bytes:
             vla_data = serialize_array(self.data, Types.u8)
-            assert len(vla_data) == self.length
+            assert len(vla_data) == getattr(self, 'length')
             buffer = memoryview(bytearray(8+len(vla_data)))
             buffer[0:2] = Types.u16.serialize(self.message_id)
             buffer[2:6] = Types.addr_t.serialize(self.addr)
@@ -4147,7 +4145,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 3
+            assert message_id == int(3)
             addr = Types.addr_t.deserialize(data[2:6])
             length = Types.size_t.deserialize(data[6:8])
             data = deserialize_array(Types.u8, data[8:])
@@ -4193,7 +4191,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 4
+            assert message_id == int(4)
             result = Types.IOResult.deserialize(data[2:3])
             return cls(result)
 
@@ -4237,7 +4235,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 100
+            assert message_id == int(100)
             requestId = Types.RequestID.deserialize(data[2:6])
             distance = Types.S8_24.deserialize(data[6:10])
             speed = Types.S8_24.deserialize(data[10:14])
@@ -4283,7 +4281,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 101
+            assert message_id == int(101)
             requestId = Types.RequestID.deserialize(data[2:6])
             return cls(requestId)
 
@@ -4331,7 +4329,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 102
+            assert message_id == int(102)
             requestId = Types.RequestID.deserialize(data[2:6])
             angle = Types.S8_24.deserialize(data[6:10])
             speed = Types.S8_24.deserialize(data[10:14])
@@ -4377,7 +4375,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 103
+            assert message_id == int(103)
             requestId = Types.RequestID.deserialize(data[2:6])
             return cls(requestId)
 
@@ -4427,7 +4425,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 104
+            assert message_id == int(104)
             requestId = Types.RequestID.deserialize(data[2:6])
             linearSpeed = Types.S8_24.deserialize(data[6:10])
             rotationSpeed = Types.S8_24.deserialize(data[10:14])
@@ -4474,7 +4472,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 105
+            assert message_id == int(105)
             requestId = Types.RequestID.deserialize(data[2:6])
             return cls(requestId)
 
@@ -4522,7 +4520,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 106
+            assert message_id == int(106)
             requestId = Types.RequestID.deserialize(data[2:6])
             direction = Types.IntersectionDirection.deserialize(data[6:7])
             action = Types.LineNavigationAction.deserialize(data[7:8])
@@ -4568,7 +4566,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 107
+            assert message_id == int(107)
             requestId = Types.RequestID.deserialize(data[2:6])
             return cls(requestId)
 
@@ -4612,7 +4610,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 120
+            assert message_id == int(120)
             requestId = Types.RequestID.deserialize(data[2:6])
             return cls(requestId)
 
@@ -4656,7 +4654,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 121
+            assert message_id == int(121)
             requestId = Types.RequestID.deserialize(data[2:6])
             return cls(requestId)
 
@@ -4706,7 +4704,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 122
+            assert message_id == int(122)
             watcherID = Types.u8.deserialize(data[2:3])
             flags = Types.WatcherFlags.deserialize(data[3:4])
             notificationPeriodMin = Types.u16.deserialize(data[4:6])
@@ -4753,7 +4751,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 123
+            assert message_id == int(123)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             return cls(callStatus)
 
@@ -4801,7 +4799,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 124
+            assert message_id == int(124)
             watcherID = Types.u8.deserialize(data[2:3])
             regionID = Types.u8.deserialize(data[3:4])
             address = Types.u16.deserialize(data[4:6])
@@ -4849,7 +4847,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 125
+            assert message_id == int(125)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             return cls(callStatus)
 
@@ -4892,7 +4890,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 108
+            assert message_id == int(108)
             requestId = Types.RequestID.deserialize(data[2:6])
             path = deserialize_array(Types.c8, data[6:])
             return cls(requestId, path)
@@ -4939,7 +4937,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 109
+            assert message_id == int(109)
             requestId = Types.RequestID.deserialize(data[2:6])
             callStatus = Types.CallStatus.deserialize(data[6:7])
             return cls(requestId, callStatus)
@@ -4992,7 +4990,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 110
+            assert message_id == int(110)
             ledsMask = Types.LEDsMask.deserialize(data[2:4])
             red = Types.u8.deserialize(data[4:5])
             green = Types.u8.deserialize(data[5:6])
@@ -5040,7 +5038,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 111
+            assert message_id == int(111)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             return cls(callStatus)
 
@@ -5080,7 +5078,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 112
+            assert message_id == int(112)
             type = Types.CalibrationType.deserialize(data[2:3])
             return cls(type)
 
@@ -5124,7 +5122,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 113
+            assert message_id == int(113)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             return cls(callStatus)
 
@@ -5163,7 +5161,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 114
+            assert message_id == int(114)
             return cls()
 
         @classmethod
@@ -5206,7 +5204,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 115
+            assert message_id == int(115)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             return cls(callStatus)
 
@@ -5248,7 +5246,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 116
+            assert message_id == int(116)
             target = Types.FirmwareUpdateTargetEnum.deserialize(data[2:3])
             source = Types.FirmwareUpdateSourceEnum.deserialize(data[3:4])
             return cls(target, source)
@@ -5293,7 +5291,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 117
+            assert message_id == int(117)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             return cls(callStatus)
 
@@ -5339,7 +5337,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 118
+            assert message_id == int(118)
             requestId = Types.RequestID.deserialize(data[2:6])
             frequency = Types.u16.deserialize(data[6:8])
             duration = Types.u16.deserialize(data[8:10])
@@ -5386,7 +5384,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 119
+            assert message_id == int(119)
             requestId = Types.RequestID.deserialize(data[2:6])
             return cls(requestId)
 
@@ -5432,7 +5430,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 126
+            assert message_id == int(126)
             dataLength = Types.size_t.deserialize(data[2:4])
             dataCRC = Types.u32.deserialize(data[4:8])
             return cls(dataLength, dataCRC)
@@ -5481,7 +5479,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 127
+            assert message_id == int(127)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             dataLength = Types.size_t.deserialize(data[3:5])
             dataCRC = Types.u32.deserialize(data[5:9])
@@ -5523,7 +5521,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 130
+            assert message_id == int(130)
             seed = Types.u32.deserialize(data[2:6])
             return cls(seed)
 
@@ -5567,7 +5565,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 131
+            assert message_id == int(131)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             return cls(callStatus)
 
@@ -5607,7 +5605,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 132
+            assert message_id == int(132)
             newState = Types.LoggingState.deserialize(data[2:3])
             return cls(newState)
 
@@ -5651,7 +5649,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 133
+            assert message_id == int(133)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             return cls(callStatus)
 
@@ -5691,7 +5689,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 134
+            assert message_id == int(134)
             testType = Types.MemoryTestTypes.deserialize(data[2:3])
             return cls(testType)
 
@@ -5735,7 +5733,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 135
+            assert message_id == int(135)
             callStatus = Types.CallStatus.deserialize(data[2:3])
             return cls(callStatus)
 
@@ -5783,7 +5781,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 256
+            assert message_id == int(256)
             requestId = Types.RequestID.deserialize(data[2:6])
             executionState = Types.ExecutionStateEnum.deserialize(data[6:7])
             overshotTime = Types.S8_24.deserialize(data[7:11])
@@ -5835,7 +5833,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 257
+            assert message_id == int(257)
             requestId = Types.RequestID.deserialize(data[2:6])
             executionState = Types.ExecutionStateEnum.deserialize(data[6:7])
             intersection = Types.IntersectionBitmap.deserialize(data[7:8])
@@ -5883,7 +5881,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 266
+            assert message_id == int(266)
             requestId = Types.RequestID.deserialize(data[2:6])
             executionState = Types.ExecutionStateEnum.deserialize(data[6:7])
             return cls(requestId, executionState)
@@ -5931,7 +5929,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 260
+            assert message_id == int(260)
             id = Types.u8.deserialize(data[2:3])
             data = deserialize_array(Types.u8, data[3:])
             return cls(id, data)
@@ -5978,7 +5976,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 263
+            assert message_id == int(263)
             moduleID = Types.ErrorModuleIDs.deserialize(data[2:3])
             errorCode = Types.u32.deserialize(data[3:7])
             return cls(moduleID, errorCode)
@@ -6019,7 +6017,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 258
+            assert message_id == int(258)
             source = Types.ShutdownSource.deserialize(data[2:3])
             return cls(source)
 
@@ -6061,7 +6059,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 259
+            assert message_id == int(259)
             requestId = Types.RequestID.deserialize(data[2:6])
             executionState = Types.ExecutionStateEnum.deserialize(data[6:7])
             return cls(requestId, executionState)
@@ -6106,7 +6104,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 261
+            assert message_id == int(261)
             status = Types.CalibrationResultEnum.deserialize(data[2:3])
             return cls(status)
 
@@ -6154,7 +6152,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 262
+            assert message_id == int(262)
             executionState = Types.ExecutionStateEnum.deserialize(data[2:3])
             progress = Types.u8.deserialize(data[3:4])
             flashID = Types.u8.deserialize(data[4:5])
@@ -6200,7 +6198,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 264
+            assert message_id == int(264)
             requestId = Types.RequestID.deserialize(data[2:6])
             executionState = Types.ExecutionStateEnum.deserialize(data[6:7])
             return cls(requestId, executionState)
@@ -6245,7 +6243,7 @@ class PacketTypes:
         @classmethod
         def deserialize(cls, data):
             message_id = Types.u16.deserialize(data[0:2])
-            assert message_id == 265
+            assert message_id == int(265)
             executionState = Types.ExecutionStateEnum.deserialize(data[2:3])
             return cls(executionState)
 
@@ -6704,7 +6702,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_MemRead(addr, length)
-        return RpcCall[PacketTypes.PacketResponse_MemRead, typing.Never](self._rpc(request, PacketTypes.PacketResponse_MemRead))
+        return self._rpc(request, PacketTypes.PacketResponse_MemRead)
 
     def MemWrite(self, addr: int | Types.addr_t, length: int | Types.size_t, data: str | bytes) -> RpcCall[PacketTypes.PacketResponse_MemWrite, typing.Never]:
         '''Virtual memory write. Entire entries have to be written in a single write operation except entries with permitted partial writes. Write is done atomically. Response to the operation is returned after writing the memory, meaning the memory should be present for consecutive reads after this operation compeletes.
@@ -6717,7 +6715,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_MemWrite(addr, length, data)
-        return RpcCall[PacketTypes.PacketResponse_MemWrite, typing.Never](self._rpc(request, PacketTypes.PacketResponse_MemWrite))
+        return self._rpc(request, PacketTypes.PacketResponse_MemWrite)
 
     def MoveStraight(self, requestId: int | Types.RequestID, distance: float | Types.S8_24, speed: float | Types.S8_24) -> RpcCall[PacketTypes.PacketResponse_MoveStraight, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]:
         '''Move robot along a straight line. The function returns as soon as movement is queued, but may not have started executing yet. Note that if both distance and speed are negative, the resulting movement is forward.
@@ -6730,7 +6728,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_MoveStraight(requestId, distance, speed)
-        return RpcCall[PacketTypes.PacketResponse_MoveStraight, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_MoveStraight))
+        return self._rpc(request, PacketTypes.PacketResponse_MoveStraight)
 
     def Rotate(self, requestId: int | Types.RequestID, angle: float | Types.S8_24, speed: float | Types.S8_24) -> RpcCall[PacketTypes.PacketResponse_Rotate, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate]:
         '''Rotate around vertical axis to a specified angle. The function returns as soon as movement is queued, but may not have started executing yet.
@@ -6743,7 +6741,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_Rotate(requestId, angle, speed)
-        return RpcCall[PacketTypes.PacketResponse_Rotate, PacketTypes.PacketEvent_PreciseMovementExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_Rotate))
+        return self._rpc(request, PacketTypes.PacketResponse_Rotate)
 
     def Velocity(self, requestId: int | Types.RequestID, linearSpeed: float | Types.S8_24, rotationSpeed: float | Types.S8_24, durationTime: int | Types.i32) -> RpcCall[PacketTypes.PacketResponse_Velocity, PacketTypes.PacketEvent_VelocityExecutionState]:
         '''Set forward and rotation velocity. Setting expiration and waiting for it to expire can cause lag in movement or sudden snaps, prefer setting expiration to multiple of the expected duration (2x, 3x, ...) and replace it with another movement just in time - this applies to cases where chaining velocity is wanted. One-shot change in velocity can remain with exact expiration time. Cancelling this movement modification is still possible and can exhibit aforementioned behavior, but resets the speed(s) to the default.
@@ -6757,7 +6755,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_Velocity(requestId, linearSpeed, rotationSpeed, durationTime)
-        return RpcCall[PacketTypes.PacketResponse_Velocity, PacketTypes.PacketEvent_VelocityExecutionState](self._rpc(request, PacketTypes.PacketResponse_Velocity))
+        return self._rpc(request, PacketTypes.PacketResponse_Velocity)
 
     def LineNavigation(self, requestId: int | Types.RequestID, direction: Types.IntersectionDirection, action: Types.LineNavigationAction) -> RpcCall[PacketTypes.PacketResponse_LineNavigation, PacketTypes.PacketEvent_LineNavigationExecutionUpdate]:
         '''Line navigation is capable to follow lines, recognize intersections and turn in chosen direction on them.
@@ -6770,7 +6768,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_LineNavigation(requestId, direction, action)
-        return RpcCall[PacketTypes.PacketResponse_LineNavigation, PacketTypes.PacketEvent_LineNavigationExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_LineNavigation))
+        return self._rpc(request, PacketTypes.PacketResponse_LineNavigation)
 
     def StopExecution(self, requestId: int | Types.RequestID) -> RpcCall[PacketTypes.PacketResponse_StopExecution, PacketTypes.PacketEvent_AudioExecutionState | PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_PreciseMovementExecutionUpdate | PacketTypes.PacketEvent_LineNavigationExecutionUpdate]:
         '''Stop execution. It can be audio playback, movement etc.
@@ -6781,7 +6779,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_StopExecution(requestId)
-        return RpcCall[PacketTypes.PacketResponse_StopExecution, PacketTypes.PacketEvent_AudioExecutionState | PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_PreciseMovementExecutionUpdate | PacketTypes.PacketEvent_LineNavigationExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_StopExecution))
+        return self._rpc(request, PacketTypes.PacketResponse_StopExecution)
 
     def WatcherSetup(self, watcherID: int | Types.u8, flags: Types.WatcherFlags, notificationPeriodMin: int | Types.u16, notificationPeriodMax: int | Types.u16) -> RpcCall[PacketTypes.PacketResponse_WatcherSetup, PacketTypes.PacketEvent_WatcherDirty]:
         '''Watcher setup (flags and notification period). After enabling the watcher using 'flags', device keeps emitting WatcherDirty unless **explicitly disabled**.
@@ -6797,7 +6795,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_WatcherSetup(watcherID, flags, notificationPeriodMin, notificationPeriodMax)
-        return RpcCall[PacketTypes.PacketResponse_WatcherSetup, PacketTypes.PacketEvent_WatcherDirty](self._rpc(request, PacketTypes.PacketResponse_WatcherSetup))
+        return self._rpc(request, PacketTypes.PacketResponse_WatcherSetup)
 
     def WatcherRegionSetup(self, watcherID: int | Types.u8, regionID: int | Types.u8, address: int | Types.u16, size: int | Types.u8, flags: Types.WatcherRegionFlags) -> RpcCall[PacketTypes.PacketResponse_WatcherRegionSetup, PacketTypes.PacketEvent_WatcherDirty]:
         '''Watcher region setup as address, size and flags. Emission does not start unless WatcherSetup is invoked with an appropriate Enable flag.
@@ -6812,7 +6810,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_WatcherRegionSetup(watcherID, regionID, address, size, flags)
-        return RpcCall[PacketTypes.PacketResponse_WatcherRegionSetup, PacketTypes.PacketEvent_WatcherDirty](self._rpc(request, PacketTypes.PacketResponse_WatcherRegionSetup))
+        return self._rpc(request, PacketTypes.PacketResponse_WatcherRegionSetup)
 
     def ExecuteFile(self, requestId: int | Types.RequestID, path: str | bytes) -> RpcCall[PacketTypes.PacketResponse_ExecuteFile, PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_AudioExecutionState]:
         '''Execute file like audio file, virtual machine program etc.
@@ -6824,7 +6822,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_ExecuteFile(requestId, path)
-        return RpcCall[PacketTypes.PacketResponse_ExecuteFile, PacketTypes.PacketEvent_VirtualMachineExecutionState | PacketTypes.PacketEvent_AudioExecutionState](self._rpc(request, PacketTypes.PacketResponse_ExecuteFile))
+        return self._rpc(request, PacketTypes.PacketResponse_ExecuteFile)
 
     def SetLED(self, ledsMask: Types.LEDsMask, red: int | Types.u8, green: int | Types.u8, blue: int | Types.u8, alpha: int | Types.u8) -> RpcCall[PacketTypes.PacketResponse_SetLED, typing.Never]:
         '''Set LEDs brightness.
@@ -6839,7 +6837,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_SetLED(ledsMask, red, green, blue, alpha)
-        return RpcCall[PacketTypes.PacketResponse_SetLED, typing.Never](self._rpc(request, PacketTypes.PacketResponse_SetLED))
+        return self._rpc(request, PacketTypes.PacketResponse_SetLED)
 
     def Calibrate(self, type: Types.CalibrationType) -> RpcCall[PacketTypes.PacketResponse_Calibrate, PacketTypes.PacketEvent_CalibrationStatus]:
         '''Request to calibrate sensors.
@@ -6850,7 +6848,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_Calibrate(type)
-        return RpcCall[PacketTypes.PacketResponse_Calibrate, PacketTypes.PacketEvent_CalibrationStatus](self._rpc(request, PacketTypes.PacketResponse_Calibrate))
+        return self._rpc(request, PacketTypes.PacketResponse_Calibrate)
 
     def TurnOff(self) -> RpcCall[PacketTypes.PacketResponse_TurnOff, typing.Never]:
         '''Request to turn off.
@@ -6860,7 +6858,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_TurnOff()
-        return RpcCall[PacketTypes.PacketResponse_TurnOff, typing.Never](self._rpc(request, PacketTypes.PacketResponse_TurnOff))
+        return self._rpc(request, PacketTypes.PacketResponse_TurnOff)
 
     def UpdateFirmware(self, target: Types.FirmwareUpdateTargetEnum, source: Types.FirmwareUpdateSourceEnum) -> RpcCall[PacketTypes.PacketResponse_UpdateFirmware, typing.Never]:
         '''Request to update firmware.
@@ -6872,7 +6870,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_UpdateFirmware(target, source)
-        return RpcCall[PacketTypes.PacketResponse_UpdateFirmware, typing.Never](self._rpc(request, PacketTypes.PacketResponse_UpdateFirmware))
+        return self._rpc(request, PacketTypes.PacketResponse_UpdateFirmware)
 
     def PlayTone(self, requestId: int | Types.RequestID, frequency: int | Types.u16, duration: int | Types.u16, volume: int | Types.u8) -> RpcCall[PacketTypes.PacketResponse_PlayTone, PacketTypes.PacketEvent_AudioExecutionState]:
         '''Play tone.
@@ -6886,7 +6884,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_PlayTone(requestId, frequency, duration, volume)
-        return RpcCall[PacketTypes.PacketResponse_PlayTone, PacketTypes.PacketEvent_AudioExecutionState](self._rpc(request, PacketTypes.PacketResponse_PlayTone))
+        return self._rpc(request, PacketTypes.PacketResponse_PlayTone)
 
     def LongRPCExtensionExecute(self, dataLength: int | Types.size_t, dataCRC: int | Types.u32) -> RpcCall[PacketTypes.PacketResponse_LongRPCExtensionExecute, typing.Never]:
         '''Execute preloaded RPC call from the virtual memory.
@@ -6898,7 +6896,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_LongRPCExtensionExecute(dataLength, dataCRC)
-        return RpcCall[PacketTypes.PacketResponse_LongRPCExtensionExecute, typing.Never](self._rpc(request, PacketTypes.PacketResponse_LongRPCExtensionExecute))
+        return self._rpc(request, PacketTypes.PacketResponse_LongRPCExtensionExecute)
 
     def SetRNGSeed(self, seed: int | Types.u32) -> RpcCall[PacketTypes.PacketResponse_SetRNGSeed, typing.Never]:
         '''Set random generator seed.
@@ -6909,7 +6907,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_SetRNGSeed(seed)
-        return RpcCall[PacketTypes.PacketResponse_SetRNGSeed, typing.Never](self._rpc(request, PacketTypes.PacketResponse_SetRNGSeed))
+        return self._rpc(request, PacketTypes.PacketResponse_SetRNGSeed)
 
     def SensorsLogging(self, newState: Types.LoggingState) -> RpcCall[PacketTypes.PacketResponse_SensorsLogging, PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate]:
         '''Turn sensors logging on or off.
@@ -6920,7 +6918,7 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_SensorsLogging(newState)
-        return RpcCall[PacketTypes.PacketResponse_SensorsLogging, PacketTypes.PacketEvent_SensorsLoggingExecutionUpdate](self._rpc(request, PacketTypes.PacketResponse_SensorsLogging))
+        return self._rpc(request, PacketTypes.PacketResponse_SensorsLogging)
 
     def MemoryTest(self, testType: Types.MemoryTestTypes) -> RpcCall[PacketTypes.PacketResponse_MemoryTest, PacketTypes.PacketEvent_MemoryTestStatus]:
         '''Start external flash memories test.
@@ -6931,10 +6929,10 @@ class AsyncControl:
         '''
 
         request = PacketTypes.PacketRequest_MemoryTest(testType)
-        return RpcCall[PacketTypes.PacketResponse_MemoryTest, PacketTypes.PacketEvent_MemoryTestStatus](self._rpc(request, PacketTypes.PacketResponse_MemoryTest))
+        return self._rpc(request, PacketTypes.PacketResponse_MemoryTest)
 
     @contextlib.asynccontextmanager
-    async def _rpc[TResponse: _PacketType, TEvent: _PacketType](self, request: _PacketType, response_type: type[TResponse]) -> typing.AsyncIterator[tuple[TResponse, typing.AsyncIterator[TEvent]]]:
+    async def _rpc(self, request: _PacketType, response_type: type[_PacketType]) -> typing.AsyncIterator[tuple[_PacketType, typing.AsyncIterator[_PacketType]]]:
         length = max(len(request.serialize()), response_type.expected_length(request))
         logger.debug('Executing RPC', request_len=length, request=request)
         async with self._channel.open_session() as events_session:
