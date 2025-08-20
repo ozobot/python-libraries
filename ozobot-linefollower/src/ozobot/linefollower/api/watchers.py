@@ -80,7 +80,8 @@ class WatcherSubscription[T: _Deserializable]:
                 yield subs
             finally:
                 process_task.cancel()
-                await process_task
+                with contextlib.suppress(asyncio.CancelledError):
+                    await process_task
 
     @classmethod
     async def _parse(
