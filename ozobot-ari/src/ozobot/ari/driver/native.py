@@ -174,17 +174,21 @@ class NativeDataAccessReadWrite[TProtoFrom: MemReadResponseBody, TProtoTo: MemWr
 
 
 async def _get_routing_key_from_ble(
+    out_queue: asyncio.Queue[str],
     address: str | None = None,
     id_prefix: str | None = None,
     name: str | None = None,
-) -> str:
+) -> None:
     async with open_client(name=name, id_prefix=id_prefix, address=address, product="ari") as ble_client:
         char = ble_client.get_characteristic(
             _ROUTING_KEY_SERVICE_UUID,
             _ROUTING_KEY_CHARACTERISTIC_UUID,
         )
         device_id_bytes = await char.read()
-        return device_id_bytes.decode("utf8")
+        await out_queue.put(
+            device_id_bytes.decode("utf8"),
+        )
+    logger.debug("ble client closed")
 
 
 async def _create_webrtc_channel(connection_key: str) -> Channel:
@@ -214,22 +218,33 @@ class NativeDriver:
     ) -> typing.AsyncIterator[NativeDriver]:
         if connection_key:
             routing_key = f"anvil.{connection_key}"
+            rk_task = None
         else:
-            routing_key = await _get_routing_key_from_ble(address=address, id_prefix=id_prefix, name=name)
+            # ble disconnection was taking too long which slowed down the whole process. Therefore we
+            #     instead spawn a task and get the rk from the queue. The disconnection then does not block the
+            #     program flow.
+            q = asyncio.Queue[str]()
+            rk_task = asyncio.create_task(
+                _get_routing_key_from_ble(address=address, id_prefix=id_prefix, name=name, out_queue=q)
+            )
+            routing_key = await q.get()
+        try:
+            channel = await _create_webrtc_channel(routing_key)
 
-        channel = await _create_webrtc_channel(routing_key)
+            class WebrtcTransportAdapter:
+                async def write(self, data: str) -> None:
+                    await channel.send(data)
 
-        class WebrtcTransportAdapter:
-            async def write(self, data: str) -> None:
-                await channel.send(data)
+                async def read(self) -> typing.AsyncIterator[str]:
+                    async for raw_data in channel.receive_str():
+                        yield raw_data
 
-            async def read(self) -> typing.AsyncIterator[str]:
-                async for raw_data in channel.receive_str():
-                    yield raw_data
-
-        transport = SerializingTransportLayer(WebrtcTransportAdapter())
-        async with Executor.create(transport, base.Cancellation) as ex:
-            yield cls(ex)
+            transport = SerializingTransportLayer(WebrtcTransportAdapter())
+            async with Executor.create(transport, base.Cancellation) as ex:
+                yield cls(ex)
+        finally:
+            if rk_task:
+                await rk_task
 
     async def move(self, distance_m: float, speed_ms: float) -> None:
         req = request.MoveStraightRequest(

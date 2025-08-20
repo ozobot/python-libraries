@@ -1,7 +1,7 @@
 import asyncio
 import contextlib
 import typing
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 from ozobot.ari.driver.native import NativeDriver
@@ -48,11 +48,16 @@ def test_import_native() -> None:
 
 
 async def test_open_ble() -> None:
-    with patch("ozobot.ari.driver.native._get_routing_key_from_ble", return_value="anvil.abcdefgh") as routing_key_mock:
+    async def _get_rk_mock(*args, out_queue, **kwargs):
+        await out_queue.put("anvil.abcdefgh")
+
+    with patch("ozobot.ari.driver.native._get_routing_key_from_ble", side_effect=_get_rk_mock) as routing_key_mock:
         with patch("ozobot.ari.driver.native._create_webrtc_channel") as channel_mock:
             async with NativeDriver.open(address="11:22:33:44:55:66", id_prefix="1234", name="EVO-ABCDEF") as driver:
                 assert isinstance(driver, NativeDriver)
-                routing_key_mock.assert_called_with(address="11:22:33:44:55:66", id_prefix="1234", name="EVO-ABCDEF")
+                routing_key_mock.assert_called_with(
+                    address="11:22:33:44:55:66", id_prefix="1234", name="EVO-ABCDEF", out_queue=ANY
+                )
                 channel_mock.assert_called_once_with("anvil.abcdefgh")
 
 
