@@ -105,18 +105,16 @@ class Channel:
     def label(self) -> str:
         return self._rtc_channel.label
 
+    @property
+    def error_events(self) -> QueueReader[str]:
+        return self._rtc_channel.errors
+
+    @property
+    def ready_state(self) -> QueueReader[ReadyState]:
+        return self._rtc_channel.ready_state
+
     def __init__(self, channel: DataChannel):
         self._rtc_channel = channel
-
-    async def error_events(self) -> typing.AsyncIterator[str]:
-        async with self._rtc_channel.errors as listener:
-            async for event in listener.items():
-                yield event
-
-    async def ready_state(self) -> typing.AsyncIterator[ReadyState]:
-        async with self._rtc_channel.ready_state as ready_states:
-            async for ready_state in ready_states.items():
-                yield ready_state
 
     async def receive(self) -> typing.AsyncIterator[bytes | str]:
         async with self._rtc_channel.messages as listener:

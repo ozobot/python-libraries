@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import typing
 import uuid
 
 from loguru import logger
+from ozobot.webrtc.aiortc_wrapper import ReadyState
 from ozobot.webrtc.connection import Channel, Connection, ConnectionFactory
 from ozobot.webrtc.datatypes import (
     ConnectionClosedBody,
@@ -112,6 +114,19 @@ class SignalingProcess:
                     local_candidates_task.cancel()
                     local_description_task.cancel()
                     messages_task.cancel()
+
+                def _is_open(x: object) -> typing.TypeGuard[typing.Literal[ReadyState.OPEN]]:
+                    return x == ReadyState.OPEN
+
+                # wait for the channels to be ready
+                stacks = contextlib.AsyncExitStack()
+                for channel in channels:
+                    await stacks.enter_async_context(channel.ready_state)
+
+                async with stacks:
+                    await asyncio.gather(
+                        *[channel.ready_state.wait_until(_is_open) for channel in channels],
+                    )
 
                 return connection, channels
 

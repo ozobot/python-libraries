@@ -1,6 +1,5 @@
 import asyncio
 
-from ozobot.webrtc.aiortc_wrapper import ReadyState
 from ozobot.webrtc.datatypes import Message
 from ozobot.webrtc.signaling.negotiation import SignalingCallee, SignalingCaller
 
@@ -28,9 +27,6 @@ async def test_channel_read_write() -> None:
         channel_callee = await anext(channels)
 
     async with asyncio.timeout(1):
-        assert await anext(channel_caller.ready_state()) == ReadyState.OPEN
-        assert await anext(channel_callee.ready_state()) == ReadyState.OPEN
-
         await channel_caller.send("hello from caller")
         assert await anext(channel_callee.receive_str()) == "hello from caller"
 
