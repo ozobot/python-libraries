@@ -281,7 +281,7 @@ class NativeDriver:
     async def play_audio(self, audio_name: str) -> None:
         req = request.PlaySoundRequest(
             id=self._request_id.get_next(),
-            params=request.PlaySoundRequestParams(name=audio_name, loop=False, volume=1.0),
+            params=request.PlaySoundRequestParams(name=audio_name, loop=False),
         )
         async with Query(req, methods.PLAY_SOUND).execute(self._executor) as q:
             await self._handle_response("PlaySound", q.response)

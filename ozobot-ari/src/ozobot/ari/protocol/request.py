@@ -74,7 +74,8 @@ class PlayToneRequest(Request):
 class PlaySoundRequestParams(Model):
     name: str
     loop: bool
-    volume: int
+    # we don't need to set the volume for now, see ANV-954
+    # volume: float
 
 
 class PlaySoundRequest(Request):
