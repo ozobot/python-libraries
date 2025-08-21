@@ -231,10 +231,12 @@ class NativeDriver:
 
             class WebrtcTransportAdapter:
                 async def write(self, data: str) -> None:
+                    logger.debug("Sending message", message=data)
                     await channel.send(data)
 
                 async def read(self) -> typing.AsyncIterator[str]:
                     async for raw_data in channel.receive_str():
+                        logger.debug("Received message", message=raw_data)
                         yield raw_data
 
             transport = SerializingTransportLayer(WebrtcTransportAdapter())
