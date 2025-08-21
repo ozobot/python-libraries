@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 
 from loguru import logger
-from ozobot.linefollower.datatypes import Color, Direction, LEDMask, TNote
+from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, LEDMask, RawColor, TNote
 from ozobot.linefollower.driver import Driver
 
 
@@ -73,9 +73,15 @@ class LineFollower:
 
     async def set_led(self, mask: LEDMask, color: Color) -> None:
         logger.debug("Setting LED", mask=mask, color=color)
-        red = int(color.red * 255)
-        green = int(color.green * 255)
-        blue = int(color.blue * 255)
+        if isinstance(color, RawColor):
+            raw_color = color
+        elif isinstance(color, ClassifiedColor):
+            raw_color = color.to_raw_color()
+
+        red = int(raw_color.red * 255)
+        green = int(raw_color.green * 255)
+        blue = int(raw_color.blue * 255)
+
         await self._driver.set_led(mask, red, green, blue)
 
     async def follow_line(self, direction: Direction) -> None:

@@ -1,7 +1,37 @@
 import contextlib
 
 import pytest
-from ozobot.linefollower.datatypes import Color
+from ozobot.linefollower.datatypes import ClassifiedColor, Color, Colors, RawColor
+
+
+@pytest.fixture
+def red() -> Color:
+    return Color(red=1, green=0, blue=0)
+
+
+@pytest.fixture
+def almost_red() -> Color:
+    return Color(red=0.999, green=0, blue=0.001)
+
+
+@pytest.fixture
+def blue() -> Color:
+    return Color(red=0, green=0, blue=1)
+
+
+@pytest.fixture
+def classified_red() -> ClassifiedColor:
+    return Colors.RED
+
+
+@pytest.fixture
+def classified_blue() -> ClassifiedColor:
+    return Colors.BLUE
+
+
+@pytest.fixture
+def classified_unknown() -> ClassifiedColor:
+    return Colors.UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -21,3 +51,85 @@ def test_color_bounds(red: int | float, green: int | float, blue: int | float, i
 
     with expect_exception:
         _ = Color(red=red, green=green, blue=blue)
+
+
+def test_color_str_repr(red: Color) -> None:
+    assert str(red) == "red=1, green=0, blue=0"
+    assert repr(red) == "RawColor(red=1, green=0, blue=0)"
+
+
+def test_classified_color_str_repr(classified_red: ClassifiedColor) -> None:
+    assert str(classified_red) == "red"
+    assert repr(classified_red) == "ClassifiedColor('red', RawColor(red=1.0, green=0, blue=0))"
+
+
+def test_unknown_color_str_repr(classified_unknown: ClassifiedColor) -> None:
+    assert str(classified_unknown) == "unknown"
+    assert repr(classified_unknown) == "ClassifiedColor('unknown', 'unknown')"
+
+
+def test_color_hash(red: Color, blue: Color) -> None:
+    assert hash(red) != hash(blue)
+
+
+def test_classified_color_hash(
+    classified_red: ClassifiedColor, classified_blue: ClassifiedColor, classified_unknown: ClassifiedColor
+) -> None:
+    assert hash(classified_red) != hash(classified_blue)
+    assert hash(classified_red) != hash(classified_unknown)
+
+
+def test_color_eq_color(red: Color, blue: Color) -> None:
+    assert red == Color(red=1, green=0, blue=0)
+    assert red == Color(red=1.0, green=0.0, blue=0.0)
+    assert red != blue
+
+
+def test_color_eq_classified_color(
+    red: Color, classified_red: ClassifiedColor, classified_blue: ClassifiedColor, classified_unknown: ClassifiedColor
+) -> None:
+    assert red == classified_red
+    assert red != classified_blue
+    assert red != classified_unknown
+
+
+def test_classified_color_eq_color(classified_red: ClassifiedColor, red: Color, blue: Color) -> None:
+    assert classified_red == red
+    assert classified_red != blue
+
+
+def test_classified_color_eq_classified_color(
+    classified_blue: ClassifiedColor, classified_red: ClassifiedColor, classified_unknown: ClassifiedColor
+) -> None:
+    assert classified_red == ClassifiedColor("red", RawColor(red=1.0, green=0, blue=0))
+    assert classified_red != classified_blue
+    assert classified_red != classified_unknown
+
+
+def test_color_is_color(red: Color, blue: Color, almost_red: Color) -> None:
+    assert red.is_color(RawColor(red=1, green=0, blue=0))
+    assert not red.is_color(almost_red, epsilon=0.00001)
+    assert red.is_color(almost_red)
+    assert not red.is_color(blue)
+
+
+def test_color_is_classified_color(
+    red: Color, classified_red: ClassifiedColor, classified_blue: ClassifiedColor, classified_unknown: ClassifiedColor
+) -> None:
+    assert red.is_color(classified_red)
+    assert not red.is_color(classified_blue)
+    assert not red.is_color(classified_unknown)
+
+
+def test_classified_color_is_color(classified_red: ClassifiedColor, red: Color, almost_red: Color, blue: Color) -> None:
+    assert classified_red.is_color(red)
+    assert classified_red.is_color(almost_red)
+    assert not classified_red.is_color(blue)
+
+
+def test_classified_color_is_classified_color(
+    classified_blue: ClassifiedColor, classified_red: ClassifiedColor, classified_unknown: ClassifiedColor
+) -> None:
+    assert classified_red.is_color(ClassifiedColor("red", RawColor(red=1.0, green=0, blue=0)))
+    assert not classified_red.is_color(classified_blue)
+    assert not classified_red.is_color(classified_unknown)
