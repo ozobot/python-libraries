@@ -30,7 +30,7 @@ async def test_serializing_transport_context() -> None:
     tone_req = request.PlayToneRequest(id=1, params=request.PlayToneRequestParams(frequency=1, volume=2, duration=3))
     await transport.write(tone_req)
 
-    sound_req = request.PlaySoundRequest(id=2, params=request.PlaySoundRequestParams(name="name", loop=False, volume=1))
+    sound_req = request.PlaySoundRequest(id=2, params=request.PlaySoundRequestParams(name="name", loop=False))
     await transport.write(sound_req)
 
     requests_sent = [
@@ -39,7 +39,7 @@ async def test_serializing_transport_context() -> None:
     ]
     assert requests_sent == [
         '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":1,"duration":3,"volume":2.0}}',
-        '{"id":2,"jsonrpc":"2.0","method":"PlaySound","params":{"name":"name","loop":false,"volume":1}}',
+        '{"id":2,"jsonrpc":"2.0","method":"PlaySound","params":{"name":"name","loop":false}}',
     ]
 
     # notice the messages are the same, just the id differs
