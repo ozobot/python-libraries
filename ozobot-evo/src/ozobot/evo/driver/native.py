@@ -163,10 +163,10 @@ class NativeDriver:
     async def open(
         cls,
         address: str | None = None,
-        id_prefix: str | None = None,
+        id: str | None = None,
         name: str | None = None,
     ) -> typing.AsyncIterator[NativeDriver]:
-        async with open_client(address=address, id_prefix=id_prefix, name=name) as client:
+        async with open_client(address=address, id=id, name=name) as client:
             char = client.get_characteristic(_SERVICE_UUID, _CHARACTERISTIC_UUID)
             control = AsyncControl(char)
             async with create_memory_regions_structure(control) as memory:

@@ -11,14 +11,14 @@ from .core import Ari
 class AriHandle:
     connection_key: str | None = None
     address: str | None = None
-    id_prefix: str | None = None
+    id: str | None = None
     name: str | None = None
 
     @contextlib.asynccontextmanager
     async def connect(self) -> typing.AsyncIterator[Ari]:
         Driver = get_driver()
         async with Driver.open(
-            address=self.address, id_prefix=self.id_prefix, name=self.name, connection_key=self.connection_key
+            address=self.address, id=self.id, name=self.name, connection_key=self.connection_key
         ) as driver:
             ari = Ari(driver)
             yield ari

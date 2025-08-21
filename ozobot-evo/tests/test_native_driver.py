@@ -42,9 +42,9 @@ async def test_open() -> None:
         patch("ozobot.evo.driver.native.open_client") as open_client_mock,
         patch("ozobot.evo.driver.native.create_memory_regions_structure"),
     ):
-        async with NativeDriver.open(address="11:22:33:44:55:66", id_prefix="1234", name="EVO-ABCDEF") as driver:
+        async with NativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
             assert isinstance(driver, NativeDriver)
-            open_client_mock.assert_called_with(address="11:22:33:44:55:66", id_prefix="1234", name="EVO-ABCDEF")
+            open_client_mock.assert_called_with(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF")
 
 
 @pytest.mark.parametrize(

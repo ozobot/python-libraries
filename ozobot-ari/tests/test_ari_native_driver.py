@@ -53,10 +53,10 @@ async def test_open_ble() -> None:
 
     with patch("ozobot.ari.driver.native._get_routing_key_from_ble", side_effect=_get_rk_mock) as routing_key_mock:
         with patch("ozobot.ari.driver.native._create_webrtc_channel") as channel_mock:
-            async with NativeDriver.open(address="11:22:33:44:55:66", id_prefix="1234", name="EVO-ABCDEF") as driver:
+            async with NativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
                 assert isinstance(driver, NativeDriver)
                 routing_key_mock.assert_called_with(
-                    address="11:22:33:44:55:66", id_prefix="1234", name="EVO-ABCDEF", out_queue=ANY
+                    address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF", out_queue=ANY
                 )
                 channel_mock.assert_called_once_with("anvil.abcdefgh")
 

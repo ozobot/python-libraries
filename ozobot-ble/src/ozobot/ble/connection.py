@@ -11,6 +11,7 @@ from loguru import logger
 from ozobot.ble.datatypes import TProductName
 from ozobot.ble.exceptions import DeviceDescriptionError, DeviceNotFoundError, NoFilterSpecifiedError
 from ozobot.common.broadcast import BroadcastManager
+from ozobot.common.match import match_with_wildcard
 
 from .datatypes import DeviceDescription
 
@@ -43,19 +44,17 @@ async def _get_device(
     *,
     name: str | None = None,
     address: str | None = None,
-    id_prefix: str | None = None,
+    id: str | None = None,
     product: TProductName | None = None,
 ) -> bleak.BLEDevice:
     async with scan_devices() as devices:
         async for device, handle in devices:
-            normalized_id = device.id or ""
+            name_passes = name is None or match_with_wildcard(name, device.name or "")
+            address_passes = address is None or match_with_wildcard(address, device.address)
+            id_passes = id is None or match_with_wildcard(id, device.id or "")
+            product_passes = product is None or device.product == product
 
-            name_match = name is None or device.name == name
-            address_match = address is None or device.address == address
-            id_match = id_prefix is None or normalized_id.startswith(id_prefix)
-            product_match = product is None or device.product == product
-
-            matches = [name_match, address_match, id_match, product_match]
+            matches = [name_passes, address_passes, id_passes, product_passes]
             if all(matches):
                 logger.info("Device scan match", device=device)
                 return handle
@@ -74,11 +73,11 @@ async def open_client(
     *,
     name: str | None = None,
     address: str | None = None,
-    id_prefix: str | None = None,
+    id: str | None = None,
     product: TProductName | None = None,
 ) -> typing.AsyncIterator[Client]:
-    _raise_when_no_filter(name, address, id_prefix, product)
-    handle = await _get_device(name=name, address=address, id_prefix=id_prefix, product=product)
+    _raise_when_no_filter(name, address, id, product)
+    handle = await _get_device(name=name, address=address, id=id, product=product)
     logger.info("Opening connection")
     async with bleak.BleakClient(handle) as client:
         yield Client(client)

@@ -41,7 +41,7 @@ class Driver(Protocol):
     def open(
         cls,
         address: str | None = None,
-        id_prefix: str | None = None,
+        id: str | None = None,
         name: str | None = None,
     ) -> AbstractAsyncContextManager[Driver]: ...
 

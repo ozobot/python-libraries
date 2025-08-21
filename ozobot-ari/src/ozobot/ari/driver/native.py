@@ -176,10 +176,10 @@ class NativeDataAccessReadWrite[TProtoFrom: MemReadResponseBody, TProtoTo: MemWr
 async def _get_routing_key_from_ble(
     out_queue: asyncio.Queue[str],
     address: str | None = None,
-    id_prefix: str | None = None,
+    id: str | None = None,
     name: str | None = None,
 ) -> None:
-    async with open_client(name=name, id_prefix=id_prefix, address=address, product="ari") as ble_client:
+    async with open_client(name=name, id=id, address=address, product="ari") as ble_client:
         char = ble_client.get_characteristic(
             _ROUTING_KEY_SERVICE_UUID,
             _ROUTING_KEY_CHARACTERISTIC_UUID,
@@ -212,7 +212,7 @@ class NativeDriver:
     async def open(
         cls,
         address: str | None = None,
-        id_prefix: str | None = None,
+        id: str | None = None,
         name: str | None = None,
         connection_key: str | None = None,
     ) -> typing.AsyncIterator[NativeDriver]:
@@ -224,9 +224,7 @@ class NativeDriver:
             #     instead spawn a task and get the rk from the queue. The disconnection then does not block the
             #     program flow.
             q = asyncio.Queue[str]()
-            rk_task = asyncio.create_task(
-                _get_routing_key_from_ble(address=address, id_prefix=id_prefix, name=name, out_queue=q)
-            )
+            rk_task = asyncio.create_task(_get_routing_key_from_ble(address=address, id=id, name=name, out_queue=q))
             routing_key = await q.get()
         try:
             channel = await _create_webrtc_channel(routing_key)

@@ -111,7 +111,7 @@ async def _scan_devices() -> typing.AsyncGenerator[tuple[DeviceDescription, Mock
         (
             {
                 "name": "EVO-123456",
-                "id_prefix": "001122",
+                "id": "001122*",
                 "address": "11:22:33:44:55:66",
             },
             sentinel.scanned_device_1,
@@ -124,7 +124,7 @@ async def _scan_devices() -> typing.AsyncGenerator[tuple[DeviceDescription, Mock
             None,
         ),
         (
-            {"name": "EVO-123456", "id_prefix": "asdf", "address": "11:22:33:44:55:66"},
+            {"name": "EVO-123456", "id": "asdf*", "address": "11:22:33:44:55:66"},
             None,
         ),
     ],
