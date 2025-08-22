@@ -76,12 +76,6 @@ def color_from_protocol(color: TNamedColor) -> Color:
             return Colors.BLUE
         case "white":
             return Colors.WHITE
-        case "cyan":
-            return Colors.CYAN
-        case "magenta":
-            return Colors.MAGENTA
-        case "yellow":
-            return Colors.YELLOW
         case "unknown":
             return Colors.UNKNOWN
         case _:

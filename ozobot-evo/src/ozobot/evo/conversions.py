@@ -39,18 +39,12 @@ def surface_color_from_protocol(surface_color: Types.SurfaceColor) -> Color:
             return Colors.BLACK
         case Types.SurfaceColorEnum.Blue:
             return Colors.BLUE
-        case Types.SurfaceColorEnum.Cyan:
-            return Colors.CYAN
         case Types.SurfaceColorEnum.Green:
             return Colors.GREEN
-        case Types.SurfaceColorEnum.Magenta:
-            return Colors.MAGENTA
         case Types.SurfaceColorEnum.Red:
             return Colors.RED
         case Types.SurfaceColorEnum.White:
             return Colors.WHITE
-        case Types.SurfaceColorEnum.Yellow:
-            return Colors.YELLOW
         case Types.SurfaceColorEnum.Unknown:
             return Colors.UNKNOWN
         case _:

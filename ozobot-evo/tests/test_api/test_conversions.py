@@ -22,12 +22,9 @@ def test_color_code_from_protocol() -> None:
     argvalues=[
         (Types.SurfaceColorEnum.Black, Colors.BLACK),
         (Types.SurfaceColorEnum.Blue, Colors.BLUE),
-        (Types.SurfaceColorEnum.Cyan, Colors.CYAN),
         (Types.SurfaceColorEnum.Green, Colors.GREEN),
-        (Types.SurfaceColorEnum.Magenta, Colors.MAGENTA),
         (Types.SurfaceColorEnum.Red, Colors.RED),
         (Types.SurfaceColorEnum.White, Colors.WHITE),
-        (Types.SurfaceColorEnum.Yellow, Colors.YELLOW),
         (Types.SurfaceColorEnum.Unknown, Colors.UNKNOWN),
     ],
     ids=lambda x: repr(x),
