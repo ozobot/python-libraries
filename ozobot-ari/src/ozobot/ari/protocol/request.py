@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Literal as L
 
-from ozobot.ari.protocol.types import TNamedColor, TUserIoPrompt
+from ozobot.ari.protocol.types import TUserIoPrompt
+from ozobot.linefollower.datatypes import TNamedColor
 
 from .base import Model, Request
 from .types import Color, Lights, TDirection

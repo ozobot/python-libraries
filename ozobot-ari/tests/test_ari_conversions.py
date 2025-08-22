@@ -2,8 +2,7 @@ import pytest
 from ozobot.ari import conversions
 from ozobot.ari.conversions import color_code_from_protocol, color_from_protocol, color_to_protocol
 from ozobot.ari.protocol import types
-from ozobot.ari.protocol.types import TNamedColor
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, TNamedColor
 
 
 @pytest.mark.parametrize(

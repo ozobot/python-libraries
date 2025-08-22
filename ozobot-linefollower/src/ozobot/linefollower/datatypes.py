@@ -7,6 +7,9 @@ import typing
 from dataclasses import dataclass
 
 
+type TNamedColor = typing.Literal["green", "black", "red", "blue", "white", "unknown"]
+
+
 @dataclass(frozen=True)
 class Color:
     red: float

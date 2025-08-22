@@ -1,11 +1,12 @@
 from typing import Annotated
 from typing import Literal as L
 
+from ozobot.linefollower.datatypes import TNamedColor
 from pydantic import BeforeValidator
 from pydantic.functional_serializers import PlainSerializer
 
 from .base import Model, Notification, Request, Response
-from .types import FloatRange, TNamedColor, VersionPair
+from .types import FloatRange, VersionPair
 
 
 class MemReadResponseColorSensor(Model):

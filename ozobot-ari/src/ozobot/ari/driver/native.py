@@ -19,13 +19,13 @@ from ozobot.ari.exceptions import (
 from ozobot.ari.protocol import base, memread, memwrite, methods, notification, request, response, types
 from ozobot.ari.protocol.memread import MemReadResponseBody
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
-from ozobot.ari.protocol.types import TDirection, TNamedColor, TUserIoPrompt
+from ozobot.ari.protocol.types import TDirection, TUserIoPrompt
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample, TNamedColor
 from ozobot.linefollower.driver import VirtualMemoryRegions
 from ozobot.webrtc import messaging
 from ozobot.webrtc.connection import Channel
