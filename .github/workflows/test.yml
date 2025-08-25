@@ -1,0 +1,47 @@
+name: Test
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv ${{ matrix.python-version }}
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: "latest"
+        python-version: ${{ matrix.python-version }}
+
+    # We cannot pass arguments via the `services` section,
+    # so we'll need to start websockify the container manually.
+    - name: Create rabbitmq docker network
+      run: |
+        docker network create rmq-network
+    - name: Run rabbitmq
+      run: |
+        docker run --detach \
+          --network rmq-network \
+          --name rabbitmq \
+          --publish 5672:5672 \
+          rabbitmq:4
+        
+    - name: Run websockify
+      run: |
+        docker run --detach \
+          --network rmq-network \
+          --health-cmd "rabbitmq-diagnostics -q ping" \
+          --health-interval 30s \
+          --health-timeout 30s \
+          --health-retries 5 \
+          --name websockify \
+          --publish 15670:15670 \
+          jwnmulder/websockify 15670 "rabbitmq:5672" 
+          
+    - name: Run tests
+      run: uv run --all-packages --frozen pytest -vv
