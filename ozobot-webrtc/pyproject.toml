@@ -14,6 +14,7 @@ dependencies = [
     "aiortc>=1.13.0",
     "loguru",
     "pydantic>=2",
+    "websockets>=15.0.0",
 ]
 
 [tool.hatch.build.targets.sdist]
