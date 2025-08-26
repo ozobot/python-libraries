@@ -1,12 +1,12 @@
 [project]
 name = "ozobot-evo"
-version = "0.1.0"
 description = "Ozobot EVO library"
 readme = "README.md"
 authors = [
     { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
 ]
 requires-python = ">=3.13"
+dynamic = ["version"]
 dependencies = [
     "ozobot-ble>=0.1.0",
     "ozobot-common>=0.1.0",
@@ -26,5 +26,14 @@ ozobot-ble = { workspace = true }
 ozobot-common = { workspace = true }
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+tag-pattern = ".*/v(?P<version>.*)"
+
+[tool.hatch.version.raw-options]
+git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--match', 'evo/v*']
+version_scheme = "no-guess-dev"
+root = "../"

@@ -1,12 +1,12 @@
 [project]
 name = "ozobot-ari"
-version = "0.1.0"
 description = "Ozobot ARI library"
 readme = "README.md"
 authors = [
     { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
 ]
 requires-python = ">=3.13"
+dynamic = ["version"]
 dependencies = [
     "ozobot-ble>=0.1.0",
     "ozobot-common>=0.1.0",
@@ -31,5 +31,14 @@ ozobot-jsonrpc = { workspace = true }
 ozobot-webrtc = { workspace = true }
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+tag-pattern = ".*/v(?P<version>.*)"
+
+[tool.hatch.version.raw-options]
+git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--match', 'ari/v*']
+version_scheme = "no-guess-dev"
+root = "../"

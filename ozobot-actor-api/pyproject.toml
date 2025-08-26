@@ -1,12 +1,12 @@
 [project]
 name = "ozobot-actor-api"
-version = "0.1.0"
 description = "Ozobot actor API package providing an alternative way for controling multiple bots"
 readme = "README.md"
 authors = [
     { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
 ]
 requires-python = ">=3.13"
+dynamic = ["version"]
 dependencies = [
     "ozobot-common>=0.1.0",
     "loguru",
@@ -30,5 +30,14 @@ ozobot-evo = { workspace = true }
 ozobot-common = { workspace = true }
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+tag-pattern = ".*/v(?P<version>.*)"
+
+[tool.hatch.version.raw-options]
+git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--match', 'actor-api/v*']
+version_scheme = "no-guess-dev"
+root = "../"

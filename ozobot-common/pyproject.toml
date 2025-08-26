@@ -1,12 +1,12 @@
 [project]
 name = "ozobot-common"
-version = "0.1.0"
 description = "Ozobot common utils"
 readme = "README.md"
 authors = [
     { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
 ]
 requires-python = ">=3.13"
+dynamic = ["version"]
 dependencies = [
     "loguru"
 ]
@@ -23,5 +23,14 @@ only-include = ["src/ozobot"]
 asyncio_mode = "auto"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+tag-pattern = ".*/v(?P<version>.*)"
+
+[tool.hatch.version.raw-options]
+git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--match', 'common/v*']
+version_scheme = "no-guess-dev"
+root = "../"
