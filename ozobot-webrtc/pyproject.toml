@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "ozobot-common",
+    "ozobot-common>=0.1.0",
     "aiohttp>=3.12.13",
     "aiormq>=6.9.0",
     "aiortc>=1.13.0",

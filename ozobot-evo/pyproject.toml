@@ -8,8 +8,8 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "ozobot-ble",
-    "ozobot-common",
+    "ozobot-ble>=0.1.0",
+    "ozobot-common>=0.1.0",
     "loguru",
 ]
 

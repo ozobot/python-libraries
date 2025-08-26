@@ -442,7 +442,6 @@ wheels = [
 
 [[package]]
 name = "ozobot-actor-api"
-version = "0.1.0"
 source = { editable = "ozobot-actor-api" }
 dependencies = [
     { name = "loguru" },
@@ -468,7 +467,6 @@ provides-extras = ["ari", "evo"]
 
 [[package]]
 name = "ozobot-ari"
-version = "0.1.0"
 source = { editable = "ozobot-ari" }
 dependencies = [
     { name = "loguru" },
@@ -491,7 +489,6 @@ requires-dist = [
 
 [[package]]
 name = "ozobot-ble"
-version = "0.1.0"
 source = { editable = "ozobot-ble" }
 dependencies = [
     { name = "bleak" },
@@ -508,7 +505,6 @@ requires-dist = [
 
 [[package]]
 name = "ozobot-common"
-version = "0.1.0"
 source = { editable = "ozobot-common" }
 dependencies = [
     { name = "loguru" },
@@ -519,7 +515,6 @@ requires-dist = [{ name = "loguru" }]
 
 [[package]]
 name = "ozobot-evo"
-version = "0.1.0"
 source = { editable = "ozobot-evo" }
 dependencies = [
     { name = "loguru" },
@@ -536,7 +531,6 @@ requires-dist = [
 
 [[package]]
 name = "ozobot-jsonrpc"
-version = "0.1.0"
 source = { editable = "ozobot-jsonrpc" }
 dependencies = [
     { name = "loguru" },
@@ -576,7 +570,6 @@ dev = [
 
 [[package]]
 name = "ozobot-linefollower"
-version = "0.1.0"
 source = { editable = "ozobot-linefollower" }
 dependencies = [
     { name = "loguru" },
@@ -591,7 +584,6 @@ requires-dist = [
 
 [[package]]
 name = "ozobot-webrtc"
-version = "0.1.0"
 source = { editable = "ozobot-webrtc" }
 dependencies = [
     { name = "aiohttp" },
