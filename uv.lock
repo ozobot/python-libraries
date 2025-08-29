@@ -446,6 +446,7 @@ source = { editable = "ozobot-actor-api" }
 dependencies = [
     { name = "loguru" },
     { name = "ozobot-common" },
+    { name = "ozobot-linefollower" },
 ]
 
 [package.optional-dependencies]
@@ -462,6 +463,7 @@ requires-dist = [
     { name = "ozobot-ari", marker = "extra == 'ari'", editable = "ozobot-ari" },
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-evo", marker = "extra == 'evo'", editable = "ozobot-evo" },
+    { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
 ]
 provides-extras = ["ari", "evo"]
 
@@ -473,6 +475,7 @@ dependencies = [
     { name = "ozobot-ble", marker = "sys_platform != 'emscripten'" },
     { name = "ozobot-common" },
     { name = "ozobot-jsonrpc" },
+    { name = "ozobot-linefollower" },
     { name = "ozobot-webrtc", marker = "sys_platform != 'emscripten'" },
     { name = "pydantic" },
 ]
@@ -483,6 +486,7 @@ requires-dist = [
     { name = "ozobot-ble", marker = "sys_platform != 'emscripten'", editable = "ozobot-ble" },
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-jsonrpc", editable = "ozobot-jsonrpc" },
+    { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
     { name = "ozobot-webrtc", marker = "sys_platform != 'emscripten'", editable = "ozobot-webrtc" },
     { name = "pydantic", specifier = ">=2.11.7" },
 ]
@@ -520,6 +524,7 @@ dependencies = [
     { name = "loguru" },
     { name = "ozobot-ble", marker = "sys_platform != 'emscripten'" },
     { name = "ozobot-common" },
+    { name = "ozobot-linefollower" },
 ]
 
 [package.metadata]
@@ -527,6 +532,7 @@ requires-dist = [
     { name = "loguru" },
     { name = "ozobot-ble", marker = "sys_platform != 'emscripten'", editable = "ozobot-ble" },
     { name = "ozobot-common", editable = "ozobot-common" },
+    { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
 ]
 
 [[package]]
