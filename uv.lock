@@ -470,20 +470,20 @@ name = "ozobot-ari"
 source = { editable = "ozobot-ari" }
 dependencies = [
     { name = "loguru" },
-    { name = "ozobot-ble" },
+    { name = "ozobot-ble", marker = "sys_platform != 'emscripten'" },
     { name = "ozobot-common" },
     { name = "ozobot-jsonrpc" },
-    { name = "ozobot-webrtc" },
+    { name = "ozobot-webrtc", marker = "sys_platform != 'emscripten'" },
     { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "loguru" },
-    { name = "ozobot-ble", editable = "ozobot-ble" },
+    { name = "ozobot-ble", marker = "sys_platform != 'emscripten'", editable = "ozobot-ble" },
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-jsonrpc", editable = "ozobot-jsonrpc" },
-    { name = "ozobot-webrtc", editable = "ozobot-webrtc" },
+    { name = "ozobot-webrtc", marker = "sys_platform != 'emscripten'", editable = "ozobot-webrtc" },
     { name = "pydantic", specifier = ">=2.11.7" },
 ]
 
@@ -518,14 +518,14 @@ name = "ozobot-evo"
 source = { editable = "ozobot-evo" }
 dependencies = [
     { name = "loguru" },
-    { name = "ozobot-ble" },
+    { name = "ozobot-ble", marker = "sys_platform != 'emscripten'" },
     { name = "ozobot-common" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "loguru" },
-    { name = "ozobot-ble", editable = "ozobot-ble" },
+    { name = "ozobot-ble", marker = "sys_platform != 'emscripten'", editable = "ozobot-ble" },
     { name = "ozobot-common", editable = "ozobot-common" },
 ]
 

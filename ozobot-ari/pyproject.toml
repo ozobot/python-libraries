@@ -8,10 +8,10 @@ authors = [
 requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
-    "ozobot-ble>=0.1.0",
+    "ozobot-ble>=0.1.0; platform_system != 'Emscripten'",
     "ozobot-common>=0.1.0",
     "ozobot-jsonrpc>=0.1.0",
-    "ozobot-webrtc>=0.1.0",
+    "ozobot-webrtc>=0.1.0; platform_system != 'Emscripten'",
     "loguru",
     "pydantic>=2.11.7",
 ]
