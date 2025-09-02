@@ -8,8 +8,8 @@ authors = [
 requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
-    "ozobot-common>=0.1.0",
-    "ozobot-linefollower>=0.1.0",
+    "ozobot-common~=0.1",
+    "ozobot-linefollower~=0.1",
     "loguru",
 ]
 
