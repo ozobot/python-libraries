@@ -14,6 +14,7 @@ def _is_unknown_color_representation(color: object) -> typing.TypeIs[typing.Lite
 
 
 type TNamedColor = typing.Literal["green", "black", "red", "blue", "white", "unknown"]
+type TDirection = typing.Literal["Straight", "Backward", "Left", "Right"]
 
 
 class Color:

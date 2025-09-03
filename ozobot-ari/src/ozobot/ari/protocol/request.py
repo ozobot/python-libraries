@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Literal as L
 
 from ozobot.ari.protocol.types import TUserIoPrompt
-from ozobot.linefollower.datatypes import TNamedColor
+from ozobot.linefollower.datatypes import TDirection, TNamedColor
 
 from .base import Model, Request
-from .types import Color, Lights, TDirection
+from .types import Color, Lights
 
 
 class MoveStraightRequestParams(Model):

@@ -55,6 +55,4 @@ class FloatRange(Model):
     end: float
 
 
-type TDirection = typing.Literal["Straight", "Backward", "Left", "Right"]
-
 type TUserIoPrompt = typing.Literal["string", "number", "boolean", "lineColor", "surfaceColor", "direction"]

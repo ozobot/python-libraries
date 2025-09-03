@@ -1,8 +1,7 @@
 import typing
 
 from ozobot.ari.protocol import types
-from ozobot.ari.protocol.types import TDirection
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, TNamedColor
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, TDirection, TNamedColor
 
 
 def led_to_protocol(mask: LEDMask) -> types.Lights:

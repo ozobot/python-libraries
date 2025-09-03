@@ -2,7 +2,7 @@ import pytest
 from ozobot.ari import conversions
 from ozobot.ari.conversions import color_code_from_protocol, color_from_protocol, color_to_protocol
 from ozobot.ari.protocol import types
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, TNamedColor
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, TDirection, TNamedColor
 
 
 @pytest.mark.parametrize(
@@ -33,7 +33,7 @@ def test_led_to_protocol(protocol_led: types.Lights, library_led: LEDMask) -> No
     ],
     ids=lambda x: repr(x),
 )
-def test_intersection_direction_to_protocol(direction: Direction, protocol_direction: types.TDirection) -> None:
+def test_intersection_direction_to_protocol(direction: Direction, protocol_direction: TDirection) -> None:
     assert conversions.intersection_direction_to_protocol(direction) == protocol_direction
 
 
@@ -47,7 +47,7 @@ def test_intersection_direction_to_protocol(direction: Direction, protocol_direc
     ],
     ids=lambda x: repr(x),
 )
-def test_intersection_direction_from_protocol(protocol_direction: types.TDirection, direction: Direction) -> None:
+def test_intersection_direction_from_protocol(protocol_direction: TDirection, direction: Direction) -> None:
     assert conversions.intersection_direction_from_protocol(protocol_direction) == direction
 
 
