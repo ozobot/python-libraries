@@ -5,7 +5,7 @@ import typing
 from ozobot.actors.actors import ActorDispatcher, dispatcher
 from ozobot.linefollower.api.core import LineFollower
 from ozobot.linefollower.datatypes import Color, Direction, LEDMask, Sample, TNote
-from ozobot.linefollower.driver import ReadableRegion, ReadableWatchableRegion, VirtualMemoryRegions
+from ozobot.linefollower.driver.interface import ReadableRegion, ReadableWatchableRegion, VirtualMemoryRegions
 
 
 class _ProxyDataAccessRead[T]:

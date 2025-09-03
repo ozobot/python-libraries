@@ -25,8 +25,8 @@ from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample, TNamedColor
-from ozobot.linefollower.driver import VirtualMemoryRegions
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample, TDirection, TNamedColor
+from ozobot.linefollower.driver.interface import VirtualMemoryRegions
 from ozobot.webrtc import messaging
 from ozobot.webrtc.connection import Channel
 from ozobot.webrtc.signaling import negotiation, token

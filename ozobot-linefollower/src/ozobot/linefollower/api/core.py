@@ -4,7 +4,7 @@ import math
 
 from loguru import logger
 from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, LEDMask, RawColor, TNote
-from ozobot.linefollower.driver import Driver
+from ozobot.linefollower.driver.interface import Driver
 
 
 class LineFollower:
