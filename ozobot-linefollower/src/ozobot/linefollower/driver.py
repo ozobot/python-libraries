@@ -37,14 +37,6 @@ class VirtualMemoryRegions(Protocol):
 
 
 class Driver(Protocol):
-    @classmethod
-    def open(
-        cls,
-        address: str | None = None,
-        id: str | None = None,
-        name: str | None = None,
-    ) -> AbstractAsyncContextManager[Driver]: ...
-
     @property
     def memory(self) -> VirtualMemoryRegions: ...
 
