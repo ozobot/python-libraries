@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import Literal as L
 
-from ozobot.linefollower.datatypes import TDirection, TNamedColor
+from ozobot.linefollower.datatypes import TDirection
 
 from .base import Model, Response
+from .types import TNamedColorLowercase
 
 
 class MoveStraightResponseBody(Model):
@@ -52,12 +53,12 @@ class UserIoPromptBooleanResponseBody(Model):
 
 class UserIoPromptSurfaceColorResponseBody(Model):
     type: L["surfaceColor"] = "surfaceColor"
-    value: TNamedColor
+    value: TNamedColorLowercase
 
 
 class UserIoPromptLineColorResponseBody(Model):
     type: L["lineColor"] = "lineColor"
-    value: TNamedColor
+    value: TNamedColorLowercase
 
 
 class UserIoPromptDirectionResponseBody(Model):

@@ -65,17 +65,17 @@ def intersection_bitmap_from_protocol(intersection_mask: types.Intersection) -> 
 
 def color_from_protocol(color: TNamedColor) -> Color:
     match color:
-        case "green":
+        case "Green":
             return Colors.GREEN
-        case "black":
+        case "Black":
             return Colors.BLACK
-        case "red":
+        case "Red":
             return Colors.RED
-        case "blue":
+        case "Blue":
             return Colors.BLUE
-        case "white":
+        case "White":
             return Colors.WHITE
-        case "unknown":
+        case "Unknown":
             return Colors.UNKNOWN
         case _:
             typing.assert_never(color)
@@ -83,17 +83,17 @@ def color_from_protocol(color: TNamedColor) -> Color:
 
 def color_to_protocol(color: Color) -> TNamedColor:
     if color == Colors.GREEN:
-        return "green"
+        return "Green"
     elif color == Colors.BLACK:
-        return "black"
+        return "Black"
     elif color == Colors.RED:
-        return "red"
+        return "Red"
     elif color == Colors.BLUE:
-        return "blue"
+        return "Blue"
     elif color == Colors.WHITE:
-        return "white"
+        return "White"
     else:
-        return "unknown"
+        return "Unknown"
 
 
 def color_code_from_protocol(color_code: list[TNamedColor]) -> ColorCode:

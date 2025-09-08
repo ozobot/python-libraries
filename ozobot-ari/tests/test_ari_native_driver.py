@@ -306,8 +306,8 @@ async def test_native_data_access_write() -> None:
         (
             Color,
             [Color(red=1, green=0, blue=0), Color(red=0, green=1, blue=0)],
-            ["red", "green"],
-            response.UserIoPromptSurfaceColorResponseBody(value="red"),
+            ["Red", "Green"],
+            response.UserIoPromptSurfaceColorResponseBody(value="Red"),
             Color(red=1, green=0, blue=0),
         ),
         (

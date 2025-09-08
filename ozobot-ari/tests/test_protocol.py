@@ -68,7 +68,7 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         notification.LineNavigationNotification(
             id=1,
             result=notification.LineNavigationColorNotificationBody(
-                colors=["red", "green", "red"],
+                colors=["Red", "Green", "Red"],
             ),
         ),
         '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"colors": ["red", "green", "red"]}}',
@@ -492,12 +492,12 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         request.UserIoPromptRequest,
     ),
     (
-        response.UserIoPromptResponse(id=1, result=response.UserIoPromptSurfaceColorResponseBody(value="red")),
+        response.UserIoPromptResponse(id=1, result=response.UserIoPromptSurfaceColorResponseBody(value="Red")),
         '{"id":1,"jsonrpc":"2.0","result":{"type":"surfaceColor","value":"red"}}',
         request.UserIoPromptRequest,
     ),
     (
-        response.UserIoPromptResponse(id=1, result=response.UserIoPromptLineColorResponseBody(value="blue")),
+        response.UserIoPromptResponse(id=1, result=response.UserIoPromptLineColorResponseBody(value="Blue")),
         '{"id":1,"jsonrpc":"2.0","result":{"type":"lineColor","value":"blue"}}',
         request.UserIoPromptRequest,
     ),

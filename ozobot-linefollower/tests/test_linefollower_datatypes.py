@@ -59,13 +59,13 @@ def test_color_str_repr(red: Color) -> None:
 
 
 def test_classified_color_str_repr(classified_red: ClassifiedColor) -> None:
-    assert str(classified_red) == "red"
-    assert repr(classified_red) == "ClassifiedColor('red', RawColor(red=1.0, green=0, blue=0))"
+    assert str(classified_red) == "Red"
+    assert repr(classified_red) == "ClassifiedColor('Red', RawColor(red=1.0, green=0, blue=0))"
 
 
 def test_unknown_color_str_repr(classified_unknown: ClassifiedColor) -> None:
-    assert str(classified_unknown) == "unknown"
-    assert repr(classified_unknown) == "ClassifiedColor('unknown', 'unknown')"
+    assert str(classified_unknown) == "Unknown"
+    assert repr(classified_unknown) == "ClassifiedColor('Unknown', 'Unknown')"
 
 
 def test_color_hash(red: Color, blue: Color) -> None:
@@ -101,7 +101,7 @@ def test_classified_color_eq_color(classified_red: ClassifiedColor, red: Color, 
 def test_classified_color_eq_classified_color(
     classified_blue: ClassifiedColor, classified_red: ClassifiedColor, classified_unknown: ClassifiedColor
 ) -> None:
-    assert classified_red == ClassifiedColor("red", RawColor(red=1.0, green=0, blue=0))
+    assert classified_red == ClassifiedColor("Red", RawColor(red=1.0, green=0, blue=0))
     assert classified_red != classified_blue
     assert classified_red != classified_unknown
 
@@ -130,6 +130,6 @@ def test_classified_color_is_color(classified_red: ClassifiedColor, red: Color, 
 def test_classified_color_is_classified_color(
     classified_blue: ClassifiedColor, classified_red: ClassifiedColor, classified_unknown: ClassifiedColor
 ) -> None:
-    assert classified_red.is_color(ClassifiedColor("red", RawColor(red=1.0, green=0, blue=0)))
+    assert classified_red.is_color(ClassifiedColor("Red", RawColor(red=1.0, green=0, blue=0)))
     assert not classified_red.is_color(classified_blue)
     assert not classified_red.is_color(classified_unknown)

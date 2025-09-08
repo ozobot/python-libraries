@@ -1,6 +1,8 @@
 import typing
+from typing import Annotated
 
 import pydantic
+from ozobot.linefollower.datatypes import TNamedColor
 
 from .base import Model
 
@@ -53,6 +55,12 @@ class VersionPair(Model):
 class FloatRange(Model):
     start: float
     end: float
+
+
+type TNamedColorLowercase = Annotated[
+    TNamedColor, pydantic.BeforeValidator(lambda x: str(x).capitalize()), pydantic.PlainSerializer(str.lower)
+]
+"""lowercase variant of `TNamedColor` used for specific message types"""
 
 
 type TUserIoPrompt = typing.Literal["string", "number", "boolean", "lineColor", "surfaceColor", "direction"]

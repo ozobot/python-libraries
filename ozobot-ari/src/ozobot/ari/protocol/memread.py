@@ -1,9 +1,6 @@
-from typing import Annotated
 from typing import Literal as L
 
 from ozobot.linefollower.datatypes import TNamedColor
-from pydantic import BeforeValidator
-from pydantic.functional_serializers import PlainSerializer
 
 from .base import Model, Notification, Request, Response
 from .types import FloatRange, VersionPair
@@ -111,22 +108,16 @@ class MemReadResponsePickupADC(Model):
     timestamp: int
 
 
-type _TUppercaseColor = Annotated[
-    TNamedColor, BeforeValidator(lambda x: str(x).lower()), PlainSerializer(str.capitalize)
-]
-"""Capitalized variant of `TNamedColor` used for specific message types"""
-
-
 class MemReadResponseLineColor(Model):
     type: L["lineColor"] = "lineColor"
-    color: _TUppercaseColor
+    color: TNamedColor
     light_source: bool
     timestamp: int
 
 
 class MemReadResponseSurfaceColor(Model):
     type: L["surfaceColor"] = "surfaceColor"
-    color: _TUppercaseColor
+    color: TNamedColor
     counter: int
     light_source: bool
     timestamp: int

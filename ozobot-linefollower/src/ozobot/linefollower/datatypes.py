@@ -9,11 +9,11 @@ from dataclasses import dataclass
 _IS_COLOR_EPSILON = 0.01
 
 
-def _is_unknown_color_representation(color: object) -> typing.TypeIs[typing.Literal["unknown"]]:
-    return color == "unknown"
+def _is_unknown_color_representation(color: object) -> typing.TypeIs[typing.Literal["Unknown"]]:
+    return color == "Unknown"
 
 
-type TNamedColor = typing.Literal["green", "black", "red", "blue", "white", "unknown"]
+type TNamedColor = typing.Literal["Green", "Black", "Red", "Blue", "White", "Unknown"]
 type TDirection = typing.Literal["Straight", "Backward", "Left", "Right"]
 
 
@@ -72,7 +72,7 @@ class RawColor(Color):
 @dataclass(frozen=True, eq=False, repr=False)
 class ClassifiedColor(Color):
     name: TNamedColor
-    _representation: RawColor | typing.Literal["unknown"]
+    _representation: RawColor | typing.Literal["Unknown"]
 
     def is_color(self, other: Color, *, epsilon: float = _IS_COLOR_EPSILON) -> bool:
         if _is_unknown_color_representation(self._representation):
@@ -113,12 +113,12 @@ class ClassifiedColor(Color):
 
 
 class Colors:
-    BLACK = ClassifiedColor("black", RawColor(0, 0, 0))
-    RED = ClassifiedColor("red", RawColor(1.0, 0, 0))
-    GREEN = ClassifiedColor("green", RawColor(0, 1.0, 0))
-    BLUE = ClassifiedColor("blue", RawColor(0, 0, 1.0))
-    WHITE = ClassifiedColor("white", RawColor(1.0, 1.0, 1.0))
-    UNKNOWN = ClassifiedColor("unknown", "unknown")
+    BLACK = ClassifiedColor("Black", RawColor(0, 0, 0))
+    RED = ClassifiedColor("Red", RawColor(1.0, 0, 0))
+    GREEN = ClassifiedColor("Green", RawColor(0, 1.0, 0))
+    BLUE = ClassifiedColor("Blue", RawColor(0, 0, 1.0))
+    WHITE = ClassifiedColor("White", RawColor(1.0, 1.0, 1.0))
+    UNKNOWN = ClassifiedColor("Unknown", "Unknown")
 
 
 class LEDMask(enum.Flag):

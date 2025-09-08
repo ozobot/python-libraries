@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from ozobot.linefollower.datatypes import TNamedColor
-
 from .base import Model, Notification
-from .types import Intersection
+from .types import Intersection, TNamedColorLowercase
 
 
 class MotionNotificationBody(Model):
@@ -17,7 +15,7 @@ class MotionNotification(Notification):
 
 
 class LineNavigationColorNotificationBody(Model):
-    colors: list[TNamedColor]
+    colors: list[TNamedColorLowercase]
 
 
 class LineNavigationNotification(Notification):

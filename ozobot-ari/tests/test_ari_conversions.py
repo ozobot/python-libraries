@@ -68,12 +68,12 @@ def test_intersection_bitmap_from_protocol(intersection: types.Intersection, exp
 @pytest.mark.parametrize(
     ["color", "protocol_color"],
     argvalues=[
-        (Colors.BLACK, "black"),
-        (Colors.RED, "red"),
-        (Colors.GREEN, "green"),
-        (Colors.BLUE, "blue"),
-        (Colors.WHITE, "white"),
-        (Colors.UNKNOWN, "unknown"),
+        (Colors.BLACK, "Black"),
+        (Colors.RED, "Red"),
+        (Colors.GREEN, "Green"),
+        (Colors.BLUE, "Blue"),
+        (Colors.WHITE, "White"),
+        (Colors.UNKNOWN, "Unknown"),
     ],
     ids=lambda x: repr(x),
 )
@@ -84,12 +84,12 @@ def test_color_from_protocol(color: Color, protocol_color: TNamedColor) -> None:
 @pytest.mark.parametrize(
     ["color", "protocol_color"],
     argvalues=[
-        (Colors.BLACK, "black"),
-        (Colors.RED, "red"),
-        (Colors.GREEN, "green"),
-        (Colors.BLUE, "blue"),
-        (Colors.WHITE, "white"),
-        (Colors.UNKNOWN, "unknown"),
+        (Colors.BLACK, "Black"),
+        (Colors.RED, "Red"),
+        (Colors.GREEN, "Green"),
+        (Colors.BLUE, "Blue"),
+        (Colors.WHITE, "White"),
+        (Colors.UNKNOWN, "Unknown"),
     ],
     ids=lambda x: repr(x),
 )
@@ -98,6 +98,6 @@ def test_color_to_protocol(color: Color, protocol_color: TNamedColor) -> None:
 
 
 def test_color_code_from_protocol() -> None:
-    assert color_code_from_protocol(["red", "black", "blue"]) == ColorCode(
+    assert color_code_from_protocol(["Red", "Black", "Blue"]) == ColorCode(
         colors=(Colors.RED, Colors.BLACK, Colors.BLUE)
     )
