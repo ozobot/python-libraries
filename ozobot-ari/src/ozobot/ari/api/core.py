@@ -1,12 +1,12 @@
-from ozobot.ari.driver.native import NativeDriver
+from ozobot.ari.driver import AriDriver
 from ozobot.linefollower.api.core import LineFollower
 from ozobot.linefollower.datatypes import Color, Direction
 
 
 class Ari(LineFollower):
-    _driver: NativeDriver
+    _driver: AriDriver
 
-    def __init__(self, driver: NativeDriver) -> None:
+    def __init__(self, driver: AriDriver) -> None:
         super().__init__(driver)
 
     async def user_io_print(self, message: str) -> None:

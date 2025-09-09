@@ -8,24 +8,22 @@ from uuid import UUID
 
 from loguru import logger
 from ozobot.ari import conversions
+from ozobot.ari.driver import shared
 from ozobot.ari.exceptions import (
     AriProtocolCommandError,
     MemoryReadUnsuccessfulError,
     MemoryWriteUnsuccessfulError,
-    UnexpectedUserIoPromptOptionTypeError,
     UnexpectedUserIoPromptResponseReceivedError,
-    UnexpectedUserIoPromptTypeError,
 )
 from ozobot.ari.protocol import base, memread, memwrite, methods, notification, request, response, types
 from ozobot.ari.protocol.memread import MemReadResponseBody
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
-from ozobot.ari.protocol.types import TUserIoPrompt
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample, TDirection, TNamedColor
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample
 from ozobot.linefollower.driver.interface import VirtualMemoryRegions
 from ozobot.webrtc import messaging
 from ozobot.webrtc.connection import Channel
@@ -353,20 +351,8 @@ class NativeDriver:
         *,
         cancellable: bool = False,
     ) -> T:
-        for opt in options:
-            if not isinstance(opt, _type):
-                raise UnexpectedUserIoPromptOptionTypeError(opt, _type)
-
-        type_name = self._type_name_from_type(_type)
-
-        protocol_options: list[str | float | int | bool | TNamedColor | TDirection] = []
-        for opt in options:
-            if isinstance(opt, Color):
-                protocol_options.append(conversions.color_to_protocol(opt))
-            elif isinstance(opt, Direction):
-                protocol_options.append(conversions.intersection_direction_to_protocol(opt))
-            else:
-                protocol_options.append(opt)
+        type_name = shared.get_user_io_type_name(_type)
+        protocol_options = shared.get_user_io_type_options(options, _type)
 
         req = request.UserIoPromptRequest(
             id=self._request_id.get_next(),
@@ -402,20 +388,6 @@ class NativeDriver:
                     logger.debug("User IO prompt response not recognized", response=r, expected_type=t)
 
             raise UnexpectedUserIoPromptResponseReceivedError(resp.result.value, _type)
-
-    def _type_name_from_type(self, _type: type[str | int | float | bool | Color | Direction]) -> TUserIoPrompt:
-        if _type == str:
-            return "string"
-        elif _type == int or _type == float:
-            return "number"
-        elif _type == bool:
-            return "boolean"
-        elif _type == Color:
-            return "surfaceColor"
-        elif _type == Direction:
-            return "direction"
-        else:
-            raise UnexpectedUserIoPromptTypeError(_type)
 
     async def _handle_response(self, function_name: str, resp: typing.Awaitable[_HasResult]) -> None:
         val = await resp

@@ -4,7 +4,7 @@ from typing import Literal as L
 
 from annotated_types import Ge, Le
 from ozobot.linefollower.datatypes import TDirection, TNamedColor
-from pydantic import AliasGenerator, BaseModel, ConfigDict, RootModel, alias_generators
+from pydantic import AliasGenerator, BaseModel, BeforeValidator, ConfigDict, RootModel, alias_generators
 
 
 class Base(BaseModel):
@@ -121,8 +121,13 @@ class MemReadRequest(BaseRequest):
         return (self.name,)
 
 
-class MemWriteNavigationSpeedRequest(BaseRequest):
-    method: L["set_lineNavigationSpeed"] = "set_lineNavigationSpeed"
+def _validate_set_prefix(name: str):
+    assert isinstance(name, str) and name.startswith("set_")
+    return name
+
+
+class MemWriteRequest(BaseRequest):
+    method: typing.Annotated[str, BeforeValidator(_validate_set_prefix)]
     speed: float
 
     @property
@@ -133,7 +138,7 @@ class MemWriteNavigationSpeedRequest(BaseRequest):
 class RetrieveFromDataStreamRequest(BaseRequest):
     method: L["retrieveFromDataStream_wrapper"] = "retrieveFromDataStream_wrapper"
     name: str
-    last_value: typing.Any | None = None
+    last_value: typing.Any | None
 
     @property
     def args(self) -> tuple:
@@ -144,12 +149,15 @@ class RetrieveFromDataStreamRequest(BaseRequest):
 
 
 class BaseResponse(Base):
-    # hack that allows us to load camelCased keys as snake_cased
-    #     e.g., load executionState as execution_state
-    # Unfortunately this breaks using snake case in the constructor. Fix this
-    # by upgrading pydantic to >=2.11 and using validate_by_alias field.
+    # note that `validate_by_alias` is not respected for pydantic<2.11,
+    # therefore this is not respected by web python and constructors
+    # do not accept the snake_case parameters
     model_config = ConfigDict(
+        frozen=True,
+        validate_by_name=True,
+        validate_by_alias=False,
         alias_generator=AliasGenerator(
+            alias=alias_generators.to_camel,
             validation_alias=alias_generators.to_camel,
         ),
     )
@@ -167,9 +175,17 @@ class IntersectionResponse(BaseExecutionStateResponse):
     intersection: dict[TDirection, bool]
 
 
+class WatcherResponse[T](RootModel[list[T]]): ...
+
+
 class ValidatedFloat(RootModel[float]):
     pass
 
 
-class ValidatedColor(RootModel[TNamedColor]):
+class ValidatedBool(RootModel[bool]):
     pass
+
+
+class ColorResponse(BaseResponse):
+    color: TNamedColor
+    timestamp: float
