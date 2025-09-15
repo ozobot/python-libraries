@@ -1,3 +1,4 @@
+import asyncio
 import typing
 
 import pydantic
@@ -6,6 +7,7 @@ from ozobot.ari.conversions import is_named_color, is_named_direction
 from ozobot.ari.driver import shared
 from ozobot.ari.exceptions import UnexpectedUserIoPromptResponseReceivedError
 from ozobot.ari.protocol.types import TUserIoPrompt
+from ozobot.common.exceptions import TSError
 from ozobot.linefollower.datatypes import (
     Color,
     Direction,
@@ -87,7 +89,10 @@ class AriWebDriver(WebDriver):
 
     async def user_io_alert(self, message: str, *, cancellable: bool = False) -> None:
         req = UserIoAlertRequest(message=message, cancellable=cancellable)
+        try:
             _ = await self._rpc.execute(req, types.ValidatedBool)
+        except TSError as err:
+            raise asyncio.CancelledError() from err
 
     async def user_io_prompt[T: (str, float, int, bool, Color, Direction)](
         self,

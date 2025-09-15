@@ -28,6 +28,10 @@ class OzobotError(Exception):
         return f"{name}({', '.join(args)})"
 
 
+class TSError(OzobotError):
+    """Base TypeScript web driver error"""
+
+
 class ActorError(Exception):
     """Base exception for actor errors."""
 
