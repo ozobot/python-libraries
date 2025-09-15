@@ -160,7 +160,7 @@ async def test_command_with_response(
 async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
     query_cls, query_cls_mock = _create_query(
         notifications=[
-            notification.LineNavigationNotification(id=0, result=types.Intersection(backward=True)),
+            notification.LineNavigationNotification(id=0, result=types.Intersection(back=True)),
             notification.LineNavigationNotification(
                 id=0, result=notification.LineNavigationColorNotificationBody(colors=["red", "black", "blue"])
             ),

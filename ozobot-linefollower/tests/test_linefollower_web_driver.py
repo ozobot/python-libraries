@@ -77,7 +77,7 @@ async def test_line_navigation():
     with patch("ozobot.linefollower.driver.web._rpcCoroutine") as mock_coro:
         mock_coro.return_value = types.IntersectionResponse(
             execution_state="FinishedNormal",
-            intersection={"Straight": True, "Left": False},
+            intersection={"Forward": True, "Left": False},
         )
         driver = WebDriver(robot_name)
 
@@ -85,7 +85,7 @@ async def test_line_navigation():
         intersection = await driver.memory.intersection.read()
         assert intersection.data == Direction.STRAIGHT | Direction.LEFT
 
-        mock_coro.assert_awaited_once_with(robot_name, "LineNavigation", ("Straight", "Follow"))
+        mock_coro.assert_awaited_once_with(robot_name, "LineNavigation", ("Forward", "Follow"))
 
 
 async def test_mem_read():

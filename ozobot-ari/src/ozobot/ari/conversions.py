@@ -37,9 +37,9 @@ def intersection_direction_to_protocol(direction: Direction) -> TDirection:
         case Direction.RIGHT:
             return "Right"
         case Direction.STRAIGHT:
-            return "Straight"
+            return "Forward"
         case Direction.BACKWARD:
-            return "Backward"
+            return "Back"
         case _:
             typing.assert_never(direction)
 
@@ -50,9 +50,9 @@ def intersection_direction_from_protocol(direction: TDirection) -> Direction:
             return Direction.LEFT
         case "Right":
             return Direction.RIGHT
-        case "Straight":
+        case "Forward":
             return Direction.STRAIGHT
-        case "Backward":
+        case "Back":
             return Direction.BACKWARD
         case _:
             typing.assert_never(direction)
@@ -61,9 +61,9 @@ def intersection_direction_from_protocol(direction: TDirection) -> Direction:
 def intersection_bitmap_from_protocol(intersection_mask: types.Intersection) -> Direction:
     intersection = Direction(0)
 
-    if intersection_mask.backward:
+    if intersection_mask.back:
         intersection |= Direction.BACKWARD
-    if intersection_mask.straight:
+    if intersection_mask.forward:
         intersection |= Direction.STRAIGHT
     if intersection_mask.left:
         intersection |= Direction.LEFT

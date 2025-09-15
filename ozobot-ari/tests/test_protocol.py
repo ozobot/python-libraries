@@ -54,9 +54,9 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         request.LineNavigationRequest(
             id=1,
-            params=request.LineNavigationRequestParams(direction="Straight", follow="Follow", detect_color_codes=True),
+            params=request.LineNavigationRequestParams(direction="Forward", follow="Follow", detect_color_codes=True),
         ),
-        '{"id":1,"jsonrpc":"2.0","method":"LineNavigation","params":{"direction":"Straight","follow":"Follow","detectColorCodes":true}}',
+        '{"id":1,"jsonrpc":"2.0","method":"LineNavigation","params":{"direction":"Forward","follow":"Follow","detectColorCodes":true}}',
         None,
     ),
     (
@@ -77,9 +77,9 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         notification.LineNavigationNotification(
             id=1,
-            result=types.Intersection(backward=True, right=True),
+            result=types.Intersection(back=True, right=True),
         ),
-        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"Backward": true, "Right": true}}',
+        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"Back": true, "Right": true}}',
         request.LineNavigationRequest,
     ),
     (
@@ -502,8 +502,8 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         request.UserIoPromptRequest,
     ),
     (
-        response.UserIoPromptResponse(id=1, result=response.UserIoPromptDirectionResponseBody(value="Straight")),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"direction","value":"Straight"}}',
+        response.UserIoPromptResponse(id=1, result=response.UserIoPromptDirectionResponseBody(value="Forward")),
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"direction","value":"Forward"}}',
         request.UserIoPromptRequest,
     ),
 )

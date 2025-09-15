@@ -49,8 +49,8 @@ def test_led_to_web_json(mask, expected):
 @pytest.mark.parametrize(
     ["direction", "expected"],
     [
-        (Direction.STRAIGHT, "Straight"),
-        (Direction.BACKWARD, "Backward"),
+        (Direction.STRAIGHT, "Forward"),
+        (Direction.BACKWARD, "Back"),
         (Direction.LEFT, "Left"),
         (Direction.RIGHT, "Right"),
     ],
@@ -70,11 +70,11 @@ def test_direction_to_web_invalid_length():
 @pytest.mark.parametrize(
     ["json_input", "expected"],
     [
-        ({"Straight": True}, Direction.STRAIGHT),
-        ({"Backward": True}, Direction.BACKWARD),
+        ({"Forward": True}, Direction.STRAIGHT),
+        ({"Back": True}, Direction.BACKWARD),
         ({"Left": True}, Direction.LEFT),
         ({"Right": True}, Direction.RIGHT),
-        ({"Straight": True, "Left": True}, Direction.STRAIGHT | Direction.LEFT),
+        ({"Forward": True, "Left": True}, Direction.STRAIGHT | Direction.LEFT),
         ({}, Direction(0)),
     ],
 )

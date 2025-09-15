@@ -44,9 +44,9 @@ def direction_to_web(direction: Direction) -> TDirection:
 
     match direction:
         case Direction.STRAIGHT:
-            return "Straight"
+            return "Forward"
         case Direction.BACKWARD:
-            return "Backward"
+            return "Back"
         case Direction.LEFT:
             return "Left"
         case Direction.RIGHT:
@@ -57,8 +57,8 @@ def direction_to_web(direction: Direction) -> TDirection:
 
 def intersection_from_web(intersection_json: dict[TDirection, bool]) -> Direction:
     mapping = {
-        "Straight": Direction.STRAIGHT,
-        "Backward": Direction.BACKWARD,
+        "Forward": Direction.STRAIGHT,
+        "Back": Direction.BACKWARD,
         "Left": Direction.LEFT,
         "Right": Direction.RIGHT,
     }

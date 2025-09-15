@@ -14,7 +14,7 @@ def _is_unknown_color_representation(color: object) -> typing.TypeIs[typing.Lite
 
 
 type TNamedColor = typing.Literal["Green", "Black", "Red", "Blue", "White", "Unknown"]
-type TDirection = typing.Literal["Straight", "Backward", "Left", "Right"]
+type TDirection = typing.Literal["Forward", "Back", "Left", "Right"]
 
 ALLOWED_NAMED_COLORS = typing.get_args(TNamedColor.__value__)
 ALLOWED_NAMED_DIRECTIONS = typing.get_args(TDirection.__value__)

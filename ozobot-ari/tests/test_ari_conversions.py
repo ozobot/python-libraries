@@ -26,8 +26,8 @@ def test_led_to_protocol(protocol_led: types.Lights, library_led: LEDMask) -> No
 @pytest.mark.parametrize(
     ["direction", "protocol_direction"],
     argvalues=[
-        (Direction.STRAIGHT, "Straight"),
-        (Direction.BACKWARD, "Backward"),
+        (Direction.STRAIGHT, "Forward"),
+        (Direction.BACKWARD, "Back"),
         (Direction.LEFT, "Left"),
         (Direction.RIGHT, "Right"),
     ],
@@ -40,8 +40,8 @@ def test_intersection_direction_to_protocol(direction: Direction, protocol_direc
 @pytest.mark.parametrize(
     ["protocol_direction", "direction"],
     argvalues=[
-        ("Straight", Direction.STRAIGHT),
-        ("Backward", Direction.BACKWARD),
+        ("Forward", Direction.STRAIGHT),
+        ("Back", Direction.BACKWARD),
         ("Left", Direction.LEFT),
         ("Right", Direction.RIGHT),
     ],
@@ -54,10 +54,10 @@ def test_intersection_direction_from_protocol(protocol_direction: TDirection, di
 @pytest.mark.parametrize(
     ["intersection", "expected_direction"],
     argvalues=[
-        (types.Intersection(straight=True), Direction.STRAIGHT),
+        (types.Intersection(forward=True), Direction.STRAIGHT),
         (types.Intersection(left=True), Direction.LEFT),
         (types.Intersection(right=True), Direction.RIGHT),
-        (types.Intersection(backward=True), Direction.BACKWARD),
+        (types.Intersection(back=True), Direction.BACKWARD),
     ],
     ids=lambda x: repr(x),
 )
