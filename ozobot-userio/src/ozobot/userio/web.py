@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import typing
 
 import pydantic
@@ -13,6 +14,17 @@ from ozobot.userio import conversions
 from ozobot.userio.datatypes import TUserIoPrompt
 from ozobot.web import rpctypes
 from ozobot.web.driver import Rpc
+
+
+@contextlib.contextmanager
+def _handle_ts_cancellation_error() -> typing.Iterator[None]:
+    """Context manager that converts TSError(CanceledByUser) to asyncio.CancelledError"""
+    # TODO: Fix this in the exception handler instead
+    try:
+        yield
+    except TSError as err:
+        if err.args[0] == "CanceledByUser":
+            raise asyncio.CancelledError() from err
 
 
 class UserIoPrintRequest(rpctypes.BaseRequest):
@@ -56,10 +68,8 @@ class UserIoWebDriverComponent:
 
     async def alert(self, message: str, *, cancellable: bool = False) -> None:
         req = UserIoAlertRequest(message=message, cancellable=cancellable)
-        try:
+        with _handle_ts_cancellation_error():
             _ = await self._rpc.execute(req, rpctypes.ValidatedBool)
-        except TSError as err:
-            raise asyncio.CancelledError() from err
 
     async def prompt[T: (str, float, int, bool, Color, Direction)](
         self,
@@ -74,5 +84,6 @@ class UserIoWebDriverComponent:
 
         req = UserIoPromptRequest(message=message, type=type_name, options=protocol_options, cancellable=cancellable)
         response_model: pydantic.TypeAdapter[str | float | bool] = pydantic.TypeAdapter(str | float | bool)
-        response = await self._rpc.execute(req, response_model)
+        with _handle_ts_cancellation_error():
+            response = await self._rpc.execute(req, response_model)
         return conversions.cast_web_prompt_response(_type, response)
