@@ -8,12 +8,10 @@ from uuid import UUID
 
 from loguru import logger
 from ozobot.ari import conversions
-from ozobot.ari.driver import shared
 from ozobot.ari.exceptions import (
     AriProtocolCommandError,
     MemoryReadUnsuccessfulError,
     MemoryWriteUnsuccessfulError,
-    UnexpectedUserIoPromptResponseReceivedError,
 )
 from ozobot.ari.protocol import base, memread, memwrite, methods, notification, request, response, types
 from ozobot.ari.protocol.memread import MemReadResponseBody
@@ -25,6 +23,8 @@ from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
 from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample
 from ozobot.linefollower.driver.interface import VirtualMemoryRegions
+from ozobot.userio import conversions as userio_conversions
+from ozobot.userio.exceptions import UnexpectedUserIoPromptResponseReceivedError
 from ozobot.webrtc import messaging
 from ozobot.webrtc.connection import Channel
 from ozobot.webrtc.signaling import negotiation, token
@@ -351,8 +351,8 @@ class NativeDriver:
         *,
         cancellable: bool = False,
     ) -> T:
-        type_name = shared.get_user_io_type_name(_type)
-        protocol_options = shared.get_user_io_type_options(options, _type)
+        type_name = userio_conversions.get_type_name(_type)
+        protocol_options = userio_conversions.get_type_options(options, _type)
 
         req = request.UserIoPromptRequest(
             id=self._request_id.get_next(),

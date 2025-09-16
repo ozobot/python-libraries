@@ -13,6 +13,8 @@ members = [
   "ozobot-linefollower",
   "ozobot-evo",
   "ozobot-jsonrpc",
+  "ozobot-userio",
+  "ozobot-web",
   "ozobot-webrtc",
 ]
 
@@ -39,6 +41,8 @@ mypy_path = [
   "ozobot-linefollower/src",
   "ozobot-evo/src",
   "ozobot-jsonrpc/src",
+  "ozobot-userio/src",
+  "ozobot-web/src",
   "ozobot-webrtc/src",
 ]
 plugins = ["pydantic.mypy"]

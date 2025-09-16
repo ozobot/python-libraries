@@ -1,8 +1,8 @@
 import typing
 
 from ozobot.evo.driver.shared import map_audio_name_to_filename
-from ozobot.linefollower.driver.types import BaseExecutionStateResponse, BaseRequest
-from ozobot.linefollower.driver.web import WebDriver
+from ozobot.web.driver import WebDriver
+from ozobot.web.rpctypes import BaseExecutionStateResponse, BaseRequest
 
 __all__ = ["WebDriver"]
 

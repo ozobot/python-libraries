@@ -12,6 +12,8 @@ dependencies = [
     "ozobot-common~=0.1",
     "ozobot-jsonrpc~=0.1",
     "ozobot-linefollower~=0.1",
+    "ozobot-userio~=0.1; platform_system == 'Emscripten'",
+    "ozobot-web~=0.1; platform_system == 'Emscripten'",
     "ozobot-webrtc~=0.1; platform_system != 'Emscripten'",
     "loguru",
     "pydantic>=2.10.5",
@@ -34,6 +36,8 @@ ozobot-ble = { workspace = true }
 ozobot-common = { workspace = true }
 ozobot-jsonrpc = { workspace = true }
 ozobot-linefollower = { workspace = true }
+ozobot-userio = { workspace = true }
+ozobot-web = { workspace = true }
 ozobot-webrtc = { workspace = true }
 
 [build-system]

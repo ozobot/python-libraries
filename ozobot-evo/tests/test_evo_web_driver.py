@@ -3,7 +3,14 @@ from unittest.mock import patch
 
 import pytest
 from ozobot.evo.driver.web import EvoWebDriver
-from ozobot.linefollower.driver import types
+from ozobot.web import rpctypes
+
+
+@patch("ozobot.evo.driver.sys.platform", "emscripten")
+def test_import_web() -> None:
+    from ozobot.evo.driver import get_driver
+
+    assert issubclass(get_driver(), EvoWebDriver)
 
 
 @pytest.mark.parametrize(
@@ -15,7 +22,7 @@ from ozobot.linefollower.driver import types
             None,
             "ExecuteFile",
             ("/system/audio/01010100.wav",),
-            types.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
         ),
     ),
 )
@@ -28,7 +35,7 @@ async def test_commands(
     rpc_result: typing.Any,
 ) -> None:
     robot_name = "robot1"
-    with patch("ozobot.linefollower.driver.web._rpcCoroutine") as mock_coro:
+    with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
         mock_coro.return_value = rpc_result
         driver = EvoWebDriver(robot_name)
         method = getattr(driver, method_name)

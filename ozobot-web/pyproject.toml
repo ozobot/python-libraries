@@ -1,6 +1,6 @@
 [project]
-name = "ozobot-evo"
-description = "Ozobot EVO library"
+name = "ozobot-web"
+description = "Ozobot web drivers"
 readme = "README.md"
 authors = [
     { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
@@ -8,16 +8,9 @@ authors = [
 requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
-    "ozobot-ble~=0.1; platform_system != 'Emscripten'",
     "ozobot-common~=0.1",
     "ozobot-linefollower~=0.1",
-    "ozobot-web~=0.1; platform_system == 'Emscripten'",
-    "loguru",
 ]
-
-[project.urls]
-Homepage = "https://ozobot.com"
-Github = "https://github.com/ozobot/python-libraries"
 
 [tool.hatch.build.targets.sdist]
 sources = ["src"]
@@ -28,10 +21,8 @@ sources = ["src"]
 only-include = ["src/ozobot"]
 
 [tool.uv.sources]
-ozobot-ble = { workspace = true }
 ozobot-common = { workspace = true }
 ozobot-linefollower = { workspace = true }
-ozobot-web = { workspace = true }
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
@@ -39,7 +30,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 source = "vcs"
+tag-pattern = ".*/v(?P<version>.*)"
 
 [tool.hatch.version.raw-options]
+git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--match', 'web/v*']
 version_scheme = "no-guess-dev"
 root = "../"

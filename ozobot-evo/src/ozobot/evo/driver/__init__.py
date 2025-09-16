@@ -20,9 +20,9 @@ class EvoDriver(Driver, typing.Protocol):
 
 def get_driver() -> type[EvoDriver]:
     if sys.platform == "emscripten":
-        from .web import WebDriver
+        from .web import EvoWebDriver
 
-        return WebDriver
+        return EvoWebDriver
     else:
         from .native import NativeDriver
 

@@ -2,8 +2,6 @@ import typing
 
 from ozobot.ari.protocol import types
 from ozobot.linefollower.datatypes import (
-    ALLOWED_NAMED_COLORS,
-    ALLOWED_NAMED_DIRECTIONS,
     Color,
     ColorCode,
     Colors,
@@ -108,11 +106,3 @@ def color_to_protocol(color: Color) -> TNamedColor:
 
 def color_code_from_protocol(color_code: list[TNamedColor]) -> ColorCode:
     return ColorCode(colors=tuple(color_from_protocol(c) for c in color_code))
-
-
-def is_named_color(value: str) -> typing.TypeGuard[TNamedColor]:
-    return value in ALLOWED_NAMED_COLORS
-
-
-def is_named_direction(value: str) -> typing.TypeGuard[TDirection]:
-    return value in ALLOWED_NAMED_DIRECTIONS

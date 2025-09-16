@@ -4,9 +4,7 @@ from ozobot.actors.actors import dispatcher
 from ozobot.linefollower.datatypes import Color, Direction
 
 
-# TODO: Generalize extra ari functions in a separate package(s)
-#     in the same way as evo is generalized to a linefollower.
-#     This can however wait until we have all the features implemented.
+# TODO: Move this interface to `ozobot-userio` package
 class UserIoEnabledRobot(typing.Protocol):
     async def user_io_print(self, message: str) -> None: ...
 

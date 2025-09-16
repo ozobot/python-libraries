@@ -3,19 +3,21 @@ import typing
 
 import pydantic
 from loguru import logger
-from ozobot.ari.exceptions import MemoryReadUnsuccessfulError
 from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
-from ozobot.linefollower.conversions import (
+from ozobot.linefollower.datatypes import ColorCode, Direction, LEDMask, Sample
+from ozobot.linefollower.exceptions import (
+    DriverCommandFailedError,
+)
+from ozobot.web import rpctypes as types
+from ozobot.web.conversions import (
     color_from_web,
     direction_to_web,
     intersection_from_web,
     led_to_web_json,
 )
-from ozobot.linefollower.datatypes import ColorCode, Direction, LEDMask, Sample
-from ozobot.linefollower.driver import types
-from ozobot.linefollower.exceptions import (
-    DriverCommandFailedError,
+from ozobot.web.exceptions import (
     InvalidWebRobotSelectorError,
+    MemoryReadUnsuccessfulError,
     MissingRobotSelectorError,
 )
 
@@ -38,7 +40,7 @@ class _HasTimestamp(typing.Protocol):
     timestamp: int
 
 
-class _Rpc:
+class Rpc:
     def __init__(self, robot_name: str) -> None:
         self._name = robot_name
 
@@ -63,7 +65,7 @@ class _Rpc:
 class WebDataAccessRead[TProtoFrom: pydantic.BaseModel, TLib]:
     def __init__(
         self,
-        rpc: _Rpc,
+        rpc: Rpc,
         property_name: str,
         *,
         response_type: type[TProtoFrom],
@@ -113,7 +115,7 @@ class WebDataAccessRead[TProtoFrom: pydantic.BaseModel, TLib]:
 class WebDataAccessReadWrite[TProtoFrom: pydantic.BaseModel, TProtoTo, TLib](WebDataAccessRead[TProtoFrom, TLib]):
     def __init__(
         self,
-        rpc: _Rpc,
+        rpc: Rpc,
         property_name: str,
         *,
         property_key: str,
@@ -132,7 +134,7 @@ class WebDataAccessReadWrite[TProtoFrom: pydantic.BaseModel, TProtoTo, TLib](Web
 
 
 class WebMemoryRegions:
-    def __init__(self, rpc: _Rpc) -> None:
+    def __init__(self, rpc: Rpc) -> None:
         self.intersection_queue = EventWatcherQueue(Sample.now(Direction(0)))
         self.intersection = EventWatcher(self.intersection_queue)
 
@@ -165,7 +167,7 @@ class WebMemoryRegions:
 
 class WebDriver:
     def __init__(self, name: str) -> None:
-        self._rpc = _Rpc(name)
+        self._rpc = Rpc(name)
         self.memory = WebMemoryRegions(self._rpc)
 
     @classmethod

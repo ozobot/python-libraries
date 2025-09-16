@@ -3,8 +3,8 @@ from unittest.mock import call, patch
 
 import pytest
 from ozobot.linefollower.datatypes import Colors, Direction, LEDMask
-from ozobot.linefollower.driver import types
-from ozobot.linefollower.driver.web import WebDriver
+from ozobot.web import rpctypes
+from ozobot.web.driver import WebDriver
 
 
 @pytest.mark.parametrize(
@@ -16,7 +16,7 @@ from ozobot.linefollower.driver.web import WebDriver
             None,
             "MoveStraight",
             (0.1, 0.2),
-            types.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
         ),
         (
             "rotate",
@@ -24,7 +24,7 @@ from ozobot.linefollower.driver.web import WebDriver
             None,
             "Rotate",
             (0.1, 0.2),
-            types.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
         ),
         (
             "velocity",
@@ -32,7 +32,7 @@ from ozobot.linefollower.driver.web import WebDriver
             None,
             "Velocity",
             (0.1, 0.2, 1000),
-            types.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
         ),
         (
             "play_tone",
@@ -40,16 +40,16 @@ from ozobot.linefollower.driver.web import WebDriver
             None,
             "PlayTone",
             (440, 500),
-            types.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
         ),
-        ("stop_all", (), None, "StopExecution", (), types.Base()),
+        ("stop_all", (), None, "StopExecution", (), rpctypes.Base()),
         (
             "set_led",
             (LEDMask.TOP | LEDMask.FRONT_LEFT, 255, 128, 0),
             None,
             "SetLED",
             ({"top": True, "front_left": True}, 255, 128, 0),
-            types.BaseCallStatusResponse(call_status="CallSuccess"),
+            rpctypes.BaseCallStatusResponse(call_status="CallSuccess"),
         ),
     ),
 )
@@ -62,7 +62,7 @@ async def test_commands(
     rpc_result: typing.Any,
 ) -> None:
     robot_name = "robot1"
-    with patch("ozobot.linefollower.driver.web._rpcCoroutine") as mock_coro:
+    with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
         mock_coro.return_value = rpc_result
         driver = WebDriver(robot_name)
         method = getattr(driver, method_name)
@@ -74,8 +74,8 @@ async def test_commands(
 
 async def test_line_navigation():
     robot_name = "robot1"
-    with patch("ozobot.linefollower.driver.web._rpcCoroutine") as mock_coro:
-        mock_coro.return_value = types.IntersectionResponse(
+    with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
+        mock_coro.return_value = rpctypes.IntersectionResponse(
             execution_state="FinishedNormal",
             intersection={"Forward": True, "Left": False},
         )
@@ -90,7 +90,7 @@ async def test_line_navigation():
 
 async def test_mem_read():
     robot_name = "robot1"
-    with patch("ozobot.linefollower.driver.web._rpcCoroutine") as mock_coro:
+    with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
         mock_coro.return_value = 0.5
         driver = WebDriver(robot_name)
 
@@ -102,8 +102,8 @@ async def test_mem_read():
 
 async def test_mem_write():
     robot_name = "robot1"
-    with patch("ozobot.linefollower.driver.web._rpcCoroutine") as mock_coro:
-        mock_coro.return_value = types.BaseCallStatusResponse(call_status="CallSuccess")
+    with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
+        mock_coro.return_value = rpctypes.BaseCallStatusResponse(call_status="CallSuccess")
         driver = WebDriver(robot_name)
 
         await driver.memory.line_following_speed.write(0.5)
@@ -127,7 +127,7 @@ async def test_mem_watch_structure() -> None:
             responses_flat[2],
         ],
     ]
-    with patch("ozobot.linefollower.driver.web._rpcCoroutine", side_effect=rpc_responses) as mock_coro:
+    with patch("ozobot.web.driver._rpcCoroutine", side_effect=rpc_responses) as mock_coro:
         driver = WebDriver(robot_name)
 
         async with driver.memory.line_color.watch() as it:
@@ -167,7 +167,7 @@ async def test_mem_watch_simple_type() -> None:
             responses_flat[2],
         ],
     ]
-    with patch("ozobot.linefollower.driver.web._rpcCoroutine", side_effect=rpc_responses) as mock_coro:
+    with patch("ozobot.web.driver._rpcCoroutine", side_effect=rpc_responses) as mock_coro:
         driver = WebDriver(robot_name)
 
         async with driver.memory.line_following_speed.watch() as it:
