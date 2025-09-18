@@ -67,6 +67,10 @@ async def emit_note(note: TNote, octave: int, duration_s: float, volume: int) ->
     await dispatcher.acall(LineFollower.emit_note, note, octave, duration_s, volume)
 
 
+async def emit_midi(midi_number: int, duration_s: float, volume: int) -> None:
+    await dispatcher.call(LineFollower.emit_midi, midi_number, duration_s, volume)
+
+
 async def play_audio(name: str) -> None:
     await dispatcher.acall(LineFollower.play_audio, name)
 

@@ -56,15 +56,27 @@ class LineFollower:
             volume,
         )
 
+    async def emit_midi(self, midi_number: int, duration_s: float, volume: int):
+        frequency_hz = LineFollower._convert_key_to_frequency(midi_number, reference=69)
+        await self.emit_tone(
+            frequency_hz,
+            duration_s,
+            volume,
+        )
+
+    # credit goes to https://gist.github.com/CGrassin/26a1fdf4fc5de788da9b376ff717516e
     @staticmethod
-    def _convert_note_to_frequency(octave: int, note_idx: int) -> int:
-        # credit goes to https://gist.github.com/CGrassin/26a1fdf4fc5de788da9b376ff717516e
-        a4 = 440
-        key = note_idx + 12 + ((octave - 2) * 12) + 1
+    def _convert_note_to_frequency(octave: int, note_idx) -> int:
+        key = note_idx + ((octave - 1) * 12) + 1
         if note_idx < 3:
             key += 12
 
-        frequency = a4 * 2 ** ((key - 49) / 12)
+        return LineFollower._convert_key_to_frequency(key, reference=49)
+
+    @staticmethod
+    def _convert_key_to_frequency(midi_number: int, *, reference: int) -> int:
+        a4 = 440
+        frequency = a4 * 2 ** ((midi_number - reference) / 12)
         return int(frequency)
 
     async def play_audio(self, name: str) -> None:

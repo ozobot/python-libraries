@@ -25,6 +25,25 @@ async def test_emit_note(note: typing.Any, octave: int, expected_frequency: int)
 
 
 @pytest.mark.parametrize(
+    ["midi_number", "expected_frequency"],
+    [
+        [81, 880],
+        [105, 3520],
+        [48, 130],
+        [72, 523],
+        [49, 138],
+        [73, 554],
+    ],
+)
+async def test_emit_midi(midi_number: int, expected_frequency: int) -> None:
+    driver = AsyncMock()
+    lf = LineFollower(driver)
+    await lf.emit_midi(midi_number, 0, 0)
+
+    driver.play_tone.assert_called_once_with(expected_frequency, 0, 0)
+
+
+@pytest.mark.parametrize(
     ["number", "expected_sounds"],
     [
         [0, ["num0"]],
