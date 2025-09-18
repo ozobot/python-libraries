@@ -1,5 +1,5 @@
 [project]
-name = "ozobot-actor-api"
+name = "ozobot-actors"
 description = "Ozobot actor API package providing an alternative way for controling multiple bots"
 readme = "README.md"
 authors = [

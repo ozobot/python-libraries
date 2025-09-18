@@ -4,7 +4,7 @@ requires-python = ">=3.13"
 
 [manifest]
 members = [
-    "ozobot-actor-api",
+    "ozobot-actors",
     "ozobot-ari",
     "ozobot-ble",
     "ozobot-common",
@@ -443,8 +443,8 @@ wheels = [
 ]
 
 [[package]]
-name = "ozobot-actor-api"
-source = { editable = "ozobot-actor-api" }
+name = "ozobot-actors"
+source = { editable = "ozobot-actors" }
 dependencies = [
     { name = "loguru" },
     { name = "ozobot-common" },
