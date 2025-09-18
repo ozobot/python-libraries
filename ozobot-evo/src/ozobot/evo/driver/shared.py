@@ -17,9 +17,11 @@ _map_audioname_filename = {
     "backward": "01040108",
     "left": "01040102",
     "right": "01040104",
-    "num0": "01040000",
-    # numbers
-    **{f"num{i}": f"010400{format(i, 'x').rjust(2, '0').upper()}" for i in range(99)},
+    # numbers 0 - 19, 20, 30, 40, .., 90, 100
+    **{
+        f"num{i}": f"010400{format(i, 'x').rjust(2, '0').upper()}"
+        for i in list(range(19)) + [20, 30, 40, 50, 60, 70, 80, 90, 100]
+    },
     "minus": "010400FF",
 }
 

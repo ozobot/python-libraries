@@ -75,6 +75,10 @@ async def set_led(mask: LEDMask, color: Color) -> None:
     await dispatcher.acall(LineFollower.set_led, mask, color)
 
 
+async def say_number(number: int) -> None:
+    await dispatcher.acall(LineFollower.say_number, number)
+
+
 async def follow_line(direction: Direction) -> None:
     await dispatcher.acall(LineFollower.follow_line, direction)
 

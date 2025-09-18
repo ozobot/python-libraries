@@ -7,6 +7,7 @@ from .linefollower import (
     move,
     play_audio,
     rotate,
+    say_number,
     set_led,
     set_velocity,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "emit_note",
     "emit_tone",
     "play_audio",
+    "say_number",
     "set_led",
     "follow_line",
     "align_with_line",

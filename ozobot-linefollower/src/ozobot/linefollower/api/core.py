@@ -71,6 +71,34 @@ class LineFollower:
         logger.debug("Playing audio file", name=name)
         await self._driver.play_audio(name)
 
+    async def say_number(self, number: int | float) -> None:
+        numint = int(number)
+        sounds: list[str] = []
+
+        if numint == 0:
+            sounds.append("num0")
+
+        if numint < 0:
+            sounds.append("minus")
+            numint = abs(numint)
+
+        if numint >= 100:
+            hundreds = numint // 100
+            numint %= 100
+            sounds.append(f"num{hundreds}")
+            sounds.append("num100")
+
+        if numint > 19:
+            tens = numint // 10
+            numint %= 10
+            sounds.append(f"num{tens}0")
+
+        if numint > 0:
+            sounds.append(f"num{numint}")
+
+        for sound in sounds:
+            await self._driver.play_audio(sound)
+
     async def set_led(self, mask: LEDMask, color: Color) -> None:
         logger.debug("Setting LED", mask=mask, color=color)
         if isinstance(color, RawColor):
