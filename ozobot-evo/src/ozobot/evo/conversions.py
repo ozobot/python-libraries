@@ -75,6 +75,13 @@ def led_to_protocol(mask: LEDMask) -> Types.LEDsMask:
         raise OzobotDataTypeError(LEDMask, type(mask))
 
     protocol_mask: Types.LEDsMask = Types.LEDsMask(0)
+    all_front_mask = (
+        Types.LEDsMask.front_left
+        | Types.LEDsMask.front_left_center
+        | Types.LEDsMask.front_center
+        | Types.LEDsMask.front_right_center
+        | Types.LEDsMask.front_right
+    )
     for led in mask:
         match led:
             case LEDMask.FRONT_LEFT:
@@ -93,6 +100,12 @@ def led_to_protocol(mask: LEDMask) -> Types.LEDsMask:
                 protocol_mask |= Types.LEDsMask.back
             case LEDMask.BUTTON:
                 protocol_mask |= Types.LEDsMask.button
+            # ALL_FRONT and ALL_ROBOT should not be needed because the iterator only goes through
+            # single bit values, but let's make mypy happy
+            case LEDMask.ALL_FRONT:
+                protocol_mask |= all_front_mask
+            case LEDMask.ALL_ROBOT:
+                protocol_mask |= all_front_mask | Types.LEDsMask.top | Types.LEDsMask.back | Types.LEDsMask.button
             case _:
                 typing.assert_never(led)
 
