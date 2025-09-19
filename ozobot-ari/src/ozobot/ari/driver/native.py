@@ -22,7 +22,6 @@ from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
 from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample
-from ozobot.linefollower.driver.interface import VirtualMemoryRegions
 from ozobot.userio import conversions as userio_conversions
 from ozobot.userio.exceptions import UnexpectedUserIoPromptResponseReceivedError
 from ozobot.webrtc import messaging
@@ -50,7 +49,7 @@ class _HasResult(typing.Protocol):
     def result(self) -> _HasResultType: ...
 
 
-class NativeMemoryRegions(VirtualMemoryRegions):
+class NativeMemoryRegions:
     def __init__(self, executor: Executor, request_id: _RequestIdCounter) -> None:
         self.intersection_queue = EventWatcherQueue(Sample.now(Direction(0)))
         self.intersection = EventWatcher(self.intersection_queue)
@@ -200,10 +199,14 @@ async def _create_webrtc_channel(connection_key: str) -> Channel:
 
 
 class NativeDriver:
+    @property
+    def memory(self) -> NativeMemoryRegions:
+        return self._memory
+
     def __init__(self, executor: Executor) -> None:
         self._executor = executor
         self._request_id = _RequestIdCounter()
-        self.memory = NativeMemoryRegions(executor, self._request_id)
+        self._memory = NativeMemoryRegions(executor, self._request_id)
 
     @classmethod
     @contextlib.asynccontextmanager

@@ -4,16 +4,19 @@ import math
 
 from loguru import logger
 from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, LEDMask, RawColor, TNote
-from ozobot.linefollower.driver.interface import Driver
+from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
 
 
 class LineFollower:
+    @property
+    def memory(self) -> VirtualMemoryRegions:
+        return self._driver.memory
+
     def __init__(
         self,
         driver: Driver,
     ) -> None:
         self._driver = driver
-        self.memory = driver.memory
 
     async def move(self, distance_m: float, speed_mps: float) -> None:
         logger.debug("Moving", distance=distance_m, speed=speed_mps)

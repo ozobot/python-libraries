@@ -13,7 +13,7 @@ from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
-from ozobot.linefollower.driver.interface import Deserializable, Serializable, VirtualMemoryRegions
+from ozobot.linefollower.driver.interface import Deserializable, Serializable
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
 _CHARACTERISTIC_UUID = UUID("8903136c-5f13-4548-a885-c58779136802")
@@ -43,7 +43,7 @@ type _TWatchers = tuple[
 ]
 
 
-class NativeMemoryRegions(VirtualMemoryRegions):
+class NativeMemoryRegions:
     def __init__(self, control: AsyncControl, watchers: _TWatchers) -> None:
         color_code_watcher, line_color_watcher, surface_color_watcher = watchers
 

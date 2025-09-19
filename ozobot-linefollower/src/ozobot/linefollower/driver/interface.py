@@ -29,11 +29,20 @@ class ReadableWatchableRegion[T](ReadableRegion[T], Protocol):
 
 
 class VirtualMemoryRegions(Protocol):
-    line_following_speed: ReadableWritableRegion[float]
-    color_code: ReadableWatchableRegion[ColorCode]
-    line_color: ReadableWatchableRegion[Color]
-    surface_color: ReadableWatchableRegion[Color]
-    intersection: ReadableWatchableRegion[Direction]
+    @property
+    def line_following_speed(self) -> ReadableWritableRegion[float]: ...
+
+    @property
+    def color_code(self) -> ReadableWatchableRegion[ColorCode]: ...
+
+    @property
+    def line_color(self) -> ReadableWatchableRegion[Color]: ...
+
+    @property
+    def surface_color(self) -> ReadableWatchableRegion[Color]: ...
+
+    @property
+    def intersection(self) -> ReadableWatchableRegion[Direction]: ...
 
 
 class Driver(Protocol):

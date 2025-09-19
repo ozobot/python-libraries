@@ -2,10 +2,16 @@ import sys
 import typing
 
 from ozobot.linefollower.datatypes import Color, Direction
-from ozobot.linefollower.driver.interface import Driver
+from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
+
+
+class AriVirtualMemory(VirtualMemoryRegions, typing.Protocol): ...
 
 
 class AriDriver(Driver, typing.Protocol):
+    @property
+    def memory(self) -> AriVirtualMemory: ...
+
     @classmethod
     def open(
         cls,

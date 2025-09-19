@@ -1,12 +1,18 @@
 import sys
 import typing
 
-from ozobot.linefollower.driver.interface import Driver
+from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
 
 __all__ = ["get_driver"]
 
 
+class EvoVirtualMemory(VirtualMemoryRegions, typing.Protocol): ...
+
+
 class EvoDriver(Driver, typing.Protocol):
+    @property
+    def memory(self) -> EvoVirtualMemory: ...
+
     @classmethod
     def open(
         cls,
