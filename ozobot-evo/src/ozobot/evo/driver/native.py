@@ -10,7 +10,7 @@ from ozobot.evo.api.watchers import LineFollowerWatcher, WatcherSubscription
 from ozobot.evo.driver.responses import handle_events, handle_response
 from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
-from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
 from ozobot.linefollower.driver.interface import Deserializable, Serializable
@@ -40,12 +40,21 @@ type _TWatchers = tuple[
     WatcherSubscription[Types.ColorCode],
     WatcherSubscription[Types.LineColor],
     WatcherSubscription[Types.SurfaceColor],
+    WatcherSubscription[Types.IRProximity],
+    WatcherSubscription[Types.IRMessage],
+    WatcherSubscription[Types.IRMessage],
+    WatcherSubscription[Types.IRMessage],
+    WatcherSubscription[Types.IRMessage],
+    WatcherSubscription[Types.Button],
+    WatcherSubscription[Types.ChargerState],
 ]
 
 
 class NativeMemoryRegions:
     def __init__(self, control: AsyncControl, watchers: _TWatchers) -> None:
-        color_code_watcher, line_color_watcher, surface_color_watcher = watchers
+        color_code_watcher, line_color_watcher, surface_color_watcher, proximity_watcher = watchers[:4]
+        ir_right_front_watcher, ir_left_front_watcher, ir_right_rear_watcher, ir_left_rear_watcher = watchers[4:8]
+        button_watcher, charger_watcher = watchers[8:10]
 
         self.intersection_queue = EventWatcherQueue(Sample(Direction(0), 0))
         self.intersection = EventWatcher(self.intersection_queue)
@@ -64,6 +73,36 @@ class NativeMemoryRegions:
         )
         self.surface_color = NativeDataWatcher(
             control, VirtualMemory.surfaceColor, surface_color_watcher, conversions.surface_color_from_protocol
+        )
+
+        proximity = NativeDataWatcher(
+            control, VirtualMemory.irProximity, proximity_watcher, conversions.proximity_from_protocol
+        )
+
+        self.proximity_right_front = DataWatcherProxy(proximity, convert=lambda p: p.right_front)
+        self.proximity_left_front = DataWatcherProxy(proximity, convert=lambda p: p.left_front)
+        self.proximity_right_rear = DataWatcherProxy(proximity, convert=lambda p: p.right_rear)
+        self.proximity_left_rear = DataWatcherProxy(proximity, convert=lambda p: p.left_rear)
+
+        self.ir_message_right_front = NativeDataWatcher(
+            control, VirtualMemory.irMessageRightFront, ir_right_front_watcher, conversions.ir_message_from_protocol
+        )
+
+        self.ir_message_left_front = NativeDataWatcher(
+            control, VirtualMemory.irMessageLeftFront, ir_left_front_watcher, conversions.ir_message_from_protocol
+        )
+
+        self.ir_message_right_rear = NativeDataWatcher(
+            control, VirtualMemory.irMessageRightRear, ir_right_rear_watcher, conversions.ir_message_from_protocol
+        )
+
+        self.ir_message_left_rear = NativeDataWatcher(
+            control, VirtualMemory.irMessageLeftRear, ir_left_rear_watcher, conversions.ir_message_from_protocol
+        )
+
+        self.button = NativeDataWatcher(control, VirtualMemory.button, button_watcher, lambda b: b.press)
+        self.charger = NativeDataWatcher(
+            control, VirtualMemory.chargerState, charger_watcher, conversions.charger_state_from_protocol
         )
 
 
@@ -138,19 +177,22 @@ async def create_memory_regions_structure(control: AsyncControl) -> typing.Async
         VirtualMemory.colorCode,
         VirtualMemory.lineColor,
         VirtualMemory.surfaceColor,
+        VirtualMemory.irProximity,
+        VirtualMemory.irMessageRightFront,
+        VirtualMemory.irMessageLeftFront,
+        VirtualMemory.irMessageRightRear,
+        VirtualMemory.irMessageLeftRear,
+        VirtualMemory.button,
+        VirtualMemory.chargerState,
     )
 
     watcher = LineFollowerWatcher(control)
 
     # Until typing allows tuple mapping, we need to do the casts below. See: https://github.com/python/typing/issues/1383
     type TExpectedInput = tuple[MemoryProperty[Types.ColorCode | Types.LineColor | Types.SurfaceColor]]
-    type TExpectedOutput = tuple[
-        WatcherSubscription[Types.ColorCode],
-        WatcherSubscription[Types.LineColor],
-        WatcherSubscription[Types.SurfaceColor],
-    ]
+
     async with watcher.watch(typing.cast(TExpectedInput, config)) as subscriptions:
-        yield NativeMemoryRegions(control, typing.cast(TExpectedOutput, subscriptions))
+        yield NativeMemoryRegions(control, typing.cast(_TWatchers, subscriptions))
 
 
 class NativeDriver:

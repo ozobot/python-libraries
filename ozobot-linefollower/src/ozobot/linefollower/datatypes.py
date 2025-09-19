@@ -149,6 +149,26 @@ class ColorCode:
     colors: tuple[Color, ...]
 
 
+@dataclass(frozen=True, kw_only=True)
+class IRMessage:
+    message: int
+    intensity: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class IRProximity:
+    right_front: int
+    left_front: int
+    right_rear: int
+    left_rear: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class TimeOfFlight:
+    distance: float
+    deviation: float
+
+
 class Sample[T]:
     @classmethod
     def now(cls, data: T) -> Sample[T]:

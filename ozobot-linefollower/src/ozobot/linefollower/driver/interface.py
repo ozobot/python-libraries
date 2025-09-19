@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import AbstractAsyncContextManager
 from typing import Protocol, Self
 
-from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, IRMessage, LEDMask, Sample
 
 
 class Deserializable(Protocol):
@@ -43,6 +43,24 @@ class VirtualMemoryRegions(Protocol):
 
     @property
     def intersection(self) -> ReadableWatchableRegion[Direction]: ...
+
+    @property
+    def ir_message_left_front(self) -> ReadableWatchableRegion[IRMessage]: ...
+
+    @property
+    def ir_message_right_front(self) -> ReadableWatchableRegion[IRMessage]: ...
+
+    @property
+    def proximity_right_front(self) -> ReadableWatchableRegion[int]: ...
+
+    @property
+    def proximity_left_front(self) -> ReadableWatchableRegion[int]: ...
+
+    @property
+    def proximity_right_rear(self) -> ReadableWatchableRegion[int]: ...
+
+    @property
+    def proximity_left_rear(self) -> ReadableWatchableRegion[int]: ...
 
 
 class Driver(Protocol):

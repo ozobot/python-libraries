@@ -8,7 +8,7 @@ from ozobot.linefollower.datatypes import ColorCode, Direction, LEDMask, Sample
 from ozobot.linefollower.exceptions import (
     DriverCommandFailedError,
 )
-from ozobot.web import rpctypes as types
+from ozobot.web import rpctypes
 from ozobot.web.conversions import (
     color_from_web,
     direction_to_web,
@@ -45,13 +45,13 @@ class Rpc:
         self._name = robot_name
 
     @typing.overload
-    async def execute[T: pydantic.BaseModel](self, req: types.BaseRequest, response_class: type[T]) -> T: ...
+    async def execute[T: pydantic.BaseModel](self, req: rpctypes.BaseRequest, response_class: type[T]) -> T: ...
 
     @typing.overload
-    async def execute[T](self, req: types.BaseRequest, response_class: pydantic.TypeAdapter[T]) -> T: ...
+    async def execute[T](self, req: rpctypes.BaseRequest, response_class: pydantic.TypeAdapter[T]) -> T: ...
 
     async def execute(
-        self, req: types.BaseRequest, response_class: type[pydantic.BaseModel] | pydantic.TypeAdapter[typing.Any]
+        self, req: rpctypes.BaseRequest, response_class: type[pydantic.BaseModel] | pydantic.TypeAdapter[typing.Any]
     ) -> typing.Any:
         logger.debug("Sending request to web python", rpc=req)
         ret = await _rpcCoroutine(self._name, req.method, req.args)
@@ -77,7 +77,7 @@ class WebDataAccessRead[TProtoFrom: pydantic.BaseModel, TLib]:
         self._from_protocol = from_protocol
 
     async def read(self) -> Sample[TLib]:
-        req = types.MemReadRequest(name=self._property_name)
+        req = rpctypes.MemReadRequest(name=self._property_name)
         resp = await self._rpc.execute(req, self._type)
         return self._convert_from_protocol(resp)
 
@@ -89,7 +89,7 @@ class WebDataAccessRead[TProtoFrom: pydantic.BaseModel, TLib]:
         last_value: TProtoFrom | None = None
 
         while True:
-            req = types.RetrieveFromDataStreamRequest(
+            req = rpctypes.RetrieveFromDataStreamRequest(
                 name=self._property_name, last_value=last_value.model_dump() if last_value else None
             )
             # we need to pass the runtime type to the WatcherResponse, but because it does not work
@@ -129,8 +129,8 @@ class WebDataAccessReadWrite[TProtoFrom: pydantic.BaseModel, TProtoTo, TLib](Web
 
     async def write(self, value: TLib) -> None:
         request_params = self._to_protocol(value)
-        req = types.MemWriteRequest(method=f"set_{self._property_name}", **{self._property_key: request_params})
-        await self._rpc.execute(req, types.BaseResponse)
+        req = rpctypes.MemWriteRequest(method=f"set_{self._property_name}", **{self._property_key: request_params})
+        await self._rpc.execute(req, rpctypes.BaseResponse)
 
 
 class WebMemoryRegions:
@@ -145,7 +145,7 @@ class WebMemoryRegions:
             rpc,
             "lineNavigationSpeed",
             property_key="speed",
-            response_type=types.ValidatedFloat,
+            response_type=rpctypes.ValidatedFloat,
             from_protocol=lambda x: x.root,
             to_protocol=lambda x: x,
         )
@@ -153,22 +153,26 @@ class WebMemoryRegions:
         self.surface_color = WebDataAccessRead(
             rpc,
             "surfaceColor",
-            response_type=types.ColorResponse,
+            response_type=rpctypes.ColorResponse,
             from_protocol=lambda x: color_from_web(x.color),
         )
 
         self.line_color = WebDataAccessRead(
             rpc,
             "lineColor",
-            response_type=types.ColorResponse,
+            response_type=rpctypes.ColorResponse,
             from_protocol=lambda x: color_from_web(x.color),
         )
 
 
 class WebDriver:
+    @property
+    def memory(self) -> WebMemoryRegions:
+        return self._memory
+
     def __init__(self, name: str) -> None:
         self._rpc = Rpc(name)
-        self.memory = WebMemoryRegions(self._rpc)
+        self._memory = WebMemoryRegions(self._rpc)
 
     @classmethod
     @contextlib.asynccontextmanager
@@ -187,25 +191,25 @@ class WebDriver:
         yield cls(name)
 
     async def move(self, distance_m: float, speed_ms: float) -> None:
-        req = types.MoveStraightRequest(distance_m=distance_m, speed_ms=speed_ms)
-        resp = await self._rpc.execute(req, types.BaseExecutionStateResponse)
+        req = rpctypes.MoveStraightRequest(distance_m=distance_m, speed_ms=speed_ms)
+        resp = await self._rpc.execute(req, rpctypes.BaseExecutionStateResponse)
         self._validate_response(req.method, resp)
 
     async def rotate(self, angle_rad: float, angular_speed_radps: float) -> None:
-        req = types.RotateRequest(angle_rad=angle_rad, angular_speed_radps=angular_speed_radps)
-        resp = await self._rpc.execute(req, types.BaseExecutionStateResponse)
+        req = rpctypes.RotateRequest(angle_rad=angle_rad, angular_speed_radps=angular_speed_radps)
+        resp = await self._rpc.execute(req, rpctypes.BaseExecutionStateResponse)
         self._validate_response(req.method, resp)
 
     async def velocity(self, linear_mps: float, angular_radps: float, duration_ms: int) -> None:
-        req = types.VelocityRequest(
+        req = rpctypes.VelocityRequest(
             linear_speed_mps=linear_mps, angular_speed_radps=angular_radps, duration_ms=duration_ms
         )
-        resp = await self._rpc.execute(req, types.BaseExecutionStateResponse)
+        resp = await self._rpc.execute(req, rpctypes.BaseExecutionStateResponse)
         self._validate_response(req.method, resp)
 
     async def play_tone(self, frequency_hz: int, duration_ms: int, volume: int) -> None:
-        req = types.PlayToneRequest(frequency_hz=frequency_hz, duration_ms=duration_ms)
-        resp = await self._rpc.execute(req, types.BaseExecutionStateResponse)
+        req = rpctypes.PlayToneRequest(frequency_hz=frequency_hz, duration_ms=duration_ms)
+        resp = await self._rpc.execute(req, rpctypes.BaseExecutionStateResponse)
         self._validate_response(req.method, resp)
 
     # async def play_audio(self, audio_name: str) -> None:
@@ -213,29 +217,29 @@ class WebDriver:
 
     async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None:
         mask_json = led_to_web_json(mask)
-        req = types.SetLedRequest(mask=mask_json, red=red, green=green, blue=blue, alpha=255)
-        resp = await self._rpc.execute(req, types.BaseCallStatusResponse)
+        req = rpctypes.SetLedRequest(mask=mask_json, red=red, green=green, blue=blue, alpha=255)
+        resp = await self._rpc.execute(req, rpctypes.BaseCallStatusResponse)
         self._validate_response(req.method, resp)
 
     async def line_navigation(self, direction: Direction, follow: bool) -> None:
         way = direction_to_web(direction)
         mode = "Follow" if follow else "DoNotFollow"
 
-        req = types.LineNavigationRequest(direction=way, follow=mode)
-        resp = await self._rpc.execute(req, types.IntersectionResponse)
+        req = rpctypes.LineNavigationRequest(direction=way, follow=mode)
+        resp = await self._rpc.execute(req, rpctypes.IntersectionResponse)
         self._validate_response(req.method, resp)
         intersection = intersection_from_web(resp.intersection)
         await self.memory.intersection_queue.write(Sample.now(intersection))
 
     async def stop_all(self) -> None:
-        req = types.StopExecutionRequest()
-        _ = await self._rpc.execute(req, types.Base)
+        req = rpctypes.StopExecutionRequest()
+        _ = await self._rpc.execute(req, rpctypes.Base)
 
     def _validate_response(
-        self, command_name: str, resp: types.BaseExecutionStateResponse | types.BaseCallStatusResponse
+        self, command_name: str, resp: rpctypes.BaseExecutionStateResponse | rpctypes.BaseCallStatusResponse
     ):
-        if isinstance(resp, types.BaseExecutionStateResponse) and resp.execution_state != "FinishedNormal":
+        if isinstance(resp, rpctypes.BaseExecutionStateResponse) and resp.execution_state != "FinishedNormal":
             raise DriverCommandFailedError(command_name, resp.execution_state)
 
-        if isinstance(resp, types.BaseCallStatusResponse) and resp.call_status != "CallSuccess":
+        if isinstance(resp, rpctypes.BaseCallStatusResponse) and resp.call_status != "CallSuccess":
             raise DriverCommandFailedError(command_name, resp.call_status)

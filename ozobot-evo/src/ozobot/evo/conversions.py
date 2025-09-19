@@ -2,7 +2,7 @@ import typing
 
 from ozobot.evo.exceptions import OzobotDataTypeError
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, IRProximity, LEDMask
 
 
 def _color_from_color_code_number(num: int) -> Color:
@@ -151,3 +151,33 @@ def intersection_bitmap_from_protocol(intersection_mask: Types.IntersectionBitma
                 typing.assert_never(dir)
 
     return intersection
+
+
+def proximity_from_protocol(proximity: Types.IRProximity) -> IRProximity:
+    return IRProximity(
+        right_front=proximity.rightFront,
+        left_front=proximity.leftFront,
+        right_rear=proximity.rightRear,
+        left_rear=proximity.leftRear,
+    )
+
+
+def ir_message_from_protocol(ir_message: Types.IRMessage) -> IRMessage:
+    return IRMessage(
+        message=ir_message.message,
+        intensity=ir_message.intensity,
+    )
+
+
+def charger_state_from_protocol(
+    charger_state: Types.ChargerState,
+) -> typing.Literal["Connected", "Disconnected", "LowPower"]:
+    match charger_state.state:
+        case Types.ChargerStateEnum.Connected:
+            return "Connected"
+        case Types.ChargerStateEnum.Disconnected:
+            return "Disconnected"
+        case Types.ChargerStateEnum.LowPower:
+            return "LowPower"
+        case _:
+            typing.assert_never(charger_state.state)

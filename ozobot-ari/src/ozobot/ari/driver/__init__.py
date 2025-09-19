@@ -1,11 +1,13 @@
 import sys
 import typing
 
-from ozobot.linefollower.datatypes import Color, Direction
-from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
+from ozobot.linefollower.datatypes import Color, Direction, TimeOfFlight
+from ozobot.linefollower.driver.interface import Driver, ReadableWatchableRegion, VirtualMemoryRegions
 
 
-class AriVirtualMemory(VirtualMemoryRegions, typing.Protocol): ...
+class AriVirtualMemory(VirtualMemoryRegions, typing.Protocol):
+    @property
+    def time_of_flight(self) -> ReadableWatchableRegion[TimeOfFlight]: ...
 
 
 class AriDriver(Driver, typing.Protocol):
@@ -37,10 +39,10 @@ class AriDriver(Driver, typing.Protocol):
 
 def get_driver() -> type[AriDriver]:
     if sys.platform == "emscripten":
-        from .web import AriWebDriver
+        from ozobot.ari.driver.web import AriWebDriver
 
         return AriWebDriver
     else:
-        from .native import NativeDriver
+        from ozobot.ari.driver.native import NativeDriver
 
         return NativeDriver

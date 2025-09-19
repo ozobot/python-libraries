@@ -1,4 +1,6 @@
-from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
+from dataclasses import dataclass
+
+from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue
 from ozobot.linefollower.datatypes import Sample
 
 
@@ -15,3 +17,43 @@ async def test_event_watcher() -> None:
         async for sample in reader:
             assert sample.data == 2
             break
+
+
+async def test_watcher_proxy() -> None:
+    @dataclass(frozen=True)
+    class Data:
+        data_int: int
+        data_str: str
+
+    source_queue = EventWatcherQueue(Sample.now(Data(0, "")))
+    source = EventWatcher(source_queue)
+
+    proxy_int = DataWatcherProxy(source, convert=lambda m: m.data_int)
+    proxy_str = DataWatcherProxy(source, convert=lambda m: m.data_str)
+
+    async with proxy_int.watch() as it_int, proxy_str.watch() as it_str:
+        await source_queue.write(
+            Sample(
+                Data(
+                    1,
+                    "hello",
+                ),
+                0,
+            ),
+        )
+
+        await source_queue.write(
+            Sample(
+                Data(
+                    2,
+                    "world",
+                ),
+                0,
+            ),
+        )
+
+        assert (await anext(it_int)).data == 1
+        assert (await anext(it_int)).data == 2
+
+        assert (await anext(it_str)).data == "hello"
+        assert (await anext(it_str)).data == "world"

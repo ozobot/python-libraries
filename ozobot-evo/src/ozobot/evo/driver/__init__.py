@@ -1,12 +1,24 @@
 import sys
 import typing
 
-from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
+from ozobot.linefollower.datatypes import IRMessage
+from ozobot.linefollower.driver.interface import Driver, ReadableWatchableRegion, VirtualMemoryRegions
 
 __all__ = ["get_driver"]
 
 
-class EvoVirtualMemory(VirtualMemoryRegions, typing.Protocol): ...
+class EvoVirtualMemory(VirtualMemoryRegions, typing.Protocol):
+    @property
+    def ir_message_left_rear(self) -> ReadableWatchableRegion[IRMessage]: ...
+
+    @property
+    def ir_message_right_rear(self) -> ReadableWatchableRegion[IRMessage]: ...
+
+    @property
+    def charger(self) -> ReadableWatchableRegion[typing.Literal["Connected", "Disconnected", "LowPower"]]: ...
+
+    @property
+    def button(self) -> ReadableWatchableRegion[bool]: ...
 
 
 class EvoDriver(Driver, typing.Protocol):
@@ -26,10 +38,10 @@ class EvoDriver(Driver, typing.Protocol):
 
 def get_driver() -> type[EvoDriver]:
     if sys.platform == "emscripten":
-        from .web import EvoWebDriver
+        from ozobot.evo.driver.web import EvoWebDriver
 
         return EvoWebDriver
     else:
-        from .native import NativeDriver
+        from ozobot.evo.driver.native import NativeDriver
 
         return NativeDriver
