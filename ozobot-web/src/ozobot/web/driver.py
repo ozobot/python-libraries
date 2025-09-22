@@ -178,6 +178,7 @@ class WebDriver:
     @contextlib.asynccontextmanager
     async def open(
         cls,
+        *,
         name: str | None = None,
         **kwargs,
     ) -> typing.AsyncIterator[typing.Self]:

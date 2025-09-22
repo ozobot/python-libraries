@@ -2,6 +2,7 @@ import typing
 
 from ozobot.evo.exceptions import OzobotDataTypeError
 from ozobot.evo.protocol import Types
+from ozobot.evo.webprotocol import types as webtypes
 from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, IRProximity, LEDMask
 
 
@@ -181,3 +182,10 @@ def charger_state_from_protocol(
             return "LowPower"
         case _:
             typing.assert_never(charger_state.state)
+
+
+def ir_message_from_web(ir_message: webtypes.ReadIrResponse) -> IRMessage:
+    return IRMessage(
+        message=ir_message.message,
+        intensity=ir_message.intensity,
+    )

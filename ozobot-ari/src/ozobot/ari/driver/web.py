@@ -39,13 +39,13 @@ class AriWebMemoryRegions(WebMemoryRegions):
             rpc,
             "readIrLeft",
             response_type=webtypes.ReadIrResponse,
-            from_protocol=lambda m: m.message,
+            from_protocol=conversions.ir_message_from_web,
         )
         self.ir_message_right_front = WebDataAccessRead(
             rpc,
             "readIrRight",
             response_type=webtypes.ReadIrResponse,
-            from_protocol=lambda m: m.message,
+            from_protocol=conversions.ir_message_from_web,
         )
 
         self.time_of_flight = WebDataAccessRead(

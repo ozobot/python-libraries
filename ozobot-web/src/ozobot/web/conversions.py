@@ -1,6 +1,6 @@
 import typing
 
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, Colors, Direction, LEDMask, TDirection, TNamedColor
+from ozobot.linefollower.datatypes import Color, Colors, Direction, LEDMask, TDirection, TNamedColor
 from ozobot.linefollower.exceptions import SingleDirectionRequiredError
 
 
@@ -64,7 +64,7 @@ def intersection_from_web(intersection_json: dict[TDirection, bool]) -> Directio
     return direction
 
 
-def color_from_web(color: TNamedColor) -> ClassifiedColor:
+def color_from_web(color: TNamedColor) -> Color:
     match color:
         case "Green":
             return Colors.GREEN

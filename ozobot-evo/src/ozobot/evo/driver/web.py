@@ -1,3 +1,4 @@
+from ozobot.evo import conversions
 from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.webprotocol import types as webtypes
 from ozobot.linefollower.api.data_access import DataWatcherProxy
@@ -25,25 +26,25 @@ class EvoWebMemoryRegions(WebMemoryRegions):
             rpc,
             "irMessageLeftFront",
             response_type=webtypes.ReadIrResponse,
-            from_protocol=lambda m: m.message,
+            from_protocol=conversions.ir_message_from_web,
         )
         self.ir_message_right_front = WebDataAccessRead(
             rpc,
             "irMessageRightFront",
             response_type=webtypes.ReadIrResponse,
-            from_protocol=lambda m: m.message,
+            from_protocol=conversions.ir_message_from_web,
         )
         self.ir_message_left_rear = WebDataAccessRead(
             rpc,
             "irMessageLeftRear",
             response_type=webtypes.ReadIrResponse,
-            from_protocol=lambda m: m.message,
+            from_protocol=conversions.ir_message_from_web,
         )
         self.ir_message_right_rear = WebDataAccessRead(
             rpc,
             "irMessageRightRear",
             response_type=webtypes.ReadIrResponse,
-            from_protocol=lambda m: m.message,
+            from_protocol=conversions.ir_message_from_web,
         )
 
         self.button = WebDataAccessRead(

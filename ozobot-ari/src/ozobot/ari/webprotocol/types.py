@@ -19,7 +19,7 @@ class TimeOfFlightResponse(rpctypes.BaseResponse):
 
 
 class ProximityResponse(rpctypes.BaseResponse):
-    value: float
+    value: int
     timestamp: float
 
 

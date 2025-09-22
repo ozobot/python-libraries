@@ -28,6 +28,7 @@ class EvoDriver(Driver, typing.Protocol):
     @classmethod
     def open(
         cls,
+        *,
         address: str | None = None,
         id: str | None = None,
         name: str | None = None,
@@ -37,7 +38,10 @@ class EvoDriver(Driver, typing.Protocol):
 
 
 def get_driver() -> type[EvoDriver]:
-    if sys.platform == "emscripten":
+    # don't use if sys.platform directly, mypy will then only check the platform specific branch
+    platform: str = sys.platform
+
+    if platform == "emscripten":
         from ozobot.evo.driver.web import EvoWebDriver
 
         return EvoWebDriver

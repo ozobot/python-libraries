@@ -290,6 +290,7 @@ class NativeDriver:
     @contextlib.asynccontextmanager
     async def open(
         cls,
+        *,
         address: str | None = None,
         id: str | None = None,
         name: str | None = None,
