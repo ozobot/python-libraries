@@ -3,6 +3,8 @@ from unittest.mock import AsyncMock, call
 
 import pytest
 from ozobot.linefollower.api.core import LineFollower
+from ozobot.linefollower.datatypes import ClassifiedColor, Colors
+from ozobot.linefollower.exceptions import InvalidClassifiedColorError
 
 
 @pytest.mark.parametrize(
@@ -65,3 +67,31 @@ async def test_say_number(number: int, expected_sounds: list[str]) -> None:
     await lf.say_number(number)
 
     driver.play_audio.assert_has_calls([call(sound) for sound in expected_sounds])
+
+
+@pytest.mark.parametrize(
+    ["color", "audio_name"],
+    [
+        [Colors.BLACK, "black"],
+        [Colors.BLUE, "blue"],
+        [Colors.GREEN, "green"],
+        [Colors.RED, "red"],
+        [Colors.WHITE, "white"],
+    ],
+    ids=lambda x: repr(x),
+)
+async def test_say_color(color: ClassifiedColor, audio_name: str) -> None:
+    driver = AsyncMock()
+    lf = LineFollower(driver)
+    await lf.say_color(color)
+
+    driver.play_audio.assert_called_with(audio_name)
+
+
+async def test_say_color_invalid() -> None:
+    driver = AsyncMock()
+    lf = LineFollower(driver)
+    with pytest.raises(InvalidClassifiedColorError):
+        await lf.say_color("not a color")  # type: ignore[arg-type]
+
+    driver.play_audio.assert_not_called()

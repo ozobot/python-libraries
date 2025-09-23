@@ -23,3 +23,8 @@ class SingleDirectionRequiredError(LineFollowerError):
 class DriverCommandFailedError(LineFollowerError):
     def __init__(self, command_name: str, reason: str) -> None:
         super().__init__(f"Command failed with an error: {command_name} - {reason}")
+
+
+class InvalidClassifiedColorError(LineFollowerError):
+    def __init__(self, obj: object) -> None:
+        super().__init__(f"Object does not represent a classified color: {obj}")

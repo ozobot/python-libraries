@@ -3,8 +3,9 @@ from __future__ import annotations
 import math
 
 from loguru import logger
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, LEDMask, RawColor, TNote
+from ozobot.linefollower.datatypes import ClassifiedColor, Color, Colors, Direction, LEDMask, RawColor, TNote
 from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
+from ozobot.linefollower.exceptions import InvalidClassifiedColorError
 
 
 class LineFollower:
@@ -113,6 +114,21 @@ class LineFollower:
 
         for sound in sounds:
             await self._driver.play_audio(sound)
+
+    async def say_color(self, color: ClassifiedColor) -> None:
+        match color:
+            case Colors.BLACK:
+                return await self.play_audio("black")
+            case Colors.RED:
+                return await self.play_audio("red")
+            case Colors.GREEN:
+                return await self.play_audio("green")
+            case Colors.BLUE:
+                return await self.play_audio("blue")
+            case Colors.WHITE:
+                return await self.play_audio("white")
+            case _:
+                raise InvalidClassifiedColorError(color)
 
     async def set_led(self, mask: LEDMask, color: Color) -> None:
         logger.debug("Setting LED", mask=mask, color=color)
