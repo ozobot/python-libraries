@@ -1,4 +1,4 @@
-from .actors import dispatcher
+from .actors import ActorDispatcher, set_actor_dispatcher
 from .linefollower import (
     align_with_line,
     emit_note,
@@ -14,7 +14,8 @@ from .linefollower import (
 from .userio import user_io_alert, user_io_print, user_io_prompt
 
 __all__ = [
-    "dispatcher",
+    "ActorDispatcher",
+    "set_actor_dispatcher",
     "move",
     "rotate",
     "set_velocity",

@@ -2,7 +2,7 @@ import asyncio
 import typing
 
 import pytest
-from ozobot.actors.actors import ActorDispatcher
+from ozobot.actors.actors import ActorDispatcher, context, set_actor_dispatcher
 from ozobot.common.exceptions import ActorAlreadyExistsError, ActorNotFoundError, SuitableActorNotFoundError
 
 
@@ -147,8 +147,7 @@ def test_dispatcher_protocol_multiple_names() -> None:
 def test_dispatcher_implicit() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
-    with pytest.raises(SuitableActorNotFoundError):
-        _ = dispatcher.call(_ValueStore.get_val)
+    assert dispatcher.call(_ValueStore.get_val) == "A"
 
 
 async def test_dispatcher_state_consistency_concurrent() -> None:
@@ -264,3 +263,31 @@ def test_dispatcher_mask_all_actors() -> None:
                 dispatcher.call(_ValueStore.get_val)
 
         assert dispatcher.call(_ValueStore.get_val) == "A"
+
+
+def test_default_actors() -> None:
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    dispatcher.add("two", _ValueStore2("b"))
+
+    assert dispatcher.call(_ValueStore.get_val) == "A"
+
+
+def test_global_actor_context() -> None:
+    class Interface:
+        def something(self) -> str:
+            raise NotImplementedError()
+
+    class Impl(Interface):
+        def something(self) -> str:
+            return "foobar"
+
+    d = ActorDispatcher()
+    d.add("actor", Impl())
+    set_actor_dispatcher(d)
+
+    assert d.call(Interface.something) == "foobar"
+
+    set_actor_dispatcher(ActorDispatcher())
+    with pytest.raises(SuitableActorNotFoundError):
+        context.dispatcher.call(Interface.something)

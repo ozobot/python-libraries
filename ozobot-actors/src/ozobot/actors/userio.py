@@ -1,10 +1,9 @@
 import typing
 
-from ozobot.actors.actors import dispatcher
+from ozobot.actors.actors import context
 from ozobot.linefollower.datatypes import Color, Direction
 
 
-# TODO: Move this interface to `ozobot-userio` package
 class UserIoEnabledRobot(typing.Protocol):
     async def user_io_print(self, message: str) -> None: ...
 
@@ -16,14 +15,16 @@ class UserIoEnabledRobot(typing.Protocol):
 
 
 async def user_io_print(message: str) -> None:
-    await dispatcher.acall(UserIoEnabledRobot.user_io_print, message)
+    await context.dispatcher.acall(UserIoEnabledRobot.user_io_print, message)
 
 
 async def user_io_alert(message: str, *, cancellable: bool = False) -> None:
-    await dispatcher.acall(UserIoEnabledRobot.user_io_alert, message, cancellable=cancellable)
+    await context.dispatcher.acall(UserIoEnabledRobot.user_io_alert, message, cancellable=cancellable)
 
 
 async def user_io_prompt[T: (str, float, int, bool, Color, Direction)](
     message: str, _type: type[T], options: list[T], *, cancellable: bool = False
 ) -> T:
-    return await dispatcher.acall(UserIoEnabledRobot.user_io_prompt, message, _type, options, cancellable=cancellable)
+    return await context.dispatcher.acall(
+        UserIoEnabledRobot.user_io_prompt, message, _type, options, cancellable=cancellable
+    )

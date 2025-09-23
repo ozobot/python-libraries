@@ -1,6 +1,7 @@
 import contextlib
 import contextvars
 import typing
+from dataclasses import dataclass
 
 from ozobot.common.exceptions import (
     ActorAlreadyExistsError,
@@ -9,10 +10,19 @@ from ozobot.common.exceptions import (
 )
 
 
+@dataclass(frozen=True)
+class _Masked:
+    actor: typing.Any
+
+
+@dataclass(frozen=True)
+class _Selected:
+    actor: typing.Any
+
+
 class ActorDispatcher:
     def __init__(self) -> None:
-        default: tuple[typing.Any, ...] = tuple()
-        self._stack = contextvars.ContextVar[tuple[typing.Any]]("stack", default=default)
+        self._stack = contextvars.ContextVar[tuple[_Masked | _Selected, ...]]("stack", default=tuple())
         self._actors: dict[str, typing.Any] = {}
 
     def add(self, name: str, actor: typing.Any) -> None:
@@ -26,7 +36,7 @@ class ActorDispatcher:
             if name not in self._actors:
                 raise ActorNotFoundError(name)
 
-        actor_objects = [self._actors[name] for name in names]
+        actor_objects = [_Selected(self._actors[name]) for name in names]
         new_stack = tuple(reversed(actor_objects)) + self._stack.get()
         context_token = self._stack.set(new_stack)
 
@@ -37,21 +47,16 @@ class ActorDispatcher:
 
     @contextlib.contextmanager
     def mask(self, *names: str, all: bool = False) -> typing.Iterator[None]:
+        if all:
+            names = tuple(self._actors.keys())
+
         for name in names:
             if name not in self._actors:
                 raise ActorNotFoundError(name)
 
-        if all:
-            new_stack = []
-        else:
-            # select actors that are in `names` and in the stack at the same time
-            actor_objects = [self._actors[name] for name in names]
-            valid_actor_objects = set(self._stack.get()).intersection(actor_objects)
-            new_stack = [*self._stack.get()]
-            for obj in valid_actor_objects:
-                new_stack.remove(obj)
-
-        context_token = self._stack.set(tuple(new_stack))
+        mask_objects = [_Masked(self._actors[name]) for name in names]
+        new_stack = tuple(reversed(mask_objects)) + self._stack.get()
+        context_token = self._stack.set(new_stack)
 
         try:
             yield
@@ -80,8 +85,17 @@ class ActorDispatcher:
         actor, method = self._find_callable_in_stack(template)
         return await method(*args, **kwargs)
 
+    def _iterate_actors(self) -> typing.Iterator[typing.Any]:
+        masked = set()
+        items_with_defaults = [*self._stack.get(), *[_Selected(a) for a in self._actors.values()]]
+        for item in items_with_defaults:
+            if isinstance(item, _Masked):
+                masked.add(item.actor)
+            elif item.actor not in masked:
+                yield item.actor
+
     def _find_field_in_stack[U](self, _type: type[U], name: str) -> tuple[typing.Any, U]:
-        for actor in self._stack.get():
+        for actor in self._iterate_actors():
             if hasattr(actor, name):
                 _callable = getattr(actor, name)
                 if not callable(_callable):
@@ -93,7 +107,7 @@ class ActorDispatcher:
         self, _type: typing.Callable[typing.Concatenate[typing.Any, P], U]
     ) -> tuple[typing.Any, typing.Callable[P, U]]:
         name = _type.__name__
-        for actor in self._stack.get():
+        for actor in self._iterate_actors():
             if hasattr(actor, name):
                 _callable = getattr(actor, name)
                 if callable(_callable):
@@ -102,4 +116,13 @@ class ActorDispatcher:
         raise SuitableActorNotFoundError(f"missing callable {name}")
 
 
-dispatcher = ActorDispatcher()
+class _Context:
+    def __init__(self, dispatcher: ActorDispatcher) -> None:
+        self.dispatcher = dispatcher
+
+
+context = _Context(ActorDispatcher())
+
+
+def set_actor_dispatcher(dispatcher: ActorDispatcher) -> None:
+    context.dispatcher = dispatcher
