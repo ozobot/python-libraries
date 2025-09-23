@@ -1,10 +1,18 @@
 from ozobot.ari.driver import AriDriver, AriVirtualMemory
 from ozobot.linefollower.api.core import LineFollower
-from ozobot.linefollower.datatypes import Color, Direction
+from ozobot.linefollower.datatypes import Color, Direction, RobotGeometry
 
 
 class Ari(LineFollower):
-    _ari_driver: AriDriver
+    @property
+    def geometry(self) -> RobotGeometry:
+        return RobotGeometry(
+            ticks_per_meter=22281.69,
+            wheel_track=0.0315,
+            wheel_diameter=0.012,
+            encoder_ticks_per_wheel_revolution=16 * 2 * 21 * 15 / 12.0,
+            max_speed_limit=0.3,
+        )
 
     @property
     def memory(self) -> AriVirtualMemory:

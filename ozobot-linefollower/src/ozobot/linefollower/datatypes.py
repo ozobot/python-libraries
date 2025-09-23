@@ -188,3 +188,12 @@ class Sample[T]:
             return False
 
         return other.timestamp == self.timestamp
+
+
+@dataclass(frozen=True, kw_only=True)
+class RobotGeometry:
+    ticks_per_meter: float
+    wheel_track: float
+    wheel_diameter: float
+    encoder_ticks_per_wheel_revolution: float
+    max_speed_limit: float
