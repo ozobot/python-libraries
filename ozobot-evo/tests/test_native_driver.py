@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import math
 import typing
 from unittest.mock import AsyncMock, Mock, patch, sentinel
 
@@ -50,9 +51,9 @@ async def test_open() -> None:
 @pytest.mark.parametrize(
     ["function_name", "command_name", "command_parameters", "rpc_parameters"],
     [
-        ("move", "MoveStraight", [0.2, 0.1], [0.2, 0.1]),
-        ("rotate", "Rotate", [0.1, 0.2], [0.1, 0.2]),
-        ("velocity", "Velocity", [0.1, 0.2, 3], [0.1, 0.2, 3]),
+        ("move", "MoveStraight", [200, 100], [0.2, 0.1]),
+        ("rotate", "Rotate", [90, 10], [math.pi / 2, math.radians(10)]),
+        ("velocity", "Velocity", [100, 10, 3], [0.1, math.radians(10), 3]),
         ("play_tone", "PlayTone", [1, 2, 3], [1, 2, 3]),
         ("play_audio", "ExecuteFile", ["happy"], ["/system/audio/01010100.wav"]),
     ],
@@ -140,9 +141,9 @@ async def test_set_led(command_direction: LEDMask, rpc_direction: Types.LEDsMask
 @pytest.mark.parametrize(
     ["function_name", "command_name", "command_parameters", "rpc_parameters"],
     [
-        ("move", "MoveStraight", [0.2, 0.1], [0.2, 0.1]),
-        ("rotate", "Rotate", [0.1, 0.2], [0.1, 0.2]),
-        ("velocity", "Velocity", [0.1, 0.2, 3], [0.1, 0.2, 3]),
+        ("move", "MoveStraight", [200, 100], [0.2, 0.1]),
+        ("rotate", "Rotate", [90, 10], [math.pi / 2, math.radians(10)]),
+        ("velocity", "Velocity", [100, 10, 3], [0.1, math.radians(10), 3]),
         ("play_tone", "PlayTone", [1, 2, 3], [1, 2, 3]),
         ("play_audio", "ExecuteFile", ["happy"], ["/system/audio/01010100.wav"]),
         (

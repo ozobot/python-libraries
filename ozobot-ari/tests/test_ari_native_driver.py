@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import math
 import typing
 from unittest.mock import ANY, Mock, patch
 
@@ -74,7 +75,7 @@ async def test_open_connection_key() -> None:
         (
             "move",
             "MoveStraight",
-            [0.2, 0.1],
+            [200, 100],
             (
                 request.MoveStraightRequest(id=0, params=request.MoveStraightRequestParams(distance=0.2, speed=0.1)),
                 methods.MOVE_STRAIGHT,
@@ -83,16 +84,24 @@ async def test_open_connection_key() -> None:
         (
             "rotate",
             "Rotate",
-            [0.1, 0.2],
-            (request.RotateRequest(id=0, params=request.RotateRequestParams(angle=0.1, speed=0.2)), methods.ROTATE),
+            [90, 10],
+            (
+                request.RotateRequest(
+                    id=0, params=request.RotateRequestParams(angle=math.pi / 2, speed=math.radians(10))
+                ),
+                methods.ROTATE,
+            ),
         ),
         (
             "velocity",
             "Velocity",
-            [0.1, 0.2, 3000],
+            [100, 10, 3000],
             (
                 request.VelocityRequest(
-                    id=0, params=request.VelocityRequestParams(linear_speed=0.1, rotation_speed=0.2, expiration=3)
+                    id=0,
+                    params=request.VelocityRequestParams(
+                        linear_speed=0.1, rotation_speed=math.radians(10), expiration=3
+                    ),
                 ),
                 methods.VELOCITY,
             ),
@@ -240,7 +249,7 @@ async def test_native_data_access_read() -> None:
     with patch("ozobot.ari.driver.native.Query", query_cls):
         driver = NativeDriver(Mock())
 
-        assert await driver.memory.line_following_speed.read() == Sample(1.23, 0)
+        assert await driver.memory.line_following_speed.read() == Sample(1230, 0)
 
         query_cls_mock.assert_called_with(
             memread.MemReadRequest(
@@ -258,7 +267,7 @@ async def test_native_data_access_write() -> None:
     with patch("ozobot.ari.driver.native.Query", query_cls):
         driver = NativeDriver(Mock())
 
-        await driver.memory.line_following_speed.write(1.23)
+        await driver.memory.line_following_speed.write(1230)
 
         query_cls_mock.assert_called_with(
             memwrite.MemWriteRequest(

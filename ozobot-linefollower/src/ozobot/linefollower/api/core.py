@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import math
-
 from loguru import logger
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
@@ -38,22 +36,25 @@ class LineFollower:
     ) -> None:
         self._driver = driver
 
-    async def move(self, distance_m: float, speed_mps: float) -> None:
-        logger.debug("Moving", distance=distance_m, speed=speed_mps)
-        await self._driver.move(distance_m, speed_mps)
+    async def move(self, distance_mm: float, speed_mmps: float) -> None:
+        logger.debug("Moving", distance=distance_mm, speed=speed_mmps)
+        await self._driver.move(
+            distance_mm,
+            speed_mmps,
+        )
 
     async def rotate(self, angle_deg: float, angular_speed_degps: float) -> None:
         logger.debug("Rotating", angle=angle_deg, anglle_speed=angular_speed_degps)
         await self._driver.rotate(
-            math.radians(angle_deg),
-            math.radians(angular_speed_degps),
+            angle_deg,
+            angular_speed_degps,
         )
 
-    async def set_velocity(self, linear_mps: float, angular_degps: float, duration_s: float) -> None:
-        logger.debug("Setting velocity", linear=linear_mps, angular=angular_degps, duration=duration_s)
+    async def set_velocity(self, linear_mmps: float, angular_degps: float, duration_s: float) -> None:
+        logger.debug("Setting velocity", linear=linear_mmps, angular=angular_degps, duration=duration_s)
         await self._driver.velocity(
-            linear_mps,
-            math.radians(angular_degps),
+            linear_mmps,
+            angular_degps,
             int(duration_s * 1000),
         )
 

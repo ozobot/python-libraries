@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import math
 import typing
 from builtins import issubclass
 from uuid import UUID
@@ -62,8 +63,8 @@ class NativeMemoryRegions:
             request_id,
             "lineFollowingSpeed",
             response_type=memread.MemReadResponseLinearVelocity,
-            from_protocol=lambda r: r.velocity,
-            to_protocol=lambda v: memwrite.MemWriteRequestLineFollowingSpeedParams(value=v),
+            from_protocol=lambda r: r.velocity * 1000,
+            to_protocol=lambda v: memwrite.MemWriteRequestLineFollowingSpeedParams(value=v / 1000),
         )
 
         self.surface_color = NativeDataAccessRead(
@@ -326,27 +327,29 @@ class NativeDriver:
             if rk_task:
                 await rk_task
 
-    async def move(self, distance_m: float, speed_ms: float) -> None:
+    async def move(self, distance_mm: float, speed_mmps: float) -> None:
         req = request.MoveStraightRequest(
             id=self._request_id.get_next(),
-            params=request.MoveStraightRequestParams(distance=distance_m, speed=speed_ms),
+            params=request.MoveStraightRequestParams(distance=distance_mm / 1000, speed=speed_mmps / 1000),
         )
         async with Query(req, methods.MOVE_STRAIGHT).execute(self._executor) as q:
             await self._handle_response("MoveStraight", q.response)
 
-    async def rotate(self, angle_rad: float, angular_speed_radps: float) -> None:
+    async def rotate(self, angle_deg: float, angular_speed_degps: float) -> None:
         req = request.RotateRequest(
             id=self._request_id.get_next(),
-            params=request.RotateRequestParams(angle=angle_rad, speed=angular_speed_radps),
+            params=request.RotateRequestParams(angle=math.radians(angle_deg), speed=math.radians(angular_speed_degps)),
         )
         async with Query(req, methods.ROTATE).execute(self._executor) as q:
             await self._handle_response("Rotate", q.response)
 
-    async def velocity(self, linear_mps: float, angular_radps: float, duration_ms: int) -> None:
+    async def velocity(self, linear_mmps: float, angular_degps: float, duration_ms: int) -> None:
         req = request.VelocityRequest(
             id=self._request_id.get_next(),
             params=request.VelocityRequestParams(
-                linear_speed=linear_mps, rotation_speed=angular_radps, expiration=duration_ms / 1000
+                linear_speed=linear_mmps / 1000,
+                rotation_speed=math.radians(angular_degps),
+                expiration=duration_ms / 1000,
             ),
         )
         async with Query(req, methods.VELOCITY).execute(self._executor) as q:

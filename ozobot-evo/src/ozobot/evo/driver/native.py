@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import math
 import typing
 from uuid import UUID
 
@@ -62,8 +63,8 @@ class NativeMemoryRegions:
         self.line_following_speed = NativeDataAccessReadWrite(
             control,
             VirtualMemory.lineNavigationSpeed,
-            lambda s8_24: float(s8_24),
-            lambda fl: Types.S8_24(fl),
+            lambda s8_24: float(s8_24) * 1000,
+            lambda fl: Types.S8_24(fl / 1000),
         )
         self.color_code = NativeDataWatcher(
             control, VirtualMemory.colorCode, color_code_watcher, conversions.color_code_from_protocol
@@ -214,27 +215,30 @@ class NativeDriver:
             async with create_memory_regions_structure(control) as memory:
                 yield cls(control, memory)
 
-    async def move(self, distance_m: float, speed_ms: float) -> None:
+    async def move(self, distance_mm: float, speed_mmps: float) -> None:
         request_id = self._control.get_next_request_id()
-        async with self._control.MoveStraight(request_id, distance_m, speed_ms) as (
+        async with self._control.MoveStraight(request_id, distance_mm / 1000, speed_mmps / 1000) as (
             resp,
             evts,
         ):
             async with self._cancellation(request_id=request_id):
                 await handle_events("MoveStraight", evts)
 
-    async def rotate(self, angle_rad: float, angular_speed_radps: float) -> None:
+    async def rotate(self, angle_deg: float, angular_speed_degps: float) -> None:
         request_id = self._control.get_next_request_id()
-        async with self._control.Rotate(request_id, angle_rad, angular_speed_radps) as (
+        async with self._control.Rotate(request_id, math.radians(angle_deg), math.radians(angular_speed_degps)) as (
             resp,
             evts,
         ):
             async with self._cancellation(request_id=request_id):
                 await handle_events("Rotate", evts)
 
-    async def velocity(self, linear_mps: float, angular_radps: float, duration_ms: int) -> None:
+    async def velocity(self, linear_mmps: float, angular_degps: float, duration_ms: int) -> None:
         request_id = self._control.get_next_request_id()
-        async with self._control.Velocity(request_id, linear_mps, angular_radps, duration_ms) as (resp, evts):
+        async with self._control.Velocity(request_id, linear_mmps / 1000, math.radians(angular_degps), duration_ms) as (
+            resp,
+            evts,
+        ):
             async with self._cancellation(request_id=request_id):
                 await handle_events("Velocity", evts)
 

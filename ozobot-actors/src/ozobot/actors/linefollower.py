@@ -47,16 +47,16 @@ class _ProxyVirtualMemoryRegions:
 memory: VirtualMemoryRegions = _ProxyVirtualMemoryRegions()
 
 
-async def move(distance_m: float, speed_mps: float) -> None:
-    await context.dispatcher.acall(LineFollower.move, distance_m, speed_mps)
+async def move(distance_mm: float, speed_mmps: float) -> None:
+    await context.dispatcher.acall(LineFollower.move, distance_mm, speed_mmps)
 
 
 async def rotate(angle_deg: float, angular_speed_degps: float) -> None:
     await context.dispatcher.acall(LineFollower.rotate, angle_deg, angular_speed_degps)
 
 
-async def set_velocity(linear_mps: float, angular_degps: float, duration_s: float) -> None:
-    await context.dispatcher.acall(LineFollower.set_velocity, linear_mps, angular_degps, duration_s)
+async def set_velocity(linear_mmps: float, angular_degps: float, duration_s: float) -> None:
+    await context.dispatcher.acall(LineFollower.set_velocity, linear_mmps, angular_degps, duration_s)
 
 
 async def emit_tone(frequency_hz: int, duration_s: float, volume: int) -> None:

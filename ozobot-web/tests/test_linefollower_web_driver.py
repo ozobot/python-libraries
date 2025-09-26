@@ -1,3 +1,4 @@
+import math
 import typing
 from unittest.mock import call, patch
 
@@ -12,7 +13,7 @@ from ozobot.web.driver import WebDriver
     (
         (
             "move",
-            (0.1, 0.2),
+            (100, 200),
             None,
             "MoveStraight",
             (0.1, 0.2),
@@ -20,18 +21,18 @@ from ozobot.web.driver import WebDriver
         ),
         (
             "rotate",
-            (0.1, 0.2),
+            (90, 10),
             None,
             "Rotate",
-            (0.1, 0.2),
+            (math.pi / 2, math.radians(10)),
             rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
         ),
         (
             "velocity",
-            (0.1, 0.2, 1000),
+            (100, 90, 1000),
             None,
             "Velocity",
-            (0.1, 0.2, 1000),
+            (0.1, math.pi / 2, 1000),
             rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
         ),
         (
@@ -95,7 +96,7 @@ async def test_mem_read():
         driver = WebDriver(robot_name)
 
         speed = await driver.memory.line_following_speed.read()
-        assert speed.data == 0.5
+        assert speed.data == 500
 
         mock_coro.assert_awaited_once_with(robot_name, "GetValue_wrapper", ("lineNavigationSpeed",))
 
@@ -106,7 +107,7 @@ async def test_mem_write():
         mock_coro.return_value = rpctypes.BaseCallStatusResponse(call_status="CallSuccess")
         driver = WebDriver(robot_name)
 
-        await driver.memory.line_following_speed.write(0.5)
+        await driver.memory.line_following_speed.write(500)
 
         mock_coro.assert_awaited_once_with(robot_name, "set_lineNavigationSpeed", (0.5,))
 
@@ -174,7 +175,7 @@ async def test_mem_watch_simple_type() -> None:
             samples = [await anext(it) for _ in range(num_data)]
             data = [sample.data for sample in samples]
         assert len(data) == num_data
-        assert data == [0.1, 0.2, 0.3]
+        assert data == [100, 200, 300]
 
         # we expect the calls to contain the property name in the first call
         # and the property name plus previous value in the consequent calls

@@ -1,4 +1,5 @@
 import contextlib
+import math
 import typing
 
 import pydantic
@@ -146,8 +147,8 @@ class WebMemoryRegions:
             "lineNavigationSpeed",
             property_key="speed",
             response_type=rpctypes.ValidatedFloat,
-            from_protocol=lambda x: x.root,
-            to_protocol=lambda x: x,
+            from_protocol=lambda x: x.root * 1000,
+            to_protocol=lambda x: x / 1000,
         )
 
         self.surface_color = WebDataAccessRead(
@@ -191,19 +192,27 @@ class WebDriver:
 
         yield cls(name)
 
-    async def move(self, distance_m: float, speed_ms: float) -> None:
-        req = rpctypes.MoveStraightRequest(distance_m=distance_m, speed_ms=speed_ms)
+    async def move(self, distance_mm: float, speed_mmps: float) -> None:
+        req = rpctypes.MoveStraightRequest(
+            distance_m=distance_mm / 1000,
+            speed_ms=speed_mmps / 1000,
+        )
         resp = await self._rpc.execute(req, rpctypes.BaseExecutionStateResponse)
         self._validate_response(req.method, resp)
 
-    async def rotate(self, angle_rad: float, angular_speed_radps: float) -> None:
-        req = rpctypes.RotateRequest(angle_rad=angle_rad, angular_speed_radps=angular_speed_radps)
+    async def rotate(self, angle_deg: float, angular_speed_degps: float) -> None:
+        req = rpctypes.RotateRequest(
+            angle_rad=math.radians(angle_deg),
+            angular_speed_radps=math.radians(angular_speed_degps),
+        )
         resp = await self._rpc.execute(req, rpctypes.BaseExecutionStateResponse)
         self._validate_response(req.method, resp)
 
-    async def velocity(self, linear_mps: float, angular_radps: float, duration_ms: int) -> None:
+    async def velocity(self, linear_mmps: float, angular_degps: float, duration_ms: int) -> None:
         req = rpctypes.VelocityRequest(
-            linear_speed_mps=linear_mps, angular_speed_radps=angular_radps, duration_ms=duration_ms
+            linear_speed_mps=linear_mmps / 1000,
+            angular_speed_radps=math.radians(angular_degps),
+            duration_ms=duration_ms,
         )
         resp = await self._rpc.execute(req, rpctypes.BaseExecutionStateResponse)
         self._validate_response(req.method, resp)
