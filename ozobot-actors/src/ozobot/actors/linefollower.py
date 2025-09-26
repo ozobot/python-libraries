@@ -4,7 +4,7 @@ import typing
 
 from ozobot.actors.actors import ActorDispatcher, context
 from ozobot.linefollower.api.core import LineFollower
-from ozobot.linefollower.datatypes import Color, Direction, LEDMask, Sample, TNote
+from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, LEDMask, Sample, TNote
 from ozobot.linefollower.driver.interface import ReadableRegion, ReadableWatchableRegion, VirtualMemoryRegions
 
 
@@ -81,6 +81,14 @@ async def set_led(mask: LEDMask, color: Color) -> None:
 
 async def say_number(number: int) -> None:
     await context.dispatcher.acall(LineFollower.say_number, number)
+
+
+async def say_direction(direction: Direction) -> None:
+    await context.dispatcher.acall(LineFollower.say_direction, direction)
+
+
+async def say_color(color: ClassifiedColor) -> None:
+    await context.dispatcher.acall(LineFollower.say_color, color)
 
 
 async def follow_line(direction: Direction) -> None:
