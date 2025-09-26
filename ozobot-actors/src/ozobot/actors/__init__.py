@@ -27,6 +27,7 @@ __all__ = [
     "emit_tone",
     "emit_midi",
     "play_audio",
+    "say_direction",
     "say_number",
     "say_color",
     "set_led",

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing
+
 from loguru import logger
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
@@ -149,6 +151,19 @@ class LineFollower:
                 return await self.play_audio("white")
             case _:
                 raise InvalidClassifiedColorError(color)
+
+    async def say_direction(self, direction: Direction) -> None:
+        match direction:
+            case Direction.LEFT:
+                return await self.play_audio("left")
+            case Direction.RIGHT:
+                return await self.play_audio("right")
+            case Direction.STRAIGHT:
+                return await self.play_audio("forward")
+            case Direction.BACKWARD:
+                return await self.play_audio("backward")
+            case _:
+                typing.reveal_type(direction)
 
     async def set_led(self, mask: LEDMask, color: Color) -> None:
         logger.debug("Setting LED", mask=mask, color=color)
