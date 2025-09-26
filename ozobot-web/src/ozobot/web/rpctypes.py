@@ -3,8 +3,11 @@ from typing import Annotated
 from typing import Literal as L
 
 from annotated_types import Ge, Le
-from ozobot.linefollower.datatypes import TDirection, TNamedColor
+from ozobot.linefollower.datatypes import TNamedColor
 from pydantic import AliasGenerator, BaseModel, BeforeValidator, ConfigDict, RootModel, alias_generators
+
+TWebDirection = L["Straight", "Backward", "Left", "Right"]
+ALLOWED_NAMED_DIRECTIONS = ["Straight", "Backward", "Left", "Right"]
 
 
 class Base(BaseModel):
@@ -96,7 +99,7 @@ class SetLedRequest(BaseRequest):
 
 class LineNavigationRequest(BaseRequest):
     method: L["LineNavigation"] = "LineNavigation"
-    direction: TDirection
+    direction: TWebDirection
     follow: L["Follow", "DoNotFollow"]
 
     @property
@@ -172,7 +175,7 @@ class BaseCallStatusResponse(BaseResponse):
 
 
 class IntersectionResponse(BaseExecutionStateResponse):
-    intersection: dict[TDirection, bool]
+    intersection: dict[TWebDirection, bool]
 
 
 class WatcherResponse[T](RootModel[list[T]]): ...

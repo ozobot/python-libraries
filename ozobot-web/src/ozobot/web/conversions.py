@@ -1,7 +1,8 @@
 import typing
 
-from ozobot.linefollower.datatypes import Color, Colors, Direction, LEDMask, TDirection, TNamedColor
+from ozobot.linefollower.datatypes import Color, Colors, Direction, LEDMask, TNamedColor
 from ozobot.linefollower.exceptions import SingleDirectionRequiredError
+from ozobot.web.rpctypes import ALLOWED_NAMED_DIRECTIONS, TWebDirection
 
 
 def led_to_web_json(mask: LEDMask) -> dict[str, bool]:
@@ -27,15 +28,15 @@ def led_to_web_json(mask: LEDMask) -> dict[str, bool]:
     return mask_json
 
 
-def direction_to_web(direction: Direction) -> TDirection:
+def direction_to_web(direction: Direction) -> TWebDirection:
     if len(direction) != 1:
         raise SingleDirectionRequiredError(direction)
 
     match direction:
         case Direction.STRAIGHT:
-            return "Forward"
+            return "Straight"
         case Direction.BACKWARD:
-            return "Back"
+            return "Backward"
         case Direction.LEFT:
             return "Left"
         case Direction.RIGHT:
@@ -44,14 +45,14 @@ def direction_to_web(direction: Direction) -> TDirection:
             typing.assert_never(direction)
 
 
-def direction_from_web(direction: TDirection) -> Direction:
+def direction_from_web(direction: TWebDirection) -> Direction:
     return intersection_from_web({direction: True})
 
 
-def intersection_from_web(intersection_json: dict[TDirection, bool]) -> Direction:
+def intersection_from_web(intersection_json: dict[TWebDirection, bool]) -> Direction:
     mapping = {
-        "Forward": Direction.STRAIGHT,
-        "Back": Direction.BACKWARD,
+        "Straight": Direction.STRAIGHT,
+        "Backward": Direction.BACKWARD,
         "Left": Direction.LEFT,
         "Right": Direction.RIGHT,
     }
@@ -95,3 +96,7 @@ def color_to_web(color: Color) -> TNamedColor:
         return "White"
     else:
         return "Unknown"
+
+
+def is_named_web_direction(value: typing.Any) -> typing.TypeGuard[TWebDirection]:
+    return value in ALLOWED_NAMED_DIRECTIONS

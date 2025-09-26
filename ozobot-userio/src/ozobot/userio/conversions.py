@@ -56,7 +56,7 @@ def cast_web_prompt_response[T](_type: type[T], value: typing.Any) -> T:
         return typing.cast(T, bool(value))
     elif _type is Color and lf_conversions.is_named_color(value):
         return typing.cast(T, web_conversions.color_from_web(value))
-    elif _type is Direction and lf_conversions.is_named_direction(value):
+    elif _type is Direction and web_conversions.is_named_web_direction(value):
         return typing.cast(T, web_conversions.direction_from_web(value))
     else:
         raise UnexpectedUserIoPromptResponseReceivedError(value, _type)
