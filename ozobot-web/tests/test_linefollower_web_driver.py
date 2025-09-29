@@ -78,7 +78,7 @@ async def test_line_navigation():
     with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
         mock_coro.return_value = rpctypes.IntersectionResponse(
             execution_state="FinishedNormal",
-            intersection={"Straight": True, "Left": False},
+            intersection={"Straight": True, "Left": True, "Right": False},
         )
         driver = WebDriver(robot_name)
 

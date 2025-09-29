@@ -57,7 +57,7 @@ def test_direction_to_web_invalid_length():
         ({"Backward": True}, Direction.BACKWARD),
         ({"Left": True}, Direction.LEFT),
         ({"Right": True}, Direction.RIGHT),
-        ({"Straight": True, "Left": True}, Direction.STRAIGHT | Direction.LEFT),
+        ({"Straight": True, "Left": True, "Right": False}, Direction.STRAIGHT | Direction.LEFT),
         ({}, Direction(0)),
     ],
 )

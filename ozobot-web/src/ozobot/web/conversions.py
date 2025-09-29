@@ -59,7 +59,7 @@ def intersection_from_web(intersection_json: dict[TWebDirection, bool]) -> Direc
 
     direction = Direction(0)
     for name, value in mapping.items():
-        if name in intersection_json:
+        if is_named_web_direction(name) and intersection_json.get(name, False):
             direction |= value
 
     return direction
