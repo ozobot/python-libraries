@@ -50,14 +50,9 @@ async def test_emit_midi(midi_number: int, expected_frequency: int) -> None:
     [
         [0, ["num0"]],
         [1, ["num1"]],
-        [12, ["num12"]],
-        [15, ["num15"]],
-        [45, ["num40", "num5"]],
-        [120, ["num1", "num100", "num20"]],
-        [127, ["num1", "num100", "num20", "num7"]],
-        [127.521, ["num1", "num100", "num20", "num7"]],
-        [-312, ["minus", "num3", "num100", "num12"]],
-        [-845, ["minus", "num8", "num100", "num40", "num5"]],
+        [120, ["num120"]],
+        [-127.521, ["minus", "num127"]],
+        [-112, ["minus", "num112"]],
     ],
     ids=lambda x: repr(x),
 )
@@ -67,6 +62,25 @@ async def test_say_number(number: int, expected_sounds: list[str]) -> None:
     await lf.say_number(number)
 
     driver.play_audio.assert_has_calls([call(sound) for sound in expected_sounds])
+
+
+@pytest.mark.parametrize(
+    ["number"],
+    [
+        [200],
+        [-200],
+        [1000],
+        [-1000],
+    ],
+    ids=lambda x: repr(x),
+)
+async def test_say_number_out_of_range(number: int) -> None:
+    driver = AsyncMock()
+    lf = LineFollower(driver)
+    with pytest.raises(ValueError):
+        await lf.say_number(number)
+
+    driver.play_audio.assert_not_called()
 
 
 @pytest.mark.parametrize(

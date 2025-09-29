@@ -111,28 +111,14 @@ class LineFollower:
 
     async def say_number(self, number: int | float) -> None:
         numint = int(number)
+        if not (-199 < numint < 199):
+            raise ValueError(f"`say_number` only supports range -199 to 199, got {numint}")
+
         sounds: list[str] = []
-
-        if numint == 0:
-            sounds.append("num0")
-
         if numint < 0:
             sounds.append("minus")
-            numint = abs(numint)
 
-        if numint >= 100:
-            hundreds = numint // 100
-            numint %= 100
-            sounds.append(f"num{hundreds}")
-            sounds.append("num100")
-
-        if numint > 19:
-            tens = numint // 10
-            numint %= 10
-            sounds.append(f"num{tens}0")
-
-        if numint > 0:
-            sounds.append(f"num{numint}")
+        sounds.append(f"num{abs(numint)}")
 
         for sound in sounds:
             await self._driver.play_audio(sound)
