@@ -14,8 +14,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ari = ["ozobot-ari"]
-evo = ["ozobot-evo"]
+ari = ["ozobot-ari~=0.1"]
+evo = ["ozobot-evo~=0.1"]
 
 [project.urls]
 Homepage = "https://ozobot.com"
