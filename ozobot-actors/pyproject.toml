@@ -16,6 +16,7 @@ dependencies = [
 [project.optional-dependencies]
 ari = ["ozobot-ari~=0.1"]
 evo = ["ozobot-evo~=0.1"]
+ora = ["ozobot-ora~=1.0.6"]
 
 [project.urls]
 Homepage = "https://ozobot.com"
@@ -34,6 +35,7 @@ ozobot-ari = { workspace = true }
 ozobot-evo = { workspace = true }
 ozobot-common = { workspace = true }
 ozobot-linefollower = { workspace = true }
+ozobot-ora = { url = "https://static.ozobot.com/python-packages/ozobot_ora-1.0.6-92d7fe8529c7c554ec80535db5cd6b0d0c5997e9-py3-none-any.whl" }
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]

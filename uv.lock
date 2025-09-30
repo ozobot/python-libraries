@@ -458,6 +458,9 @@ ari = [
 evo = [
     { name = "ozobot-evo" },
 ]
+ora = [
+    { name = "ozobot-ora" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -466,8 +469,9 @@ requires-dist = [
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-evo", marker = "extra == 'evo'", editable = "ozobot-evo" },
     { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
+    { name = "ozobot-ora", marker = "extra == 'ora'", url = "https://static.ozobot.com/python-packages/ozobot_ora-1.0.6-92d7fe8529c7c554ec80535db5cd6b0d0c5997e9-py3-none-any.whl" },
 ]
-provides-extras = ["ari", "evo"]
+provides-extras = ["ari", "evo", "ora"]
 
 [[package]]
 name = "ozobot-ari"
@@ -595,6 +599,61 @@ requires-dist = [
     { name = "loguru" },
     { name = "ozobot-common", editable = "ozobot-common" },
 ]
+
+[[package]]
+name = "ozobot-ora"
+version = "1.0.6"
+source = { url = "https://static.ozobot.com/python-packages/ozobot_ora-1.0.6-92d7fe8529c7c554ec80535db5cd6b0d0c5997e9-py3-none-any.whl" }
+wheels = [
+    { url = "https://static.ozobot.com/python-packages/ozobot_ora-1.0.6-92d7fe8529c7c554ec80535db5cd6b0d0c5997e9-py3-none-any.whl", hash = "sha256:9f9c1d4a072c9a10eb0a4684254fa9cbedb95b721d0e99946f934dd2d54be691" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alabaster", marker = "extra == 'docs'", specifier = "==0.7.16" },
+    { name = "attrs", marker = "extra == 'test'", specifier = "==23.2.0" },
+    { name = "babel", marker = "extra == 'docs'", specifier = "==2.15.0" },
+    { name = "certifi", marker = "extra == 'docs'", specifier = "==2024.2.2" },
+    { name = "charset-normalizer", marker = "extra == 'docs'", specifier = "==3.3.2" },
+    { name = "docutils", marker = "extra == 'docs'", specifier = "==0.20.1" },
+    { name = "filelock", marker = "extra == 'test'", specifier = "==3.13.1" },
+    { name = "idna", marker = "extra == 'docs'", specifier = "==3.7" },
+    { name = "imagesize", marker = "extra == 'docs'", specifier = "==1.4.1" },
+    { name = "iniconfig", marker = "extra == 'test'", specifier = "==2.0.0" },
+    { name = "jinja2", marker = "extra == 'docs'", specifier = "==3.1.4" },
+    { name = "markdown-it-py", marker = "extra == 'docs'", specifier = "==3.0.0" },
+    { name = "markupsafe", marker = "extra == 'docs'", specifier = "==2.1.5" },
+    { name = "mdit-py-plugins", marker = "extra == 'docs'", specifier = "==0.4.1" },
+    { name = "mdurl", marker = "extra == 'docs'", specifier = "==0.1.2" },
+    { name = "mypy", marker = "extra == 'test'", specifier = "==1.9.0" },
+    { name = "mypy-extensions", marker = "extra == 'test'", specifier = "==1.0.0" },
+    { name = "myst-parser", marker = "extra == 'docs'", specifier = "==3.0.1" },
+    { name = "packaging", marker = "extra == 'docs'", specifier = "==24.0" },
+    { name = "packaging", marker = "extra == 'test'", specifier = "==24.0" },
+    { name = "pluggy", marker = "extra == 'test'", specifier = "==1.4.0" },
+    { name = "pygments", marker = "extra == 'docs'", specifier = "==2.18.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = "==8.1.1" },
+    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = "==0.23.5.post1" },
+    { name = "pytest-mypy", marker = "extra == 'test'", specifier = "==0.10.3" },
+    { name = "pytest-ruff", marker = "extra == 'test'", specifier = "==0.3.1" },
+    { name = "pytest-timeout", marker = "extra == 'test'", specifier = "==2.3.1" },
+    { name = "pyyaml", marker = "extra == 'docs'", specifier = "==6.0.1" },
+    { name = "requests", marker = "extra == 'docs'", specifier = "==2.32.2" },
+    { name = "ruff", marker = "extra == 'test'", specifier = "==0.3.3" },
+    { name = "snowballstemmer", marker = "extra == 'docs'", specifier = "==2.2.0" },
+    { name = "sphinx", marker = "extra == 'docs'", specifier = "==7.3.7" },
+    { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = "==2.0.0" },
+    { name = "sphinxcontrib-applehelp", marker = "extra == 'docs'", specifier = "==1.0.8" },
+    { name = "sphinxcontrib-devhelp", marker = "extra == 'docs'", specifier = "==1.0.6" },
+    { name = "sphinxcontrib-htmlhelp", marker = "extra == 'docs'", specifier = "==2.0.5" },
+    { name = "sphinxcontrib-jquery", marker = "extra == 'docs'", specifier = "==4.1" },
+    { name = "sphinxcontrib-jsmath", marker = "extra == 'docs'", specifier = "==1.0.1" },
+    { name = "sphinxcontrib-qthelp", marker = "extra == 'docs'", specifier = "==1.0.7" },
+    { name = "sphinxcontrib-serializinghtml", marker = "extra == 'docs'", specifier = "==1.1.10" },
+    { name = "typing-extensions", marker = "extra == 'test'", specifier = "==4.10.0" },
+    { name = "urllib3", marker = "extra == 'docs'", specifier = "==2.2.1" },
+]
+provides-extras = ["test", "docs"]
 
 [[package]]
 name = "ozobot-userio"

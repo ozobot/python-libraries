@@ -47,4 +47,9 @@ jobs:
           jwnmulder/websockify 15670 "rabbitmq:5672" 
           
     - name: Run tests
-      run: uv run --all-packages --frozen pytest -vv
+      run: |
+        uv run \
+          --all-packages \
+          --all-extras \
+          --frozen \
+          pytest -vv
