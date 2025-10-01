@@ -189,6 +189,10 @@ class ValidatedBool(RootModel[bool]):
     pass
 
 
+class ValidatedAny(RootModel[typing.Any]):
+    pass
+
+
 class ColorResponse(BaseResponse):
     color: TNamedColor
     timestamp: float

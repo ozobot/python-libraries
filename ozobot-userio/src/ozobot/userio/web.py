@@ -28,7 +28,7 @@ def _handle_ts_cancellation_error() -> typing.Iterator[None]:
 
 
 class UserIoPrintRequest(rpctypes.BaseRequest):
-    method: typing.Literal["UserIoPrint"] = "UserIoPrint"
+    method: typing.Literal["UserIoPrint", "Print"] = "UserIoPrint"
     message: str
 
     @property
@@ -37,7 +37,7 @@ class UserIoPrintRequest(rpctypes.BaseRequest):
 
 
 class UserIoAlertRequest(rpctypes.BaseRequest):
-    method: typing.Literal["UserIoAlert"] = "UserIoAlert"
+    method: typing.Literal["UserIoAlert", "Alert"] = "UserIoAlert"
     message: str
     cancellable: bool
 
@@ -47,7 +47,7 @@ class UserIoAlertRequest(rpctypes.BaseRequest):
 
 
 class UserIoPromptRequest(rpctypes.BaseRequest):
-    method: typing.Literal["UserIoPrompt"] = "UserIoPrompt"
+    method: typing.Literal["UserIoPrompt", "Prompt"] = "UserIoPrompt"
     message: str
     cancellable: bool
     type: TUserIoPrompt
@@ -59,17 +59,22 @@ class UserIoPromptRequest(rpctypes.BaseRequest):
 
 
 class UserIoWebDriverComponent:
-    def __init__(self, rpc: Rpc) -> None:
+    def __init__(self, rpc: Rpc, *, method_prefix: typing.Literal["UserIo", ""] = "UserIo") -> None:
+        """
+        Component that implements RPC on UserIO components. `method_prefix` can be optionally
+        overwritten to use non uniform API that differs between Ari and Browser Terminal.
+        """
         self._rpc = rpc
+        self._method_prefix = method_prefix
 
     async def print(self, message: str) -> None:
-        req = UserIoPrintRequest(message=message)
-        _ = await self._rpc.execute(req, rpctypes.ValidatedBool)
+        req = UserIoPrintRequest(method=f"{self._method_prefix}Print", message=message)
+        _ = await self._rpc.execute(req, rpctypes.ValidatedAny)
 
     async def alert(self, message: str, *, cancellable: bool = False) -> None:
-        req = UserIoAlertRequest(message=message, cancellable=cancellable)
+        req = UserIoAlertRequest(method=f"{self._method_prefix}Alert", message=message, cancellable=cancellable)
         with _handle_ts_cancellation_error():
-            _ = await self._rpc.execute(req, rpctypes.ValidatedBool)
+            _ = await self._rpc.execute(req, rpctypes.ValidatedAny)
 
     async def prompt[T: (str, float, int, bool, Color, Direction)](
         self,
@@ -82,7 +87,13 @@ class UserIoWebDriverComponent:
         type_name = conversions.get_type_name(_type)
         protocol_options = conversions.get_type_options(options, _type)
 
-        req = UserIoPromptRequest(message=message, type=type_name, options=protocol_options, cancellable=cancellable)
+        req = UserIoPromptRequest(
+            method=f"{self._method_prefix}Prompt",
+            message=message,
+            type=type_name,
+            options=protocol_options,
+            cancellable=cancellable,
+        )
         response_model: pydantic.TypeAdapter[str | float | bool] = pydantic.TypeAdapter(str | float | bool)
         with _handle_ts_cancellation_error():
             response = await self._rpc.execute(req, response_model)
