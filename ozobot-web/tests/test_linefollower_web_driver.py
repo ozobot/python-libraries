@@ -84,7 +84,7 @@ async def test_line_navigation():
 
         await driver.line_navigation(Direction.STRAIGHT, follow=True)
         intersection = await driver.memory.intersection.read()
-        assert intersection.data == Direction.STRAIGHT | Direction.LEFT
+        assert intersection.value == Direction.STRAIGHT | Direction.LEFT
 
         mock_coro.assert_awaited_once_with(robot_name, "LineNavigation", ("Straight", "Follow"))
 
@@ -96,7 +96,7 @@ async def test_mem_read():
         driver = WebDriver(robot_name)
 
         speed = await driver.memory.line_following_speed.read()
-        assert speed.data == 500
+        assert speed.value == 500
 
         mock_coro.assert_awaited_once_with(robot_name, "GetValue_wrapper", ("lineNavigationSpeed",))
 
@@ -133,7 +133,7 @@ async def test_mem_watch_structure() -> None:
 
         async with driver.memory.line_color.watch() as it:
             samples = [await anext(it) for _ in range(num_data)]
-            data = [sample.data for sample in samples]
+            data = [sample.value for sample in samples]
         assert len(data) == num_data
         assert data == [
             Colors.RED,
@@ -173,7 +173,7 @@ async def test_mem_watch_simple_type() -> None:
 
         async with driver.memory.line_following_speed.watch() as it:
             samples = [await anext(it) for _ in range(num_data)]
-            data = [sample.data for sample in samples]
+            data = [sample.value for sample in samples]
         assert len(data) == num_data
         assert data == [100, 200, 300]
 

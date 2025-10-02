@@ -14,5 +14,5 @@ def test_sample_from_protocol() -> None:
     sample = sample_from_protocol(_Data(1, 2), lambda d: d.val1 + d.val2)
 
     assert isinstance(sample, Sample)
-    assert sample.data == 3
+    assert sample.value == 3
     assert sample.timestamp == datetime.datetime.fromtimestamp(1)

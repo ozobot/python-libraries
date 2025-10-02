@@ -59,7 +59,7 @@ class DataWatcherProxy[T, U]:
 
     async def read(self) -> Sample[U]:
         sample = await self._watcher.read()
-        return Sample(self._convert(sample.data), sample.timestamp)
+        return Sample(self._convert(sample.value), sample.timestamp)
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
@@ -67,6 +67,6 @@ class DataWatcherProxy[T, U]:
 
             async def _reader_converted() -> typing.AsyncIterator[Sample[U]]:
                 async for sample in reader:
-                    yield Sample(self._convert(sample.data), sample.timestamp)
+                    yield Sample(self._convert(sample.value), sample.timestamp)
 
             yield _reader_converted()

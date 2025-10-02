@@ -8,14 +8,14 @@ async def test_event_watcher() -> None:
     q = EventWatcherQueue[int](Sample(0, 0))
     w = EventWatcher[int](q)
 
-    assert (await w.read()).data == 0
+    assert (await w.read()).value == 0
     await q.write(Sample(1, 0))
-    assert (await w.read()).data == 1
+    assert (await w.read()).value == 1
 
     async with w.watch() as reader:
         await q.write(Sample(2, 0))
         async for sample in reader:
-            assert sample.data == 2
+            assert sample.value == 2
             break
 
 
@@ -52,8 +52,8 @@ async def test_watcher_proxy() -> None:
             ),
         )
 
-        assert (await anext(it_int)).data == 1
-        assert (await anext(it_int)).data == 2
+        assert (await anext(it_int)).value == 1
+        assert (await anext(it_int)).value == 2
 
-        assert (await anext(it_str)).data == "hello"
-        assert (await anext(it_str)).data == "world"
+        assert (await anext(it_str)).value == "hello"
+        assert (await anext(it_str)).value == "world"

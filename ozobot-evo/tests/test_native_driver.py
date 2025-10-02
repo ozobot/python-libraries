@@ -205,7 +205,7 @@ async def test_native_data_access_read() -> None:
 
     ret = await da.read()
     assert isinstance(ret, Sample)
-    assert ret.data == 1
+    assert ret.value == 1
 
     cmd_mock.assert_called_once_with(property.address, property.size)
 
@@ -261,12 +261,12 @@ async def test_native_data_watcher() -> None:
         samples = [await anext(it) for _ in range(2)]
 
         assert all([isinstance(s, Sample) for s in samples])
-        values = [s.data for s in samples]
+        values = [s.value for s in samples]
         assert values == [10, 20]
 
     # test reading
     ret = await da.read()
     assert isinstance(ret, Sample)
-    assert ret.data == 1
+    assert ret.value == 1
 
     cmd_mock.assert_called_once_with(property.address, property.size)

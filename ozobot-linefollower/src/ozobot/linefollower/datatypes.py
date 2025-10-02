@@ -174,8 +174,8 @@ class Sample[T]:
     def now(cls, data: T) -> Sample[T]:
         return Sample(data, datetime.datetime.now())
 
-    def __init__(self, data: T, timestamp: datetime.datetime | float) -> None:
-        self.data = data
+    def __init__(self, value: T, timestamp: datetime.datetime | float) -> None:
+        self.value = value
         self.timestamp = (
             timestamp if isinstance(timestamp, datetime.datetime) else datetime.datetime.fromtimestamp(timestamp)
         )
@@ -184,7 +184,7 @@ class Sample[T]:
         if not isinstance(other, Sample):
             return False
 
-        if other.data != self.data:
+        if other.value != self.value:
             return False
 
         return other.timestamp == self.timestamp
