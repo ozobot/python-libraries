@@ -1,8 +1,9 @@
 import sys
 import typing
 
-from ozobot.linefollower.datatypes import Color, Direction, TimeOfFlight
+from ozobot.linefollower.datatypes import TimeOfFlight
 from ozobot.linefollower.driver.interface import Driver, ReadableWatchableRegion, VirtualMemoryRegions
+from ozobot.userio.interface import UserIoInterface
 
 
 class AriVirtualMemory(VirtualMemoryRegions, typing.Protocol):
@@ -10,7 +11,7 @@ class AriVirtualMemory(VirtualMemoryRegions, typing.Protocol):
     def time_of_flight(self) -> ReadableWatchableRegion[TimeOfFlight]: ...
 
 
-class AriDriver(Driver, typing.Protocol):
+class AriDriver(Driver, UserIoInterface, typing.Protocol):
     @property
     def memory(self) -> AriVirtualMemory: ...
 
@@ -23,19 +24,6 @@ class AriDriver(Driver, typing.Protocol):
         name: str | None = None,
         connection_key: str | None = None,
     ) -> typing.AsyncContextManager[typing.Self]: ...
-
-    async def user_io_print(self, message: str) -> None: ...
-
-    async def user_io_alert(self, message: str, *, cancellable: bool = False) -> None: ...
-
-    async def user_io_prompt[T: (str, float, int, bool, Color, Direction)](
-        self,
-        message: str,
-        _type: type[T],
-        options: list[T],
-        *,
-        cancellable: bool = False,
-    ) -> T: ...
 
 
 def get_driver() -> type[AriDriver]:
