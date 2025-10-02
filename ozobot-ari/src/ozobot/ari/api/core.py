@@ -15,7 +15,7 @@ class Ari(LineFollower):
         )
 
     @property
-    def memory(self) -> AriVirtualMemory:
+    def data(self) -> AriVirtualMemory:
         return self._ari_driver.memory
 
     def __init__(self, driver: AriDriver) -> None:

@@ -17,7 +17,7 @@ class Evo(LineFollower):
         )
 
     @property
-    def memory(self) -> EvoVirtualMemory:
+    def data(self) -> EvoVirtualMemory:
         return self._evo_driver.memory
 
     def __init__(self, driver: EvoDriver) -> None:

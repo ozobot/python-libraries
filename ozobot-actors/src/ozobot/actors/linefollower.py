@@ -44,7 +44,7 @@ class _ProxyVirtualMemoryRegions:
         raise AttributeError(f"'memory' has no attribute '{name}'")
 
 
-memory: VirtualMemoryRegions = _ProxyVirtualMemoryRegions()
+data: VirtualMemoryRegions = _ProxyVirtualMemoryRegions()
 
 
 async def move(distance_mm: float, speed_mmps: float) -> None:
