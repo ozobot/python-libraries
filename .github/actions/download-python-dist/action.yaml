@@ -1,0 +1,17 @@
+name: Download Python package dist
+inputs:
+  package-name:
+    description: "Python package name"
+    required: true
+runs:
+  steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: alldist/
+
+    - name: Copy specific package dist to upload directory
+      run: |
+        mkdir dist/
+        cp alldist/${{ inputs.package-name }}-* dist/
