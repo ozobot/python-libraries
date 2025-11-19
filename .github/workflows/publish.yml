@@ -3,7 +3,7 @@ name: Build and publish
 on:
   push:
     tags:
-      - "*/*"
+      - "*-*"
 
 jobs:
   build:
@@ -39,11 +39,11 @@ jobs:
     - id: check
       run: |
         ref="${{ github.ref_name }}"
-        if [[ "$ref" =~ ^([a-zA-Z0-9_-]+)/([0-9]+\.[0-9]+\.[0-9]+rc[0-9]+)$ ]]; then
+        if   [[ "$ref" =~ ^([a-zA-Z0-9_-]+)-v([0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+)$ ]]; then
           echo "has-release-tag=false" >> $GITHUB_OUTPUT
           echo "has-tag=true" >> $GITHUB_OUTPUT
           package_name="${BASH_REMATCH[1]}"
-        elif [[ "$ref" =~ ^([a-zA-Z0-9_-]+)/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+        elif [[ "$ref" =~ ^([a-zA-Z0-9_-]+)-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
           echo "has-release-tag=true" >> $GITHUB_OUTPUT
           echo "has-tag=true" >> $GITHUB_OUTPUT
           package_name="${BASH_REMATCH[1]}"

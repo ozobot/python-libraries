@@ -30,9 +30,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 source = "vcs"
-tag-pattern = ".*/v(?P<version>.*)"
 
 [tool.hatch.version.raw-options]
-git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--match', 'ble/v*']
 version_scheme = "no-guess-dev"
 root = "../"
