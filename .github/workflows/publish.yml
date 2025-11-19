@@ -68,14 +68,18 @@ jobs:
       
     permissions:
       id-token: write
+      contents: read
 
     steps:
     - uses: actions/checkout@v4
-    - uses: ./.github/actions/download-python-dist
+    - name: Download artifact ${{ needs.check-tag.outputs.package-name }}
+      uses: ./.github/actions/download-python-dist
+      with:
+        package-name: ${{ needs.check-tag.outputs.package-name }}
     - name: Publish distribution package
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        package-name: ${{ needs.check-tag.outputs.package-name }}
+        repository-url: https://test.pypi.org/legacy/
         verbose: true
   publish-to-pypi:
     needs: [build, check-tag]
@@ -86,15 +90,18 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/p/${{ needs.check-tag.outputs.package-name }}
-      
+
     permissions:
       id-token: write
+      contents: read
 
     steps:
     - uses: actions/checkout@v4
-    - uses: ./.github/actions/download-python-dist
+    - name: Download artifact ${{ needs.check-tag.outputs.package-name }}
+      uses: ./.github/actions/download-python-dist
+      with:
+        package-name: ${{ needs.check-tag.outputs.package-name }}
     - name: Publish distribution package
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        repository-url: https://test.pypi.org/legacy
         verbose: true

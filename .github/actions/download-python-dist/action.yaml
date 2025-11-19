@@ -4,6 +4,7 @@ inputs:
     description: "Python package name"
     required: true
 runs:
+  using: composite
   steps:
     - name: Download all the dists
       uses: actions/download-artifact@v4
@@ -11,7 +12,23 @@ runs:
         name: python-package-distributions
         path: alldist/
 
-    - name: Copy specific package dist to upload directory
+    - name: Copy ${{ inputs.package-name }} dist to upload directory
+      shell: bash
+      env:
+        package_name: ${{ inputs.package-name }}
+        file_name: ozobot_${{ inputs.package-name }}-
       run: |
+        echo "Downloaded artifacts"
+        ls -1q alldist/*
+
+        echo "Add fixed package name prefix ${package_name} -> ${file_name}"
         mkdir dist/
-        cp alldist/${{ inputs.package-name }}-* dist/
+        cp alldist/${file_name}* dist/
+        num_whl=$(ls -1q dist/*.whl | wc -l)
+        num_sdist=$(ls -1q dist/*.tar.gz | wc -l)
+
+        if [ "$num_whl" != "1" ] || [ "$num_sdist" != "1" ]; then
+          echo "Expected a single wheel file and a single sdist to be uploaded, got: "
+          ls -1q dist/
+          exit 1
+        fi
