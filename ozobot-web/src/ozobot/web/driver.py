@@ -241,10 +241,6 @@ class WebDriver:
         intersection = intersection_from_web(resp.intersection)
         await self.memory.intersection_queue.write(Sample.now(intersection))
 
-    async def stop_all(self) -> None:
-        req = rpctypes.StopExecutionRequest()
-        _ = await self._rpc.execute(req, rpctypes.Base)
-
     def _validate_response(
         self, command_name: str, resp: rpctypes.BaseExecutionStateResponse | rpctypes.BaseCallStatusResponse
     ):

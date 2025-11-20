@@ -43,7 +43,6 @@ from ozobot.web.driver import WebDriver
             (440, 500),
             rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
         ),
-        ("stop_all", (), None, "StopExecution", (), rpctypes.Base()),
         (
             "set_led",
             (LEDMask.TOP | LEDMask.FRONT_LEFT, 255, 128, 0),

@@ -107,14 +107,6 @@ class LineNavigationRequest(BaseRequest):
         return (self.direction, self.follow)
 
 
-class StopExecutionRequest(BaseRequest):
-    method: L["StopExecution"] = "StopExecution"
-
-    @property
-    def args(self) -> tuple:
-        return tuple()
-
-
 class MemReadRequest(BaseRequest):
     method: L["GetValue_wrapper"] = "GetValue_wrapper"
     name: str
