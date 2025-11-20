@@ -17,6 +17,5 @@ class EvoHandle:
     async def connect(self) -> typing.AsyncIterator[Evo]:
         Driver = get_driver()
         async with Driver.open(address=self.address, id=self.id, name=self.name) as driver:
-            await driver.stop_all()
             evo = Evo(driver)
             yield evo

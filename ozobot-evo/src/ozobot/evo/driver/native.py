@@ -51,6 +51,11 @@ type _TWatchers = tuple[
 ]
 
 
+async def _stop_execution(control: AsyncControl, *, request_id: int) -> None:
+    async with control.StopExecution(request_id) as (resp, _):
+        pass  # there's nothing to check in the StopExecution response
+
+
 class NativeMemoryRegions:
     def __init__(self, control: AsyncControl, watchers: _TWatchers) -> None:
         color_code_watcher, line_color_watcher, surface_color_watcher, proximity_watcher = watchers[:4]
@@ -212,6 +217,8 @@ class NativeDriver:
         async with open_client(address=address, id=id, name=name) as client:
             char = client.get_characteristic(_SERVICE_UUID, _CHARACTERISTIC_UUID)
             control = AsyncControl(char)
+            await _stop_execution(control, request_id=0)
+
             async with create_memory_regions_structure(control) as memory:
                 yield cls(control, memory)
 
@@ -282,17 +289,10 @@ class NativeDriver:
         sample = Sample.now(intersection)
         await self.memory.intersection_queue.write(sample)
 
-    async def stop_all(self) -> None:
-        await self._stop_execution(0)
-
-    async def _stop_execution(self, request_id: int) -> None:
-        async with self._control.StopExecution(request_id) as (resp, _):
-            pass  # there's nothing to check in the StopExecution response
-
     @contextlib.asynccontextmanager
     async def _cancellation(self, *, request_id: int) -> typing.AsyncIterator[None]:
         try:
             yield
         except BaseException as e:
-            await self._stop_execution(request_id)
+            await _stop_execution(self._control, request_id=request_id)
             raise e

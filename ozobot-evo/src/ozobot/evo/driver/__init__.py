@@ -34,8 +34,6 @@ class EvoDriver(Driver, typing.Protocol):
         name: str | None = None,
     ) -> typing.AsyncContextManager[typing.Self]: ...
 
-    async def stop_all(self): ...
-
 
 def get_driver() -> type[EvoDriver]:
     # don't use if sys.platform directly, mypy will then only check the platform specific branch
