@@ -24,8 +24,11 @@ class ReadableWritableRegion[T](ReadableRegion, Protocol):
     async def write(self, data: T) -> None: ...
 
 
-class ReadableWatchableRegion[T](ReadableRegion[T], Protocol):
+class WatchableRegion[T](Protocol):
     def watch(self) -> AbstractAsyncContextManager[AsyncIterator[Sample[T]]]: ...
+
+
+class ReadableWatchableRegion[T](ReadableRegion[T], WatchableRegion[T], Protocol): ...
 
 
 class VirtualMemoryRegions(Protocol):
@@ -42,7 +45,7 @@ class VirtualMemoryRegions(Protocol):
     def surface_color(self) -> ReadableWatchableRegion[Color]: ...
 
     @property
-    def intersection(self) -> ReadableWatchableRegion[Direction]: ...
+    def intersection(self) -> WatchableRegion[Direction]: ...
 
     @property
     def ir_message_left_front(self) -> ReadableWatchableRegion[IRMessage]: ...
@@ -55,12 +58,6 @@ class VirtualMemoryRegions(Protocol):
 
     @property
     def proximity_left_front(self) -> ReadableWatchableRegion[int]: ...
-
-    @property
-    def proximity_right_rear(self) -> ReadableWatchableRegion[int]: ...
-
-    @property
-    def proximity_left_rear(self) -> ReadableWatchableRegion[int]: ...
 
 
 class Driver(Protocol):

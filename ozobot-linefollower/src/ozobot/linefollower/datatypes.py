@@ -177,7 +177,7 @@ class Sample[T]:
     def __init__(self, value: T, timestamp: datetime.datetime | float) -> None:
         self.value = value
         self.timestamp = (
-            timestamp if isinstance(timestamp, datetime.datetime) else datetime.datetime.fromtimestamp(timestamp)
+            timestamp if isinstance(timestamp, datetime.datetime) else datetime.datetime.fromtimestamp(timestamp / 1000)
         )
 
     def __eq__(self, other: object) -> bool:

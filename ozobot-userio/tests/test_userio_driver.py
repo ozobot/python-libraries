@@ -15,7 +15,7 @@ from ozobot.web.driver import Rpc
             "print",
             {"message": "hello world!"},
             None,
-            "UserIoPrint",
+            "userIoPrint",
             ("hello world!",),
             rpctypes.ValidatedBool(root=True),
         ),
@@ -23,7 +23,7 @@ from ozobot.web.driver import Rpc
             "alert",
             {"message": "hello world!", "cancellable": True},
             None,
-            "UserIoAlert",
+            "userIoAlert",
             ("hello world!", True),
             rpctypes.ValidatedBool(root=True),
         ),
@@ -118,9 +118,13 @@ async def test_commands(
                 Colors.RED,
             ),
             Colors.BLUE,
-            "surfaceColor",
-            ["Black", "Blue", "Red"],
-            "Blue",
+            "color",
+            [
+                {"red": 0, "green": 0, "blue": 0, "name": "Black"},
+                {"red": 0, "green": 0, "blue": 1, "name": "Blue"},
+                {"red": 1, "green": 0, "blue": 0, "name": "Red"},
+            ],
+            {"red": 0, "green": 0, "blue": 1, "name": "Blue"},
         ),
         (
             Direction,
@@ -153,4 +157,4 @@ async def test_user_io_prompt(
         result = await driver.prompt(message, method_type, method_options, cancellable=False)
         assert result == method_result
 
-        mock_coro.assert_awaited_once_with(robot_name, "UserIoPrompt", (message, rpc_type, rpc_options, False))
+        mock_coro.assert_awaited_once_with(robot_name, "userIoPrompt", (message, rpc_type, rpc_options, False))

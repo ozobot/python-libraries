@@ -9,7 +9,7 @@ def test_sample_from_protocol() -> None:
         def __init__(self, val1: int, val2: int) -> None:
             self.val1 = val1
             self.val2 = val2
-            self.timestamp = 1
+            self.timestamp = 1000
 
     sample = sample_from_protocol(_Data(1, 2), lambda d: d.val1 + d.val2)
 

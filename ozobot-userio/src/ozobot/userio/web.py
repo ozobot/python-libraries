@@ -8,10 +8,9 @@ from ozobot.linefollower.datatypes import (
     Color,
     Direction,
     TDirection,
-    TNamedColor,
 )
 from ozobot.userio import conversions
-from ozobot.userio.datatypes import TUserIoPrompt
+from ozobot.userio.datatypes import TWebUserIoPrompt
 from ozobot.web import rpctypes
 from ozobot.web.driver import Rpc
 
@@ -28,7 +27,7 @@ def _handle_ts_cancellation_error() -> typing.Iterator[None]:
 
 
 class UserIoPrintRequest(rpctypes.BaseRequest):
-    method: typing.Literal["UserIoPrint", "Print"] = "UserIoPrint"
+    method: typing.Literal["userIoPrint"] = "userIoPrint"
     message: str
 
     @property
@@ -37,7 +36,7 @@ class UserIoPrintRequest(rpctypes.BaseRequest):
 
 
 class UserIoAlertRequest(rpctypes.BaseRequest):
-    method: typing.Literal["UserIoAlert", "Alert"] = "UserIoAlert"
+    method: typing.Literal["userIoAlert"] = "userIoAlert"
     message: str
     cancellable: bool
 
@@ -47,32 +46,30 @@ class UserIoAlertRequest(rpctypes.BaseRequest):
 
 
 class UserIoPromptRequest(rpctypes.BaseRequest):
-    method: typing.Literal["UserIoPrompt", "Prompt"] = "UserIoPrompt"
+    method: typing.Literal["userIoPrompt"] = "userIoPrompt"
     message: str
     cancellable: bool
-    type: TUserIoPrompt
-    options: list[str | int | float | bool | TNamedColor | TDirection]
+    type: TWebUserIoPrompt
+    options: list[str | int | float | bool | rpctypes.ClassifiedColor | TDirection]
 
     @property
     def args(self) -> tuple:
-        return (self.message, self.type, self.options, self.cancellable)
+        serialized_options = [
+            opt.model_dump() if isinstance(opt, rpctypes.ClassifiedColor) else opt for opt in self.options
+        ]
+        return (self.message, self.type, serialized_options, self.cancellable)
 
 
 class UserIoWebDriverComponent:
-    def __init__(self, rpc: Rpc, *, method_prefix: typing.Literal["UserIo", ""] = "UserIo") -> None:
-        """
-        Component that implements RPC on UserIO components. `method_prefix` can be optionally
-        overwritten to use non uniform API that differs between Ari and Browser Terminal.
-        """
+    def __init__(self, rpc: Rpc) -> None:
         self._rpc = rpc
-        self._method_prefix = method_prefix
 
     async def print(self, message: str) -> None:
-        req = UserIoPrintRequest(method=f"{self._method_prefix}Print", message=message)
+        req = UserIoPrintRequest(message=message)
         _ = await self._rpc.execute(req, rpctypes.ValidatedAny)
 
     async def alert(self, message: str, *, cancellable: bool = False) -> None:
-        req = UserIoAlertRequest(method=f"{self._method_prefix}Alert", message=message, cancellable=cancellable)
+        req = UserIoAlertRequest(message=message, cancellable=cancellable)
         with _handle_ts_cancellation_error():
             _ = await self._rpc.execute(req, rpctypes.ValidatedAny)
 
@@ -84,17 +81,18 @@ class UserIoWebDriverComponent:
         *,
         cancellable: bool = False,
     ) -> T:
-        type_name = conversions.get_type_name(_type)
-        protocol_options = conversions.get_type_options(options, _type)
+        type_name = conversions.get_web_type_name(_type)
+        protocol_options = conversions.get_web_type_options(options, _type)
 
         req = UserIoPromptRequest(
-            method=f"{self._method_prefix}Prompt",
             message=message,
             type=type_name,
             options=protocol_options,
             cancellable=cancellable,
         )
-        response_model: pydantic.TypeAdapter[str | float | bool] = pydantic.TypeAdapter(str | float | bool)
+        response_model: pydantic.TypeAdapter[str | float | bool | rpctypes.ClassifiedColor] = pydantic.TypeAdapter(
+            str | float | bool | rpctypes.ClassifiedColor
+        )
         with _handle_ts_cancellation_error():
             response = await self._rpc.execute(req, response_model)
         return conversions.cast_web_prompt_response(_type, response)

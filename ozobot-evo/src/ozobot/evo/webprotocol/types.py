@@ -3,27 +3,13 @@ import typing
 from ozobot.web import rpctypes
 
 
-class ExecuteFileRequest(rpctypes.BaseRequest):
-    method: typing.Literal["ExecuteFile"] = "ExecuteFile"
+class PlayAudioRequest(rpctypes.BaseRequest):
+    method: typing.Literal["playAudio"] = "playAudio"
     filename: str
 
     @property
     def args(self) -> tuple:
         return (self.filename,)
-
-
-class ProximityResponse(rpctypes.BaseResponse):
-    left_rear: int
-    left_front: int
-    right_rear: int
-    right_front: int
-    timestamp: float
-
-
-class ReadIrResponse(rpctypes.BaseResponse):
-    message: int
-    intensity: int
-    timestamp: float
 
 
 class ButtonResponse(rpctypes.BaseResponse):

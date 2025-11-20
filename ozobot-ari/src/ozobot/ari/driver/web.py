@@ -3,52 +3,14 @@ from ozobot.ari.webprotocol import types as webtypes
 from ozobot.linefollower.datatypes import Color, Direction
 from ozobot.userio.web import UserIoWebDriverComponent
 from ozobot.web import rpctypes
-from ozobot.web.driver import Rpc, WebDataAccessRead, WebDriver, WebMemoryRegions
+from ozobot.web.driver import Rpc, WebDataAccessReadWatch, WebDriver, WebMemoryRegions
 
 
 class AriWebMemoryRegions(WebMemoryRegions):
     def __init__(self, rpc: Rpc) -> None:
         super().__init__(rpc)
 
-        self.proximity_left_front = WebDataAccessRead(
-            rpc,
-            "proximityLeft",
-            response_type=webtypes.ProximityResponse,
-            from_protocol=lambda m: m.value,
-        )
-        self.proximity_right_front = WebDataAccessRead(
-            rpc,
-            "proximityRight",
-            response_type=webtypes.ProximityResponse,
-            from_protocol=lambda m: m.value,
-        )
-        self.proximity_left_rear = WebDataAccessRead(
-            rpc,
-            "proximityEdgeLeft",
-            response_type=webtypes.ProximityResponse,
-            from_protocol=lambda m: m.value,
-        )
-        self.proximity_right_rear = WebDataAccessRead(
-            rpc,
-            "proximityEdgeRight",
-            response_type=webtypes.ProximityResponse,
-            from_protocol=lambda m: m.value,
-        )
-
-        self.ir_message_left_front = WebDataAccessRead(
-            rpc,
-            "readIrLeft",
-            response_type=webtypes.ReadIrResponse,
-            from_protocol=conversions.ir_message_from_web,
-        )
-        self.ir_message_right_front = WebDataAccessRead(
-            rpc,
-            "readIrRight",
-            response_type=webtypes.ReadIrResponse,
-            from_protocol=conversions.ir_message_from_web,
-        )
-
-        self.time_of_flight = WebDataAccessRead(
+        self.time_of_flight = WebDataAccessReadWatch(
             rpc,
             "timeOfFlight",
             response_type=webtypes.TimeOfFlightResponse,
@@ -67,9 +29,8 @@ class AriWebDriver(WebDriver):
         self._ari_memory = AriWebMemoryRegions(self._rpc)
 
     async def play_audio(self, audio_name: str) -> None:
-        req = webtypes.ExecuteFileRequest(filename=audio_name)
-        resp = await self._rpc.execute(req, rpctypes.BaseExecutionStateResponse)
-        self._validate_response(req.method, resp)
+        req = webtypes.PlayAudioRequest(filename=audio_name)
+        _ = await self._rpc.execute(req, rpctypes.ValidatedNone)
 
     async def user_io_print(self, message: str) -> None:
         return await self._userio_component.print(message)

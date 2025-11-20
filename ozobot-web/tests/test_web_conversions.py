@@ -1,11 +1,15 @@
 import pytest
-from ozobot.linefollower.datatypes import Direction, LEDMask
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, LEDMask, TNamedColor
 from ozobot.linefollower.exceptions import SingleDirectionRequiredError
 from ozobot.web.conversions import (
+    color_code_from_web,
+    color_from_web,
     direction_to_web,
     intersection_from_web,
+    ir_message_from_web,
     led_to_web_json,
 )
+from ozobot.web.rpctypes import ClassifiedColor, ReadIrResponse
 
 
 @pytest.mark.parametrize(
@@ -63,3 +67,28 @@ def test_direction_to_web_invalid_length():
 )
 def test_intersection_from_web(json_input, expected):
     assert intersection_from_web(json_input) == expected
+
+
+def test_color_code_from_web() -> None:
+    colors = ["Red", "Black", "Blue"]
+    responses = [ClassifiedColor(red=0, green=0, blue=0, name=c) for c in colors]
+    assert color_code_from_web(responses) == ColorCode(colors=(Colors.RED, Colors.BLACK, Colors.BLUE))
+
+
+@pytest.mark.parametrize(
+    ["web", "lib"],
+    [
+        ("Red", Colors.RED),
+        ("Blue", Colors.BLUE),
+        ("Green", Colors.GREEN),
+        ("Black", Colors.BLACK),
+        ("White", Colors.WHITE),
+        ("Unknown", Colors.UNKNOWN),
+    ],
+)
+def test_color_from_web(web: TNamedColor, lib: Color) -> None:
+    assert color_from_web(ClassifiedColor(red=0, green=0, blue=0, name=web)) == lib
+
+
+def test_ir_message_from_web() -> None:
+    assert ir_message_from_web(ReadIrResponse(message=10, intensity=20)) == IRMessage(message=10, intensity=20)

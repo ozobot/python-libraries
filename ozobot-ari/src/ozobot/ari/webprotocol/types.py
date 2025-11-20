@@ -3,8 +3,8 @@ import typing
 from ozobot.web import rpctypes
 
 
-class ExecuteFileRequest(rpctypes.BaseRequest):
-    method: typing.Literal["ExecuteFile"] = "ExecuteFile"
+class PlayAudioRequest(rpctypes.BaseRequest):
+    method: typing.Literal["playAudio"] = "playAudio"
     filename: str
 
     @property
@@ -15,15 +15,4 @@ class ExecuteFileRequest(rpctypes.BaseRequest):
 class TimeOfFlightResponse(rpctypes.BaseResponse):
     distance: float
     deviation: float
-    timestamp: float
-
-
-class ProximityResponse(rpctypes.BaseResponse):
-    value: int
-    timestamp: float
-
-
-class ReadIrResponse(rpctypes.BaseResponse):
-    message: int
-    intensity: int
     timestamp: float

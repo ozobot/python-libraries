@@ -130,10 +130,3 @@ def time_of_flight_from_web(time_of_flight: webtypes.TimeOfFlightResponse) -> Ti
         distance=time_of_flight.distance * 1000,
         deviation=time_of_flight.deviation * 1000,
     )
-
-
-def ir_message_from_web(ir_message: webtypes.ReadIrResponse) -> IRMessage:
-    return IRMessage(
-        message=ir_message.message,
-        intensity=ir_message.intensity,
-    )

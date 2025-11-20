@@ -1,8 +1,9 @@
 import typing
 
-from ozobot.linefollower.datatypes import Color, Colors, Direction, LEDMask, TNamedColor
+from ozobot.linefollower.conversions import is_named_color
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, LEDMask
 from ozobot.linefollower.exceptions import SingleDirectionRequiredError
-from ozobot.web.rpctypes import ALLOWED_NAMED_DIRECTIONS, TWebDirection
+from ozobot.web.rpctypes import ALLOWED_NAMED_DIRECTIONS, ClassifiedColor, ReadIrResponse, TWebDirection
 
 
 def led_to_web_json(mask: LEDMask) -> dict[str, bool]:
@@ -65,8 +66,8 @@ def intersection_from_web(intersection_json: dict[TWebDirection, bool]) -> Direc
     return direction
 
 
-def color_from_web(color: TNamedColor) -> Color:
-    match color:
+def color_from_web(color: ClassifiedColor) -> Color:
+    match color.name:
         case "Green":
             return Colors.GREEN
         case "Black":
@@ -80,23 +81,38 @@ def color_from_web(color: TNamedColor) -> Color:
         case "Unknown":
             return Colors.UNKNOWN
         case _:
-            typing.assert_never(color)
+            typing.assert_never(color.name)
 
 
-def color_to_web(color: Color) -> TNamedColor:
+def color_to_web(color: Color) -> ClassifiedColor:
     if color == Colors.GREEN:
-        return "Green"
+        return ClassifiedColor(name="Green", red=0, green=1, blue=0)
     elif color == Colors.BLACK:
-        return "Black"
+        return ClassifiedColor(name="Black", red=0, green=0, blue=0)
     elif color == Colors.RED:
-        return "Red"
+        return ClassifiedColor(name="Red", red=1, green=0, blue=0)
     elif color == Colors.BLUE:
-        return "Blue"
+        return ClassifiedColor(name="Blue", red=0, green=0, blue=1)
     elif color == Colors.WHITE:
-        return "White"
+        return ClassifiedColor(name="White", red=1, green=1, blue=1)
     else:
-        return "Unknown"
+        return ClassifiedColor(name="Unknown", red=0, green=0, blue=0)
+
+
+def color_code_from_web(colors: list[ClassifiedColor]) -> ColorCode:
+    return ColorCode(colors=tuple(color_from_web(c) for c in colors))
 
 
 def is_named_web_direction(value: typing.Any) -> typing.TypeGuard[TWebDirection]:
     return value in ALLOWED_NAMED_DIRECTIONS
+
+
+def is_color_web(value: typing.Any) -> typing.TypeGuard[ClassifiedColor]:
+    return isinstance(value, ClassifiedColor) and is_named_color(value.name)
+
+
+def ir_message_from_web(ir_message: ReadIrResponse) -> IRMessage:
+    return IRMessage(
+        message=ir_message.message,
+        intensity=ir_message.intensity,
+    )

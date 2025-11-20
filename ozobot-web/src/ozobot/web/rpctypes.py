@@ -4,7 +4,7 @@ from typing import Literal as L
 
 from annotated_types import Ge, Le
 from ozobot.linefollower.datatypes import TNamedColor
-from pydantic import AliasGenerator, BaseModel, BeforeValidator, ConfigDict, RootModel, alias_generators
+from pydantic import AliasGenerator, BaseModel, ConfigDict, RootModel, alias_generators
 
 TWebDirection = L["Straight", "Backward", "Left", "Right"]
 ALLOWED_NAMED_DIRECTIONS = ["Straight", "Backward", "Left", "Right"]
@@ -32,7 +32,7 @@ class BaseRequest(Base):
 
 
 class MoveStraightRequest(BaseRequest):
-    method: L["MoveStraight"] = "MoveStraight"
+    method: L["move"] = "move"
     distance_m: float
     speed_ms: float
 
@@ -42,7 +42,7 @@ class MoveStraightRequest(BaseRequest):
 
 
 class RotateRequest(BaseRequest):
-    method: L["Rotate"] = "Rotate"
+    method: L["rotate"] = "rotate"
     angle_rad: float
     angular_speed_radps: float
 
@@ -52,7 +52,7 @@ class RotateRequest(BaseRequest):
 
 
 class VelocityRequest(BaseRequest):
-    method: L["Velocity"] = "Velocity"
+    method: L["velocity"] = "velocity"
     linear_speed_mps: float
     angular_speed_radps: float
     duration_ms: int
@@ -63,7 +63,7 @@ class VelocityRequest(BaseRequest):
 
 
 class PlayToneRequest(BaseRequest):
-    method: L["PlayTone"] = "PlayTone"
+    method: L["playTone"] = "playTone"
     frequency_hz: float
     duration_ms: float
 
@@ -85,7 +85,7 @@ TSetLedMaskItem = L[
 
 
 class SetLedRequest(BaseRequest):
-    method: L["SetLED"] = "SetLED"
+    method: L["setLed"] = "setLed"
     mask: dict[TSetLedMaskItem, bool]
     red: Annotated[int, Ge(0), Le(255)]
     green: Annotated[int, Ge(0), Le(255)]
@@ -98,9 +98,9 @@ class SetLedRequest(BaseRequest):
 
 
 class LineNavigationRequest(BaseRequest):
-    method: L["LineNavigation"] = "LineNavigation"
+    method: L["lineNavigation"] = "lineNavigation"
     direction: TWebDirection
-    follow: L["Follow", "DoNotFollow"]
+    follow: bool
 
     @property
     def args(self) -> tuple:
@@ -108,39 +108,41 @@ class LineNavigationRequest(BaseRequest):
 
 
 class MemReadRequest(BaseRequest):
-    method: L["GetValue_wrapper"] = "GetValue_wrapper"
-    name: str
+    @classmethod
+    def create(cls, name: str) -> typing.Self:
+        return cls(method=f"memory.{name}.read")
 
     @property
     def args(self) -> tuple:
-        return (self.name,)
-
-
-def _validate_set_prefix(name: str):
-    assert isinstance(name, str) and name.startswith("set_")
-    return name
+        return tuple()
 
 
 class MemWriteRequest(BaseRequest):
-    method: typing.Annotated[str, BeforeValidator(_validate_set_prefix)]
-    speed: float
+    method: str
+    data: typing.Any
+
+    @classmethod
+    def create(cls, name: str, data: typing.Any) -> typing.Self:
+        return cls(method=f"memory.{name}.write", data=data)
 
     @property
     def args(self) -> tuple:
-        return (self.speed,)
+        return (self.data,)
 
 
-class RetrieveFromDataStreamRequest(BaseRequest):
-    method: L["retrieveFromDataStream_wrapper"] = "retrieveFromDataStream_wrapper"
-    name: str
+class MemWatchRequest(BaseRequest):
+    @classmethod
+    def create(cls, name: str, last_value: typing.Any | None = None) -> typing.Self:
+        return cls(method=f"memory.{name}.wait", last_value=last_value)
+
     last_value: typing.Any | None
 
     @property
     def args(self) -> tuple:
         if self.last_value is not None:
-            return ({"type": self.name, "value": self.last_value},)
+            return ({"value": self.last_value},)
         else:
-            return ({"type": self.name},)
+            return (None,)
 
 
 class BaseResponse(Base):
@@ -158,22 +160,18 @@ class BaseResponse(Base):
     )
 
 
-class BaseExecutionStateResponse(BaseResponse):
-    execution_state: L["FinishedNormal"] | str
-
-
-class BaseCallStatusResponse(BaseResponse):
-    call_status: L["CallSuccess"] | str
-
-
-class IntersectionResponse(BaseExecutionStateResponse):
-    intersection: dict[TWebDirection, bool]
-
-
 class WatcherResponse[T](RootModel[list[T]]): ...
 
 
+class ValidatedNone(RootModel[None]):
+    pass
+
+
 class ValidatedFloat(RootModel[float]):
+    pass
+
+
+class ValidatedInt(RootModel[int]):
     pass
 
 
@@ -185,6 +183,26 @@ class ValidatedAny(RootModel[typing.Any]):
     pass
 
 
-class ColorResponse(BaseResponse):
-    color: TNamedColor
+class Sample[T](BaseResponse):
+    value: T
     timestamp: float
+
+
+class ClassifiedColor(BaseModel):
+    name: TNamedColor
+    red: float
+    green: float
+    blue: float
+
+
+class IntersectionResponse(RootModel[dict[TWebDirection, bool]]):
+    pass
+
+
+class ColorCodeResponse(BaseResponse):
+    colors: list[ClassifiedColor]
+
+
+class ReadIrResponse(BaseResponse):
+    message: int
+    intensity: int

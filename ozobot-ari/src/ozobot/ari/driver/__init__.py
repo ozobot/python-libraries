@@ -26,6 +26,17 @@ class AriDriver(Driver, UserIoInterface, typing.Protocol):
     ) -> typing.AsyncContextManager[typing.Self]: ...
 
 
+# this enables verbose errors when memory region implementations do not
+# match the interfaces
+if typing.TYPE_CHECKING:
+    _vm: AriVirtualMemory
+    from ozobot.ari.driver.native import NativeMemoryRegions
+    from ozobot.ari.driver.web import AriWebMemoryRegions
+
+    _vm = AriWebMemoryRegions()  # type: ignore[call-arg]
+    _vm = NativeMemoryRegions()  # type: ignore[call-arg]
+
+
 def get_driver() -> type[AriDriver]:
     # don't use if sys.platform directly, mypy will then only check the platform specific branch
     platform: str = sys.platform

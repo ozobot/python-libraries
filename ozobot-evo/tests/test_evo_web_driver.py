@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 import pytest
 from ozobot.evo.driver.web import EvoWebDriver
-from ozobot.web import rpctypes
 
 
 @patch("ozobot.evo.driver.sys.platform", "emscripten")
@@ -20,9 +19,9 @@ def test_import_web() -> None:
             "play_audio",
             ("happy",),
             None,
-            "ExecuteFile",
-            ("/system/audio/01010100.wav",),
-            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            "playAudio",
+            ("01010100",),
+            None,
         ),
     ),
 )

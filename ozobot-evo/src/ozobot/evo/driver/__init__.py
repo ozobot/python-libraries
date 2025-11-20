@@ -9,6 +9,12 @@ __all__ = ["get_driver"]
 
 class EvoVirtualMemory(VirtualMemoryRegions, typing.Protocol):
     @property
+    def proximity_right_rear(self) -> ReadableWatchableRegion[int]: ...
+
+    @property
+    def proximity_left_rear(self) -> ReadableWatchableRegion[int]: ...
+
+    @property
     def ir_message_left_rear(self) -> ReadableWatchableRegion[IRMessage]: ...
 
     @property
@@ -19,6 +25,17 @@ class EvoVirtualMemory(VirtualMemoryRegions, typing.Protocol):
 
     @property
     def button(self) -> ReadableWatchableRegion[bool]: ...
+
+
+# this enables verbose errors when memory region implementations do not
+# match the interfaces
+if typing.TYPE_CHECKING:
+    _vm: EvoVirtualMemory
+    from ozobot.evo.driver.native import NativeMemoryRegions
+    from ozobot.evo.driver.web import EvoWebMemoryRegions
+
+    _vm = EvoWebMemoryRegions()  # type: ignore[call-arg]
+    _vm = NativeMemoryRegions()  # type: ignore[call-arg]
 
 
 class EvoDriver(Driver, typing.Protocol):

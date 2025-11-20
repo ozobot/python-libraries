@@ -4,7 +4,6 @@ from unittest.mock import call, patch
 
 import pytest
 from ozobot.linefollower.datatypes import Colors, Direction, LEDMask
-from ozobot.web import rpctypes
 from ozobot.web.driver import WebDriver
 
 
@@ -15,41 +14,49 @@ from ozobot.web.driver import WebDriver
             "move",
             (100, 200),
             None,
-            "MoveStraight",
+            "move",
             (0.1, 0.2),
-            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            None,
         ),
         (
             "rotate",
             (90, 10),
             None,
-            "Rotate",
+            "rotate",
             (math.pi / 2, math.radians(10)),
-            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            None,
         ),
         (
             "velocity",
             (100, 90, 1000),
             None,
-            "Velocity",
+            "velocity",
             (0.1, math.pi / 2, 1000),
-            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            None,
         ),
         (
             "play_tone",
             (440, 500, 50),
             None,
-            "PlayTone",
+            "playTone",
             (440, 500),
-            rpctypes.BaseExecutionStateResponse(execution_state="FinishedNormal"),
+            None,
         ),
         (
             "set_led",
             (LEDMask.TOP | LEDMask.FRONT_LEFT, 255, 128, 0),
             None,
-            "SetLED",
+            "setLed",
             ({"top": True, "front_left": True}, 255, 128, 0),
-            rpctypes.BaseCallStatusResponse(call_status="CallSuccess"),
+            None,
+        ),
+        (
+            "line_navigation",
+            (Direction.STRAIGHT, True),
+            None,
+            "lineNavigation",
+            ("Straight", True),
+            None,
         ),
     ),
 )
@@ -72,43 +79,27 @@ async def test_commands(
         mock_coro.assert_awaited_once_with(robot_name, rpc_name, rpc_args)
 
 
-async def test_line_navigation():
-    robot_name = "robot1"
-    with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
-        mock_coro.return_value = rpctypes.IntersectionResponse(
-            execution_state="FinishedNormal",
-            intersection={"Straight": True, "Left": True, "Right": False},
-        )
-        driver = WebDriver(robot_name)
-
-        await driver.line_navigation(Direction.STRAIGHT, follow=True)
-        intersection = await driver.memory.intersection.read()
-        assert intersection.value == Direction.STRAIGHT | Direction.LEFT
-
-        mock_coro.assert_awaited_once_with(robot_name, "LineNavigation", ("Straight", "Follow"))
-
-
 async def test_mem_read():
     robot_name = "robot1"
     with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
-        mock_coro.return_value = 0.5
+        mock_coro.return_value = {"timestamp": 0, "value": 0.5}
         driver = WebDriver(robot_name)
 
         speed = await driver.memory.line_following_speed.read()
         assert speed.value == 500
 
-        mock_coro.assert_awaited_once_with(robot_name, "GetValue_wrapper", ("lineNavigationSpeed",))
+        mock_coro.assert_awaited_once_with(robot_name, "memory.lineFollowingSpeed.read", tuple())
 
 
 async def test_mem_write():
     robot_name = "robot1"
     with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
-        mock_coro.return_value = rpctypes.BaseCallStatusResponse(call_status="CallSuccess")
+        mock_coro.return_value = None
         driver = WebDriver(robot_name)
 
         await driver.memory.line_following_speed.write(500)
 
-        mock_coro.assert_awaited_once_with(robot_name, "set_lineNavigationSpeed", (0.5,))
+        mock_coro.assert_awaited_once_with(robot_name, "memory.lineFollowingSpeed.write", (0.5,))
 
 
 async def test_mem_watch_structure() -> None:
@@ -116,9 +107,9 @@ async def test_mem_watch_structure() -> None:
     num_data = 3
 
     responses_flat = [
-        {"color": "Red", "timestamp": 1},
-        {"color": "Black", "timestamp": 2},
-        {"color": "Blue", "timestamp": 3},
+        {"value": {"red": 1, "green": 0, "blue": 0, "name": "Red"}, "timestamp": 1},
+        {"value": {"red": 0, "green": 0, "blue": 0, "name": "Black"}, "timestamp": 2},
+        {"value": {"red": 0, "green": 0, "blue": 1, "name": "Blue"}, "timestamp": 3},
     ]
 
     rpc_responses = [
@@ -144,13 +135,13 @@ async def test_mem_watch_structure() -> None:
         # and the property name plus previous value in the consequent calls
         call_args_prefix = (
             robot_name,
-            "retrieveFromDataStream_wrapper",
+            "memory.lineColor.wait",
         )
 
         mock_coro.assert_has_calls(
             [
-                call(*call_args_prefix, ({"type": "lineColor"},)),
-                call(*call_args_prefix, ({"type": "lineColor", "value": responses_flat[1]},)),
+                call(*call_args_prefix, (None,)),
+                call(*call_args_prefix, ({"value": responses_flat[1]},)),
             ]
         )
 
@@ -159,7 +150,11 @@ async def test_mem_watch_simple_type() -> None:
     robot_name = "robot1"
     num_data = 3
 
-    responses_flat = [0.1, 0.2, 0.3]
+    responses_flat = [
+        {"timestamp": 0, "value": 0.1},
+        {"timestamp": 0, "value": 0.2},
+        {"timestamp": 0, "value": 0.3},
+    ]
 
     rpc_responses = [
         [responses_flat[0], responses_flat[1]],
@@ -180,12 +175,12 @@ async def test_mem_watch_simple_type() -> None:
         # and the property name plus previous value in the consequent calls
         call_args_prefix = (
             robot_name,
-            "retrieveFromDataStream_wrapper",
+            "memory.lineFollowingSpeed.wait",
         )
 
         mock_coro.assert_has_calls(
             [
-                call(*call_args_prefix, ({"type": "lineNavigationSpeed"},)),
-                call(*call_args_prefix, ({"type": "lineNavigationSpeed", "value": responses_flat[1]},)),
+                call(*call_args_prefix, (None,)),
+                call(*call_args_prefix, ({"value": responses_flat[1]},)),
             ]
         )
