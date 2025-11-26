@@ -20,7 +20,10 @@ jobs:
     - name: Build packages
       env:
         SETUPTOOLS_SCM_PRETEND_METADATA: '{node=""}'
-      run: uv build --all-packages
+      run: |
+        # we need to build sdist and wheel separately, otherwise the wheel is empty
+        uv build --all-packages --sdist
+        uv build --all-packages --wheel
 
     - name: Upload github artifacts
       uses: actions/upload-artifact@v4
