@@ -144,6 +144,13 @@ def test_dispatcher_protocol_multiple_names() -> None:
         assert dispatcher.call(_ValueStore2.get_val_with_suffix) == "b_suffix"
 
 
+def test_dispatcher_implicit() -> None:
+    dispatcher = ActorDispatcher()
+    dispatcher.add("one", _ValueStore1("a"))
+    with pytest.raises(SuitableActorNotFoundError):
+        _ = dispatcher.call(_ValueStore.get_val)
+
+
 async def test_dispatcher_state_consistency_concurrent() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
