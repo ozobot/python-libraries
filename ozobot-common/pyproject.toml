@@ -11,6 +11,10 @@ dependencies = [
     "loguru"
 ]
 
+[project.urls]
+Homepage = "https://ozobot.com"
+Github = "https://github.com/ozobot/python-libraries"
+
 [tool.hatch.build.targets.sdist]
 sources = ["src"]
 only-include = ["src/ozobot"]
