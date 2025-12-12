@@ -2,14 +2,6 @@ import contextlib
 import typing
 from logging import getLogger
 
-try:
-    from _ozo import _rpcCoroutine
-except ImportError:
-
-    async def _rpcCoroutine(object_name: str, func_name: str, args: list[typing.Any]) -> dict[str, typing.Any]:
-        raise Exception("Executed dummy _rpcCoroutine")
-
-
 from ozobot.ora.datatypes import (
     Cartesian,
     FingerGripperState,
@@ -25,6 +17,7 @@ from ozobot.ora.datatypes import (
     VacuumGripperState,
 )
 from ozobot.ora.units import PhysicalQuantityDomain, Value, domains, number_to_value, quantities, units, value_to_number
+from ozobot.web.browser import _rpcCoroutine
 
 logger = getLogger(__name__)
 

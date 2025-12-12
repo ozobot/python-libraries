@@ -4,7 +4,7 @@ import contextlib
 import typing
 
 from ozobot.ora.datatypes import IoValueType
-from ozobot.ora.drivers.browser import OraWebDriver
+from ozobot.ora.driver import get_driver
 from ozobot.ora.iogroups import InputFactory, OutputFactory
 from ozobot.ora.sync import (
     Cartesian,
@@ -22,7 +22,9 @@ from ozobot.ora.units.quantities import deg, hour, inch, kg, m, minute, mm, perc
 
 _TIo = typing.TypeVar("_TIo", bool, float, int)
 
-_driver = OraWebDriver()
+# FIXME: replace by actor api
+_driver_cls = get_driver()
+_driver = _driver_cls()
 _ora = OraSync(_driver)
 
 

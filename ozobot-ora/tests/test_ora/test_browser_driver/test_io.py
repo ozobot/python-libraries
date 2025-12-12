@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
 from ozobot.ora.datatypes import IoName, IoValue, IoValueType
-from ozobot.ora.drivers.browser import OraWebDriver
+from ozobot.ora.driver.web import OraWebDriver
 
-_CORO_MODULE_PATH = "ozobot.ora.drivers.browser._rpcCoroutine"
+_CORO_MODULE_PATH = "ozobot.ora.driver.web._rpcCoroutine"
 
 
 async def test_get_analog_inputs():

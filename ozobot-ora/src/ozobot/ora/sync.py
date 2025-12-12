@@ -5,7 +5,7 @@ import typing
 from collections.abc import Callable
 from typing import Literal
 
-from ozobot.ora.drivers.browser import OraWebDriver
+from ozobot.ora.driver import OraDriver
 
 from .datatypes import (
     Cartesian,
@@ -51,10 +51,10 @@ def wait(seconds: float) -> None:
 
 
 class OraSync:
-    _robot: OraWebDriver
+    _robot: OraDriver
     _task_queue: TaskQueue
 
-    def __init__(self, robot: OraWebDriver):
+    def __init__(self, robot: OraDriver):
         self._robot = robot
         self._task_queue = TaskQueue(3)
 

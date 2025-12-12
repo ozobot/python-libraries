@@ -15,7 +15,6 @@ members = [
     "ozobot-ora",
     "ozobot-userio",
     "ozobot-web",
-    "ozobot-ora",
     "ozobot-webrtc",
 ]
 
@@ -605,6 +604,12 @@ requires-dist = [
 [[package]]
 name = "ozobot-ora"
 source = { editable = "ozobot-ora" }
+dependencies = [
+    { name = "ozobot-web", marker = "sys_platform == 'emscripten'" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" }]
 
 [[package]]
 name = "ozobot-userio"
