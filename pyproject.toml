@@ -62,6 +62,8 @@ select = [
     "B",
     # isort
     "I",
+    # async
+    "ASYNC",
 ]
 
 [tool.pytest.ini_options]
