@@ -1,4 +1,6 @@
 # Next
+ - Require Python 3.13
+ - Move to `python-libraries` repo, change structure to match repo conventions
  - ORA-341: add `replace` to datastructures
  - ORA-384: add `Input.wait` method to the simple api
  - ORA-596: initialize driver by context manager
