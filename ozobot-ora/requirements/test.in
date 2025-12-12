@@ -1,6 +1,0 @@
-pytest
-pytest-asyncio
-pytest-mypy
-pytest-ruff
-pytest-timeout
-ruff

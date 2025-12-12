@@ -1,84 +1,31 @@
-[build-system]
-requires = ["setuptools", "wheel", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools]
-package-dir = { "ozobot.ora" = "src/ozobot/ora" }
-packages = [
-    "ozobot.ora",
-]
-
-[tool.setuptools.package-data]
-"*" = ["py.typed"]
-
 [project]
 name = "ozobot-ora"
-dynamic = ["version", "dependencies", "optional-dependencies"]
+description = "Ozobot ORA library"
+authors = [
+    { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
+]
 requires-python = ">=3.12"
+dynamic = ["version"]
 
-[tool.setuptools.dynamic]
-dependencies = { file = ["requirements/base.txt"] }
-optional-dependencies.test = { file = ["requirements/test.txt"] }
-optional-dependencies.docs = { file = ["requirements/docs.txt"] }
+[project.urls]
+Homepage = "https://ozobot.com"
+Github = "https://github.com/ozobot/python-libraries"
 
+[tool.hatch.build.targets.sdist]
+sources = ["src"]
+only-include = ["src/ozobot"]
 
-[tool.pip-tools]
-strip-extras = true
-annotation-style = "split"
-upgrade = false
-newline = "CRLF"
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+only-include = ["src/ozobot"]
 
-[tool.setuptools_scm]
-root = "../.."
-version_file = "src/ozobot/ora/version.py"
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
 version_scheme = "no-guess-dev"
-tag_regex = "^(?:[\\w-]+-)?pylib/(?P<version>[vV]?\\d+(?:\\.\\d+){0,2}[^\\+]*)(?:\\+.*)?$"
-git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--match', 'pylib/v[0-9]*']
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-
-pythonpath = [
-    "src/",
-    "tests/utils",
-]
-
-testpaths = [
-    "src",
-    "tests",
-]
-
-timeout = 120
-
-required_plugins = [
-    "pytest-asyncio",
-    "pytest-mypy",
-    "pytest-ruff",
-    "pytest-timeout",
-]
-
-addopts = "--mypy --ruff --ruff-format"
-
-[tool.ruff]
-line-length = 200
-exclude = [
-    "src/ozobot/ora/version.py"
-]
-
-[tool.ruff.lint]
-select = [
-    # pycodestyle
-    "E",
-    # Pyflakes
-    "F",
-    # pyupgrade
-    "UP",
-    # flake8-bugbear
-    "B",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
-    # async
-    "ASYNC",
-]
+root = "../"

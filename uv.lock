@@ -15,6 +15,7 @@ members = [
     "ozobot-ora",
     "ozobot-userio",
     "ozobot-web",
+    "ozobot-ora",
     "ozobot-webrtc",
 ]
 
