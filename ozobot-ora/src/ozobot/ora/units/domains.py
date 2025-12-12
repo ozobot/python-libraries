@@ -48,4 +48,15 @@ type AngularAccelerationDomain = ProportionalRelationDomain[AngleDomain, PowerDo
 type AngularJerkDomain = ProportionalRelationDomain[AngleDomain, PowerDomain[TimeDomain, ThirdPower]]
 """ Physical quantity domain representing angular jerk, angle over time cubed. """
 
-__all__ = ["DistanceDomain", "AngleDomain", "TimeDomain", "RatioDomain", "WeightDomain", "SpeedDomain", "AccelerationDomain", "JerkDomain", "AngularAccelerationDomain", "AngularJerkDomain"]
+__all__ = [
+    "DistanceDomain",
+    "AngleDomain",
+    "TimeDomain",
+    "RatioDomain",
+    "WeightDomain",
+    "SpeedDomain",
+    "AccelerationDomain",
+    "JerkDomain",
+    "AngularAccelerationDomain",
+    "AngularJerkDomain",
+]

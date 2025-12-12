@@ -24,7 +24,9 @@ class LazyTaskGroup:
         self._exceptions = list()
         self._waiter = None
 
-    def create_task(self, coro: typing.Coroutine[_TUnbound, typing.Any, typing.Any], *, name: str | None = None) -> asyncio.Task[_TUnbound]:
+    def create_task(
+        self, coro: typing.Coroutine[_TUnbound, typing.Any, typing.Any], *, name: str | None = None
+    ) -> asyncio.Task[_TUnbound]:
         task: Task[_TUnbound] = asyncio.create_task(coro, name=name)
         _logger.debug("Spawned task: id=%s, name=%s", id(task), name)
         task.add_done_callback(self._on_task_done)

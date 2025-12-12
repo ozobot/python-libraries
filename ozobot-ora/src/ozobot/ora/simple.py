@@ -6,7 +6,17 @@ import typing
 from ozobot.ora.datatypes import IoValueType
 from ozobot.ora.drivers.browser import OraWebDriver
 from ozobot.ora.iogroups import InputFactory, OutputFactory
-from ozobot.ora.sync import Cartesian, FingerGripperState, Frame, Joints, OraSync, ReferenceFrameModifier, Tool, VacuumGripperState, wait
+from ozobot.ora.sync import (
+    Cartesian,
+    FingerGripperState,
+    Frame,
+    Joints,
+    OraSync,
+    ReferenceFrameModifier,
+    Tool,
+    VacuumGripperState,
+    wait,
+)
 from ozobot.ora.units import Value, domains, units
 from ozobot.ora.units.quantities import deg, hour, inch, kg, m, minute, mm, percent, rad, s
 
@@ -127,7 +137,9 @@ class move:
         :param speed: Optional speed of the movement. If unset, the default speed is used.
         :param acceleration: Optional acceleration of the movement. If unset, the default acceleration is used.
         """
-        return _ora.move_linear(offset, speed=speed, acceleration=acceleration, reference=ReferenceFrameModifier.RELATIVE)
+        return _ora.move_linear(
+            offset, speed=speed, acceleration=acceleration, reference=ReferenceFrameModifier.RELATIVE
+        )
 
     @staticmethod
     def linear_tool(

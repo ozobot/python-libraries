@@ -2,9 +2,15 @@ import math
 import typing
 
 import pytest
-
 from ozobot.ora.units import PhysicalQuantity, Value
-from ozobot.ora.units.abstract import PowerDomain, ProportionalRelationDomain, SecondPower, number_to_value, units, value_to_number
+from ozobot.ora.units.abstract import (
+    PowerDomain,
+    ProportionalRelationDomain,
+    SecondPower,
+    number_to_value,
+    units,
+    value_to_number,
+)
 from ozobot.ora.units.domains import AngleDomain, DistanceDomain, TimeDomain
 from ozobot.ora.units.exceptions import IncompatiblePhysicalDomainError
 from ozobot.ora.units.quantities import deg, hour, inch, m, minute, mm, rad, s
@@ -88,7 +94,9 @@ def test_acceleration_units() -> None:
 
     assert units(1, inch / s**2) != units(1, m / hour**2)
 
-    typing.assert_type(m / s**2, PhysicalQuantity[ProportionalRelationDomain[DistanceDomain, PowerDomain[TimeDomain, SecondPower]]])
+    typing.assert_type(
+        m / s**2, PhysicalQuantity[ProportionalRelationDomain[DistanceDomain, PowerDomain[TimeDomain, SecondPower]]]
+    )
 
 
 def test_convert_to_number() -> None:

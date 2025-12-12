@@ -12,7 +12,10 @@ def test_cartesian_str() -> None:
 def test_cartesian_repr() -> None:
     c = Cartesian(y=20, z=units(0.3, m))
     c.x = 10
-    assert repr(c) == "Cartesian(x=Value(10, mm), y=Value(20, mm), z=Value(0.3, m), w=Value(0, deg), p=Value(0, deg), r=Value(0, deg))"
+    assert (
+        repr(c)
+        == "Cartesian(x=Value(10, mm), y=Value(20, mm), z=Value(0.3, m), w=Value(0, deg), p=Value(0, deg), r=Value(0, deg))"
+    )
 
 
 def test_joints_str() -> None:
@@ -22,7 +25,10 @@ def test_joints_str() -> None:
 
 def test_joins_repr() -> None:
     j = Joints(a1=10, a2=units(20, deg))
-    assert repr(j) == "Joints(a1=Value(10, deg), a2=Value(20, deg), a3=Value(0, deg), a4=Value(0, deg), a5=Value(0, deg), a6=Value(0, deg))"
+    assert (
+        repr(j)
+        == "Joints(a1=Value(10, deg), a2=Value(20, deg), a3=Value(0, deg), a4=Value(0, deg), a5=Value(0, deg), a6=Value(0, deg))"
+    )
 
 
 def test_frame_str() -> None:
@@ -32,7 +38,10 @@ def test_frame_str() -> None:
 
 def test_frame_repr() -> None:
     f = Frame(y=20, z=units(0.3, m))
-    assert repr(f) == "Frame(x=Value(0, mm), y=Value(20, mm), z=Value(0.3, m), w=Value(0, deg), p=Value(0, deg), r=Value(0, deg))"
+    assert (
+        repr(f)
+        == "Frame(x=Value(0, mm), y=Value(20, mm), z=Value(0.3, m), w=Value(0, deg), p=Value(0, deg), r=Value(0, deg))"
+    )
 
 
 def test_tool_collider_str() -> None:
@@ -53,7 +62,10 @@ def test_tool_str() -> None:
         weight=units(0.1, kg),
         collider=ToolCollider(1),
     )
-    assert str(t) == "[type=ToolType.FINGER_GRIPPER, tcp=[x=0mm, y=0mm, z=30mm, w=0deg, p=0deg, r=0deg], center_of_gravity=[0mm, 0mm, 0mm], weight=0.1kg, collider=type 1]"
+    assert (
+        str(t)
+        == "[type=ToolType.FINGER_GRIPPER, tcp=[x=0mm, y=0mm, z=30mm, w=0deg, p=0deg, r=0deg], center_of_gravity=[0mm, 0mm, 0mm], weight=0.1kg, collider=type 1]"
+    )
 
 
 def test_tool_repr() -> None:
@@ -81,7 +93,9 @@ def test_cartesian_replace() -> None:
 
 
 def test_joint_replace() -> None:
-    assert Joints(a1=1, a2=2, a3=3, a4=4, a5=5, a6=6).replace(a2=20, a5=50) == Joints(a1=1, a2=20, a3=3, a4=4, a5=50, a6=6)
+    assert Joints(a1=1, a2=2, a3=3, a4=4, a5=5, a6=6).replace(a2=20, a5=50) == Joints(
+        a1=1, a2=20, a3=3, a4=4, a5=50, a6=6
+    )
 
 
 def test_frame_replace() -> None:

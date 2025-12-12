@@ -91,7 +91,10 @@ class Value(typing.Generic[_TDomain]):
         self_as_base = self.as_base_quantity()
         other_as_base = other.as_base_quantity()
 
-        return self_as_base.value == other_as_base.value and self_as_base.physical_quantity == other_as_base.physical_quantity
+        return (
+            self_as_base.value == other_as_base.value
+            and self_as_base.physical_quantity == other_as_base.physical_quantity
+        )
 
     def __hash__(self):
         return hash((self.__class__, self.value, self.physical_quantity))
@@ -151,7 +154,9 @@ class Value(typing.Generic[_TDomain]):
 
         if isinstance(other, Value):
             if self.physical_quantity != other.physical_quantity:
-                raise ValueError(f"Cannot do {operation_name} of values within different units: {self.physical_quantity} {operator} {other.physical_quantity}")
+                raise ValueError(
+                    f"Cannot do {operation_name} of values within different units: {self.physical_quantity} {operator} {other.physical_quantity}"
+                )
 
             return other.value
 
@@ -177,7 +182,14 @@ class PhysicalQuantity(typing.Generic[_TDomain]):
     _base: PhysicalQuantity[_TDomain] | None
     _to_base: typing.Callable[[float], float]
 
-    def __init__(self, name: str, abbreviation: str, domain: _TDomain, to_base: typing.Callable[[float], float] | None = None, base: PhysicalQuantity[_TDomain] | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        abbreviation: str,
+        domain: _TDomain,
+        to_base: typing.Callable[[float], float] | None = None,
+        base: PhysicalQuantity[_TDomain] | None = None,
+    ) -> None:
         self._name = name
         self._abbreviation = abbreviation
         self._base = base
@@ -214,9 +226,15 @@ class PhysicalQuantity(typing.Generic[_TDomain]):
     def __pow__(self, power: typing.Literal[2, 3], modulo=None) -> PhysicalQuantity[PowerDomain]:
         domain = PowerDomain.create(self.domain, power)
 
-        base = PhysicalQuantity(f"{self._get_base()._name}^{power}", f"{self._get_base()._abbreviation}^{power}", domain) if self._base else None
+        base = (
+            PhysicalQuantity(f"{self._get_base()._name}^{power}", f"{self._get_base()._abbreviation}^{power}", domain)
+            if self._base
+            else None
+        )
 
-        return PhysicalQuantity(f"{self._name}^2", f"{self._abbreviation}^2", domain, lambda q: self._to_base(q) ** power, base)
+        return PhysicalQuantity(
+            f"{self._name}^2", f"{self._abbreviation}^2", domain, lambda q: self._to_base(q) ** power, base
+        )
 
     def __rtruediv__(self, other):
         if isinstance(other, Value):
@@ -224,17 +242,29 @@ class PhysicalQuantity(typing.Generic[_TDomain]):
 
         raise ValueError(f"Cannot divide {type(other)} by {self.__class__.__name__}")
 
-    def __truediv__(self, other: PhysicalQuantity[_UDomain]) -> PhysicalQuantity[ProportionalRelationDomain[_TDomain, _UDomain]]:
+    def __truediv__(
+        self, other: PhysicalQuantity[_UDomain]
+    ) -> PhysicalQuantity[ProportionalRelationDomain[_TDomain, _UDomain]]:
         if isinstance(other, PhysicalQuantity):
             domain = ProportionalRelationDomain.create(self.domain, other.domain)
 
             base = (
-                PhysicalQuantity(f"{self._get_base()._name} per {other._get_base()._name}", f"{self._get_base()._abbreviation} / {other._get_base()._abbreviation}", domain)
+                PhysicalQuantity(
+                    f"{self._get_base()._name} per {other._get_base()._name}",
+                    f"{self._get_base()._abbreviation} / {other._get_base()._abbreviation}",
+                    domain,
+                )
                 if self._base or other._base
                 else None
             )
 
-            return PhysicalQuantity(f"{self._name} per {other._name}", f"{self._abbreviation} / {other._abbreviation}", domain, lambda q: self._to_base(q) / other._to_base(1), base)
+            return PhysicalQuantity(
+                f"{self._name} per {other._name}",
+                f"{self._abbreviation} / {other._abbreviation}",
+                domain,
+                lambda q: self._to_base(q) / other._to_base(1),
+                base,
+            )
 
         raise ValueError(f"Cannot divide {self.__class__.__name__} by {type(other)}")
 
@@ -242,7 +272,12 @@ class PhysicalQuantity(typing.Generic[_TDomain]):
         if not isinstance(other, self.__class__):
             return False
 
-        return self._name == other._name and self._abbreviation == other._abbreviation and self.domain == other.domain and self._base == other._base
+        return (
+            self._name == other._name
+            and self._abbreviation == other._abbreviation
+            and self.domain == other.domain
+            and self._base == other._base
+        )
 
     def __hash__(self):
         return hash((self.__class__, self._name, self._abbreviation, self.domain, self._base))
@@ -253,10 +288,14 @@ def value_to_number(value: Value[_TDomain] | float, *, expected_domain: _TDomain
 
 
 @typing.overload
-def value_to_number(value: typing.Iterable[Value[_TDomain] | float], *, expected_domain: _TDomain) -> tuple[float, ...]: ...
+def value_to_number(
+    value: typing.Iterable[Value[_TDomain] | float], *, expected_domain: _TDomain
+) -> tuple[float, ...]: ...
 
 
-def value_to_number(value: Value[_TDomain] | float | typing.Iterable[Value[_TDomain] | float], *, expected_domain: _TDomain) -> float | tuple[float, ...]:
+def value_to_number(
+    value: Value[_TDomain] | float | typing.Iterable[Value[_TDomain] | float], *, expected_domain: _TDomain
+) -> float | tuple[float, ...]:
     if isinstance(value, typing.Iterable):
         return tuple(_value_to_number(item, expected_domain=expected_domain) for item in value)
 
@@ -278,10 +317,14 @@ def number_to_value(number: float, *, physical_quantity: PhysicalQuantity[_TDoma
 
 
 @typing.overload
-def number_to_value(number: typing.Sequence[float], *, physical_quantity: PhysicalQuantity[_TDomain]) -> typing.Sequence[Value[_TDomain]]: ...
+def number_to_value(
+    number: typing.Sequence[float], *, physical_quantity: PhysicalQuantity[_TDomain]
+) -> typing.Sequence[Value[_TDomain]]: ...
 
 
-def number_to_value(number: float | typing.Sequence[float], *, physical_quantity: PhysicalQuantity[_TDomain]) -> Value[_TDomain] | typing.Sequence[Value[_TDomain]]:
+def number_to_value(
+    number: float | typing.Sequence[float], *, physical_quantity: PhysicalQuantity[_TDomain]
+) -> Value[_TDomain] | typing.Sequence[Value[_TDomain]]:
     if isinstance(number, typing.Sequence):
         return tuple(Value(item, physical_quantity) for item in number)
 

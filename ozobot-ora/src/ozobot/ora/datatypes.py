@@ -109,7 +109,9 @@ class Cartesian(arithmetics.ValueVector):
         "r": quantities.deg,
     }
 
-    def __init__(self, x: _TDistance = 0, y: _TDistance = 0, z: _TDistance = 0, w: _TAngle = 0, p: _TAngle = 0, r: _TAngle = 0):
+    def __init__(
+        self, x: _TDistance = 0, y: _TDistance = 0, z: _TDistance = 0, w: _TAngle = 0, p: _TAngle = 0, r: _TAngle = 0
+    ):
         super().__init__(x=x, y=y, z=z, w=w, p=p, r=r)
 
     x = arithmetics.rw_property("x", Value[domains.DistanceDomain])
@@ -191,7 +193,9 @@ class Joints(arithmetics.ValueVector):
         "a6": quantities.deg,
     }
 
-    def __init__(self, a1: _TAngle = 0, a2: _TAngle = 0, a3: _TAngle = 0, a4: _TAngle = 0, a5: _TAngle = 0, a6: _TAngle = 0):
+    def __init__(
+        self, a1: _TAngle = 0, a2: _TAngle = 0, a3: _TAngle = 0, a4: _TAngle = 0, a5: _TAngle = 0, a6: _TAngle = 0
+    ):
         super().__init__(a1=a1, a2=a2, a3=a3, a4=a4, a5=a5, a6=a6)
 
     a1 = arithmetics.rw_property("a1", Value[domains.AngleDomain])
@@ -274,7 +278,9 @@ class Frame(arithmetics.ValueVector):
         "r": quantities.deg,
     }
 
-    def __init__(self, x: _TDistance = 0, y: _TDistance = 0, z: _TDistance = 0, w: _TAngle = 0, p: _TAngle = 0, r: _TAngle = 0):
+    def __init__(
+        self, x: _TDistance = 0, y: _TDistance = 0, z: _TDistance = 0, w: _TAngle = 0, p: _TAngle = 0, r: _TAngle = 0
+    ):
         super().__init__(x=x, y=y, z=z, w=w, p=p, r=r)
 
     x = arithmetics.rw_property("x", Value[domains.DistanceDomain])
@@ -340,7 +346,9 @@ class ToolCollider:
 class Tool:
     type: ToolType
     tcp: Frame
-    center_of_gravity: tuple[Value[domains.DistanceDomain], Value[domains.DistanceDomain], Value[domains.DistanceDomain]]
+    center_of_gravity: tuple[
+        Value[domains.DistanceDomain], Value[domains.DistanceDomain], Value[domains.DistanceDomain]
+    ]
     weight: Value[domains.WeightDomain]
     collider: ToolCollider
 
@@ -349,7 +357,9 @@ class Tool:
         *,
         type: ToolType,
         tcp: Frame,
-        center_of_gravity: tuple[Value[domains.DistanceDomain], Value[domains.DistanceDomain], Value[domains.DistanceDomain]],
+        center_of_gravity: tuple[
+            Value[domains.DistanceDomain], Value[domains.DistanceDomain], Value[domains.DistanceDomain]
+        ],
         weight: Value[domains.WeightDomain],
         collider: ToolCollider,
     ):
@@ -363,11 +373,20 @@ class Tool:
         if not isinstance(other, Tool):
             return False
 
-        return self.type == other.type and self.tcp == other.tcp and self.center_of_gravity == other.center_of_gravity and self.weight == other.weight and self.collider == other.collider
+        return (
+            self.type == other.type
+            and self.tcp == other.tcp
+            and self.center_of_gravity == other.center_of_gravity
+            and self.weight == other.weight
+            and self.collider == other.collider
+        )
 
     def __str__(self) -> str:
         # we want __str__ string for all fields but `center_of_gravity` where we want a custom format
-        patched_fields = {**{k: str(v) for k, v in self.__dict__.items()}, "center_of_gravity": f"[{', '.join(str(v) for v in self.center_of_gravity)}]"}
+        patched_fields = {
+            **{k: str(v) for k, v in self.__dict__.items()},
+            "center_of_gravity": f"[{', '.join(str(v) for v in self.center_of_gravity)}]",
+        }
 
         return f"[{', '.join(f'{n}={v!s}' for n, v in patched_fields.items())}]"
 
@@ -385,7 +404,10 @@ class Tool:
         *,
         type: ToolType | None = None,
         tcp: Frame | None = None,
-        center_of_gravity: tuple[Value[domains.DistanceDomain], Value[domains.DistanceDomain], Value[domains.DistanceDomain]] | None = None,
+        center_of_gravity: tuple[
+            Value[domains.DistanceDomain], Value[domains.DistanceDomain], Value[domains.DistanceDomain]
+        ]
+        | None = None,
         weight: Value[domains.WeightDomain] | None = None,
         collider: ToolCollider | None = None,
     ) -> Tool:

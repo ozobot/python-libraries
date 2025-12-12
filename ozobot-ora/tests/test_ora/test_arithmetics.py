@@ -1,7 +1,6 @@
 import typing
 
 import pytest
-
 from ozobot.ora import arithmetics
 from ozobot.ora.units import Value, domains, units
 from ozobot.ora.units.quantities import kg, mm
@@ -10,7 +9,12 @@ from ozobot.ora.units.quantities import kg, mm
 class _DummyDistanceVector(arithmetics.ValueVector):
     _quantities = {"x": mm, "y": mm, "z": mm}
 
-    def __init__(self, x: Value[domains.DistanceDomain] | float = 0, y: Value[domains.DistanceDomain] | float = 0, z: Value[domains.DistanceDomain] | float = 0):
+    def __init__(
+        self,
+        x: Value[domains.DistanceDomain] | float = 0,
+        y: Value[domains.DistanceDomain] | float = 0,
+        z: Value[domains.DistanceDomain] | float = 0,
+    ):
         super().__init__(x=x, y=y, z=z)
 
     x = arithmetics.rw_property("x", Value[domains.DistanceDomain])

@@ -10,7 +10,20 @@ except ImportError:
         raise Exception("Executed dummy _rpcCoroutine")
 
 
-from ozobot.ora.datatypes import Cartesian, FingerGripperState, Frame, IoName, IoValue, IoValueType, Joints, ReferenceFrameModifier, Tool, ToolCollider, ToolType, VacuumGripperState
+from ozobot.ora.datatypes import (
+    Cartesian,
+    FingerGripperState,
+    Frame,
+    IoName,
+    IoValue,
+    IoValueType,
+    Joints,
+    ReferenceFrameModifier,
+    Tool,
+    ToolCollider,
+    ToolType,
+    VacuumGripperState,
+)
 from ozobot.ora.units import PhysicalQuantityDomain, Value, domains, number_to_value, quantities, units, value_to_number
 
 logger = getLogger(__name__)
@@ -172,7 +185,11 @@ class OraWebDriver:
         jerk: Value[domains.AngularJerkDomain] | None = None,
     ):
         cmd_name = "moveJoint" if isinstance(pose, Joints) else "moveJointToCartesian"
-        formatted_pose = value_to_number(tuple(pose), expected_domain=domains.AngleDomain()) if isinstance(pose, Joints) else _wpr_value_to_tuple(pose)
+        formatted_pose = (
+            value_to_number(tuple(pose), expected_domain=domains.AngleDomain())
+            if isinstance(pose, Joints)
+            else _wpr_value_to_tuple(pose)
+        )
         args = [
             formatted_pose,
             *self._construct_joint_movement_kwargs(speed=speed, acceleration=acceleration, jerk=jerk),
@@ -213,7 +230,9 @@ class OraWebDriver:
         acceleration: Value[domains.AccelerationDomain] | None = None,
         jerk: Value[domains.JerkDomain] | None = None,
     ):
-        speed_raw, acc_raw, jerk_raw = self._construct_linear_movement_kwargs(speed=speed, acceleration=acceleration, jerk=jerk)
+        speed_raw, acc_raw, jerk_raw = self._construct_linear_movement_kwargs(
+            speed=speed, acceleration=acceleration, jerk=jerk
+        )
         if speed_raw:
             self._default_tcp_speed_mm_s = speed_raw
 
@@ -229,7 +248,9 @@ class OraWebDriver:
         acceleration: Value[domains.AngularAccelerationDomain] | None = None,
         jerk: Value[domains.AngularJerkDomain] | None = None,
     ):
-        speed_raw, acc_raw, jerk_raw = self._construct_joint_movement_kwargs(speed=speed, acceleration=acceleration, jerk=jerk)
+        speed_raw, acc_raw, jerk_raw = self._construct_joint_movement_kwargs(
+            speed=speed, acceleration=acceleration, jerk=jerk
+        )
         if speed_raw:
             self._default_joint_speed_deg_s = speed_raw
 
@@ -240,8 +261,16 @@ class OraWebDriver:
             self._default_joint_jerk_deg_s3 = jerk_raw
 
     async def _set_speed(self, speed_percent: float):
-        await self.set_defaults_joint(speed=units(speed_percent, quantities.percent), acceleration=units(500, quantities.deg / quantities.s**2), jerk=None)
-        await self.set_defaults_linear(speed=units(500 * speed_percent / 100, quantities.mm / quantities.s), acceleration=units(2000, quantities.mm / quantities.s**2), jerk=None)
+        await self.set_defaults_joint(
+            speed=units(speed_percent, quantities.percent),
+            acceleration=units(500, quantities.deg / quantities.s**2),
+            jerk=None,
+        )
+        await self.set_defaults_linear(
+            speed=units(500 * speed_percent / 100, quantities.mm / quantities.s),
+            acceleration=units(2000, quantities.mm / quantities.s**2),
+            jerk=None,
+        )
 
         return await self._controller(
             "setSpeed",
@@ -256,7 +285,11 @@ class OraWebDriver:
     async def wait_for_input_change(self, inputs: typing.Sequence[IoName[_TIo]]) -> typing.Sequence[IoValue[_TIo]]:
         return await self._read_inputs(lambda args: self._listener("waitForInputs", args), inputs)
 
-    async def _read_inputs(self, call_component_fnc: typing.Callable[[list[typing.Any]], typing.Awaitable[typing.Any]], inputs: typing.Sequence[IoName[_TIo]]) -> typing.Sequence[IoValue[_TIo]]:
+    async def _read_inputs(
+        self,
+        call_component_fnc: typing.Callable[[list[typing.Any]], typing.Awaitable[typing.Any]],
+        inputs: typing.Sequence[IoName[_TIo]],
+    ) -> typing.Sequence[IoValue[_TIo]]:
         parameters = [{"index": input.index, "type": input.value_type.value} for input in inputs]
 
         values = await call_component_fnc(
@@ -264,10 +297,18 @@ class OraWebDriver:
                 parameters,
             ],
         )
-        return typing.cast(typing.Sequence[IoValue[_TIo]], [IoValue(index=value["index"], value=value["value"], value_type=IoValueType(value["type"])) for value in values])
+        return typing.cast(
+            typing.Sequence[IoValue[_TIo]],
+            [
+                IoValue(index=value["index"], value=value["value"], value_type=IoValueType(value["type"]))
+                for value in values
+            ],
+        )
 
     async def write_outputs(self, outputs: typing.Sequence[IoValue[_TIo]]) -> None:
-        parameters = [{"index": output.index, "type": output.value_type.value, "value": output.value} for output in outputs]
+        parameters = [
+            {"index": output.index, "type": output.value_type.value, "value": output.value} for output in outputs
+        ]
         await self._controller(
             "writeOutputs",
             [
@@ -283,7 +324,9 @@ class OraWebDriver:
         jerk: Value[domains.AngularJerkDomain] | None,
     ) -> tuple[float, float, float]:
         return (
-            self._default_joint_speed_deg_s if speed is None else speed.as_base_quantity().value / 100 * 180,  # convert percent to fraction and then to degrees
+            self._default_joint_speed_deg_s
+            if speed is None
+            else speed.as_base_quantity().value / 100 * 180,  # convert percent to fraction and then to degrees
             self._default_joint_acceleration_deg_s2 if acceleration is None else acceleration.as_base_quantity().value,
             self._default_joint_jerk_deg_s3 if jerk is None else jerk.as_base_quantity().value,
         )

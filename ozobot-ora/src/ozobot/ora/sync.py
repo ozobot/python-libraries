@@ -7,7 +7,19 @@ from typing import Literal
 
 from ozobot.ora.drivers.browser import OraWebDriver
 
-from .datatypes import Cartesian, FingerGripperState, Frame, IoName, IoValue, Joints, ReferenceFrameModifier, Tool, ToolCollider, ToolType, VacuumGripperState
+from .datatypes import (
+    Cartesian,
+    FingerGripperState,
+    Frame,
+    IoName,
+    IoValue,
+    Joints,
+    ReferenceFrameModifier,
+    Tool,
+    ToolCollider,
+    ToolType,
+    VacuumGripperState,
+)
 from .queue import TaskQueue
 from .units import Value, domains
 from .utils import as_sync
@@ -71,7 +83,9 @@ class OraSync:
         run = self._task_queue.run_blocking
         _logger.debug("Running linear: pose=%s, radius=%s, runner=%s", pose, run)
 
-        await run(self._robot.move_linear(pose, reference_frame_modifier=reference, speed=speed, acceleration=acceleration))
+        await run(
+            self._robot.move_linear(pose, reference_frame_modifier=reference, speed=speed, acceleration=acceleration)
+        )
 
     @as_sync
     async def move_circle(
@@ -89,16 +103,34 @@ class OraSync:
         await run(self._robot.move_circle(p_aux, p_end, arc_angle=arc_angle, speed=speed, acceleration=acceleration))
 
     @as_sync
-    async def set_defaults_joint(self, speed: Value[domains.RatioDomain] | None, acceleration: Value[domains.AngularAccelerationDomain] | None, jerk: Value[domains.AngularJerkDomain] | None) -> None:
-        _logger.debug("Setting defaults joint movement parameters: speed=%s, acceleration=%s, jerk=%s", speed, acceleration, jerk)
+    async def set_defaults_joint(
+        self,
+        speed: Value[domains.RatioDomain] | None,
+        acceleration: Value[domains.AngularAccelerationDomain] | None,
+        jerk: Value[domains.AngularJerkDomain] | None,
+    ) -> None:
+        _logger.debug(
+            "Setting defaults joint movement parameters: speed=%s, acceleration=%s, jerk=%s", speed, acceleration, jerk
+        )
 
-        await self._task_queue.run_blocking(self._robot.set_defaults_joint(speed=speed, acceleration=acceleration, jerk=jerk))
+        await self._task_queue.run_blocking(
+            self._robot.set_defaults_joint(speed=speed, acceleration=acceleration, jerk=jerk)
+        )
 
     @as_sync
-    async def set_defaults_linear(self, speed: Value[domains.SpeedDomain] | None, acceleration: Value[domains.AccelerationDomain] | None, jerk: Value[domains.JerkDomain] | None) -> None:
-        _logger.debug("Setting defaults linear movement parameters: speed=%s, acceleration=%s, jerk=%s", speed, acceleration, jerk)
+    async def set_defaults_linear(
+        self,
+        speed: Value[domains.SpeedDomain] | None,
+        acceleration: Value[domains.AccelerationDomain] | None,
+        jerk: Value[domains.JerkDomain] | None,
+    ) -> None:
+        _logger.debug(
+            "Setting defaults linear movement parameters: speed=%s, acceleration=%s, jerk=%s", speed, acceleration, jerk
+        )
 
-        await self._task_queue.run_blocking(self._robot.set_defaults_linear(speed=speed, acceleration=acceleration, jerk=jerk))
+        await self._task_queue.run_blocking(
+            self._robot.set_defaults_linear(speed=speed, acceleration=acceleration, jerk=jerk)
+        )
 
     @as_sync
     async def set_tool_state(self, state: FingerGripperState | VacuumGripperState) -> None:
@@ -170,7 +202,9 @@ class OraSync:
         await self._robot.write_outputs(spec)
 
     @as_sync
-    async def wait_for_input(self, inputs: typing.Sequence[IoName[_TIo]], predicate: Callable[[list[_TIo]], bool]) -> typing.Sequence[_TIo]:
+    async def wait_for_input(
+        self, inputs: typing.Sequence[IoName[_TIo]], predicate: Callable[[list[_TIo]], bool]
+    ) -> typing.Sequence[_TIo]:
         while True:
             response = await self._robot.wait_for_input_change(inputs)
             values = [value.value for value in response]
@@ -179,4 +213,15 @@ class OraSync:
                 return values
 
 
-__all__ = ("OraSync", "Cartesian", "Joints", "ReferenceFrameModifier", "Frame", "Tool", "ToolType", "ToolCollider", "FingerGripperState", "VacuumGripperState")
+__all__ = (
+    "OraSync",
+    "Cartesian",
+    "Joints",
+    "ReferenceFrameModifier",
+    "Frame",
+    "Tool",
+    "ToolType",
+    "ToolCollider",
+    "FingerGripperState",
+    "VacuumGripperState",
+)

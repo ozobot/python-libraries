@@ -1,7 +1,6 @@
 import asyncio
 
 import pytest
-
 from ozobot.ora.queue import LazyTaskGroup, TaskQueue
 
 
