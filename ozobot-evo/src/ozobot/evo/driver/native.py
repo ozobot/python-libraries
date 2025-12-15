@@ -130,15 +130,12 @@ class NativeDataAccessRead[T: Deserializable, U]:
         self._property = property
         self._from_protocol = from_protocol
 
-    async def read(self) -> Sample[U]:
+    async def read(self) -> U:
         async with self._control.MemRead(self._property.address, self._property.size) as (resp, _):
             handle_response("MemRead", resp)
 
         val = self._property.type.deserialize(bytes(resp.data))
-        if isinstance(val, _HasTimestamp):
-            return sample_from_protocol(val, self._from_protocol)
-        else:
-            return Sample.now(self._from_protocol(val))
+        return self._from_protocol(val)
 
 
 class NativeDataAccessReadWrite[T: _DeserializeAndSerializable, U](NativeDataAccessRead[T, U]):
@@ -170,7 +167,7 @@ class NativeDataWatcher[T: Deserializable, U]:
         self._reader = NativeDataAccessRead(control, property, from_protocol)
         self._from_protocol = from_protocol
 
-    async def read(self) -> Sample[U]:
+    async def read(self) -> U:
         return await self._reader.read()
 
     @contextlib.asynccontextmanager

@@ -8,9 +8,9 @@ async def test_event_watcher() -> None:
     q = EventWatcherQueue[int](Sample(0, 0))
     w = EventWatcher[int](q)
 
-    assert (await w.read()).value == 0
+    assert (await w.read()) == 0
     await q.write(Sample(1, 0))
-    assert (await w.read()).value == 1
+    assert (await w.read()) == 1
 
     async with w.watch() as reader:
         await q.write(Sample(2, 0))

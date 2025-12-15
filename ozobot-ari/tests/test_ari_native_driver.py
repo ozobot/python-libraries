@@ -249,7 +249,7 @@ async def test_native_data_access_read() -> None:
     with patch("ozobot.ari.driver.native.Query", query_cls):
         driver = NativeDriver(Mock())
 
-        assert await driver.memory.line_following_speed.read() == Sample(1230, 0)
+        assert await driver.memory.line_following_speed.read() == 1230
 
         query_cls_mock.assert_called_with(
             memread.MemReadRequest(

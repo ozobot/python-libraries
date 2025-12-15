@@ -17,7 +17,7 @@ class Serializable(Protocol):
 
 
 class ReadableRegion[T](Protocol):
-    async def read(self) -> Sample[T]: ...
+    async def read(self) -> T: ...
 
 
 class ReadableWritableRegion[T](ReadableRegion, Protocol):

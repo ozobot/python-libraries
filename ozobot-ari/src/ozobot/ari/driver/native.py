@@ -168,14 +168,14 @@ class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
         self._from_protocol = from_protocol
         self._request_id_counter = id_counter
 
-    async def read(self) -> Sample[TLib]:
+    async def read(self) -> TLib:
         req = memread.MemReadRequest(
             id=self._request_id_counter.get_next(),
             params=memread.MemReadRequestParams(segment=self._name),
         )
         async with Query(req, methods.MEM_READ).execute(self._executor) as q:
             resp = await q.response
-            return self._convert_from_protocol(resp.result)
+            return self._from_protocol(typing.cast(TProtoFrom, resp.result))
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[TLib]]]:
@@ -190,9 +190,9 @@ class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
         self, iter: typing.AsyncIterator[memread.WatchNotification]
     ) -> typing.AsyncIterator[Sample[TLib]]:
         async for val in iter:
-            yield self._convert_from_protocol(val.notification)
+            yield self._convert_sample_from_protocol(val.notification)
 
-    def _convert_from_protocol(self, val: MemReadResponseBody) -> Sample[TLib]:
+    def _convert_sample_from_protocol(self, val: MemReadResponseBody) -> Sample[TLib]:
         if isinstance(val, self._type):
             if isinstance(val, _HasTimestamp):
                 return sample_from_protocol(val, self._from_protocol)

@@ -9,7 +9,7 @@ from ozobot.linefollower.datatypes import Sample
 
 
 class _Watcher[T](typing.Protocol):
-    async def read(self) -> Sample[T]: ...
+    async def read(self) -> T: ...
 
     def watch(self) -> contextlib.AbstractAsyncContextManager[typing.AsyncIterator[Sample[T]]]: ...
 
@@ -33,8 +33,8 @@ class EventWatcher[T]:
     def __init__(self, queue: EventWatcherQueue[T]):
         self._queue = queue
 
-    async def read(self) -> Sample[T]:
-        return self._queue.last
+    async def read(self) -> T:
+        return self._queue.last.value
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[T]]]:
@@ -57,9 +57,9 @@ class DataWatcherProxy[T, U]:
         self._watcher = watcher
         self._convert = convert
 
-    async def read(self) -> Sample[U]:
-        sample = await self._watcher.read()
-        return Sample(self._convert(sample.value), sample.timestamp)
+    async def read(self) -> U:
+        value = await self._watcher.read()
+        return self._convert(value)
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
@@ -76,5 +76,5 @@ class DataReadConstant[T]:
     def __init__(self, factory: typing.Callable[[], T]) -> None:
         self._factory = factory
 
-    async def read(self) -> Sample[T]:
-        return Sample.now(self._factory())
+    async def read(self) -> T:
+        return self._factory()

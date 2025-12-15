@@ -84,11 +84,11 @@ async def test_commands(
 async def test_mem_read():
     robot_name = "robot1"
     with patch(_RPC_COROUTINE_MODULE_PATH) as mock_coro:
-        mock_coro.return_value = {"timestamp": 0, "value": 0.5}
+        mock_coro.return_value = 0.5
         driver = LineFollowerWebDriver(robot_name)
 
         speed = await driver.memory.line_following_speed.read()
-        assert speed.value == 500
+        assert speed == 500
 
         mock_coro.assert_awaited_once_with(robot_name, "memory.lineFollowingSpeed.read", tuple())
 

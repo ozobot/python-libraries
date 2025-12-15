@@ -205,8 +205,7 @@ async def test_native_data_access_read() -> None:
     da = NativeDataAccessRead(control, property, lambda v: v.voltage)
 
     ret = await da.read()
-    assert isinstance(ret, Sample)
-    assert ret.value == 1
+    assert ret == 1
 
     cmd_mock.assert_called_once_with(property.address, property.size)
 
@@ -267,7 +266,6 @@ async def test_native_data_watcher() -> None:
 
     # test reading
     ret = await da.read()
-    assert isinstance(ret, Sample)
-    assert ret.value == 1
+    assert ret == 1
 
     cmd_mock.assert_called_once_with(property.address, property.size)

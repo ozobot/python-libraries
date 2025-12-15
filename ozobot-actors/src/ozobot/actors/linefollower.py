@@ -14,7 +14,7 @@ class _ProxyDataAccessRead[T]:
         self._value_type = value_type
         self._name = name
 
-    async def read(self) -> Sample[T]:
+    async def read(self) -> T:
         obj = self._dispatcher.get_property(self._value_type, self._name)
         return await obj.read()
 
@@ -25,7 +25,7 @@ class _ProxyDataWatcher[T]:
         self._value_type = value_type
         self._name = name
 
-    async def read(self) -> Sample[T]:
+    async def read(self) -> T:
         obj = self._dispatcher.get_property(self._value_type, self._name)
         return await obj.read()
 

@@ -51,29 +51,11 @@ class Rpc:
         return response_class.model_validate(ret)
 
 
-def _convert_from_protocol[TProtoFrom, TLib](
-    name: str,
-    _type: type[TProtoFrom],
-    sample: rpctypes.Sample[TProtoFrom],
-    transformer: typing.Callable[[TProtoFrom], TLib],
-) -> Sample[TLib]:
-    if isinstance(sample.value, _type):
-        converted_val = transformer(sample.value)
-        return Sample(converted_val, timestamp=sample.timestamp / 1000)
-    else:
-        raise MemoryReadUnsuccessfulError(name, f"got unexpected type {type(sample.value)}")
-
-
 # To make the code cleaner, we define the rpctypes.Sample[T] and list[rpctypes.Sample[T]] factories...
 # We need to pass the runtime type as rpc.execute's response_type, but pydantic fails when T is
 #     a generic type (e.g., TProtoFrom: pydantic.BaseModel bound to a function) and mypy fails when T is a
 #     runtime type (e.g, T = type(int)). We use the following to satisfy both...
 #     https://github.com/python/mypy/issues/13619
-def _get_response_model[T](_type: type[T]) -> type[rpctypes.Sample[T]]:
-    response_model = rpctypes.Sample[_type]  # type: ignore[valid-type]
-    return response_model
-
-
 def _get_response_model_list[T](_type: type[T]) -> type[list[rpctypes.Sample[T]]]:
     response_model = list[rpctypes.Sample[_type]]  # type: ignore[valid-type]
     return response_model
@@ -108,7 +90,14 @@ class WebDataAccessWatch[TProtoFrom: pydantic.BaseModel, TLib]:
             samples = await self._rpc.execute(req, response_model)
             last_sample = samples[-1]
             for sample in samples:
-                yield _convert_from_protocol(self._property_name, self._type, sample, self._from_protocol)
+                yield self._convert_from_protocol(sample)
+
+    def _convert_from_protocol(self, sample: rpctypes.Sample[TProtoFrom]) -> Sample[TLib]:
+        if isinstance(sample.value, self._type):
+            converted_val = self._from_protocol(sample.value)
+            return Sample(converted_val, timestamp=sample.timestamp / 1000)
+        else:
+            raise MemoryReadUnsuccessfulError(self._property_name, f"got unexpected type {type(sample.value)}")
 
 
 class WebDataAccessRead[TProtoFrom: pydantic.BaseModel, TLib]:
@@ -125,10 +114,10 @@ class WebDataAccessRead[TProtoFrom: pydantic.BaseModel, TLib]:
         self._type = response_type
         self._from_protocol = from_protocol
 
-    async def read(self) -> Sample[TLib]:
+    async def read(self) -> TLib:
         req = rpctypes.MemReadRequest.create(name=self._property_name)
-        resp = await self._rpc.execute(req, _get_response_model(self._type))
-        return _convert_from_protocol(self._property_name, self._type, resp, self._from_protocol)
+        resp = await self._rpc.execute(req, self._type)
+        return self._from_protocol(resp)
 
 
 class WebDataAccessReadWatch[TProtoFrom: pydantic.BaseModel, TLib]:
@@ -146,7 +135,7 @@ class WebDataAccessReadWatch[TProtoFrom: pydantic.BaseModel, TLib]:
     def watch(self) -> typing.AsyncContextManager[typing.AsyncIterator[Sample[TLib]]]:
         return self._watch.watch()
 
-    async def read(self) -> Sample[TLib]:
+    async def read(self) -> TLib:
         return await self._read.read()
 
 
