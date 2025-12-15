@@ -9,10 +9,9 @@ from ozobot.linefollower.datatypes import (
     Direction,
     TDirection,
 )
+from ozobot.linefollower.driver.web import Rpc, rpctypes
 from ozobot.userio import conversions
 from ozobot.userio.datatypes import TWebUserIoPrompt
-from ozobot.web import rpctypes
-from ozobot.web.driver import Rpc
 
 
 @contextlib.contextmanager

@@ -2,14 +2,14 @@ import typing
 
 from ozobot.ari import conversions as ari_conversions
 from ozobot.linefollower.datatypes import Color, Direction, TDirection, TNamedColor
+from ozobot.linefollower.driver.web import conversions as web_conversions
+from ozobot.linefollower.driver.web.rpctypes import ClassifiedColor
 from ozobot.userio.datatypes import TUserIoPrompt, TWebUserIoPrompt
 from ozobot.userio.exceptions import (
     UnexpectedUserIoPromptOptionTypeError,
     UnexpectedUserIoPromptResponseReceivedError,
     UnexpectedUserIoPromptTypeError,
 )
-from ozobot.web import conversions as web_conversions
-from ozobot.web.rpctypes import ClassifiedColor
 
 
 def get_type_name(_type: type[str | int | float | bool | Color | Direction]) -> TUserIoPrompt:

@@ -3,9 +3,10 @@ from unittest.mock import patch
 
 import pytest
 from ozobot.linefollower.datatypes import Color, Colors, Direction
+from ozobot.linefollower.driver.web import Rpc, rpctypes
 from ozobot.userio.web import UserIoWebDriverComponent
-from ozobot.web import rpctypes
-from ozobot.web.driver import Rpc
+
+_RPC_COROUTINE_MODULE_PATH = "ozobot.linefollower.driver.web.driver._rpcCoroutine"
 
 
 @pytest.mark.parametrize(
@@ -38,7 +39,7 @@ async def test_commands(
     rpc_result: typing.Any,
 ) -> None:
     robot_name = "robot1"
-    with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
+    with patch(_RPC_COROUTINE_MODULE_PATH) as mock_coro:
         mock_coro.return_value = rpc_result
         rpc = Rpc(robot_name)
         driver = UserIoWebDriverComponent(rpc)
@@ -149,7 +150,7 @@ async def test_user_io_prompt(
 ) -> None:
     robot_name = "robot1"
     message = "Hello world!"
-    with patch("ozobot.web.driver._rpcCoroutine") as mock_coro:
+    with patch(_RPC_COROUTINE_MODULE_PATH) as mock_coro:
         mock_coro.return_value = rpc_response
         rpc = Rpc(robot_name)
         driver = UserIoWebDriverComponent(rpc)

@@ -1,7 +1,6 @@
 import pytest
 from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, LEDMask, TNamedColor
-from ozobot.linefollower.exceptions import SingleDirectionRequiredError
-from ozobot.web.conversions import (
+from ozobot.linefollower.driver.web.conversions import (
     color_code_from_web,
     color_from_web,
     direction_to_web,
@@ -9,7 +8,8 @@ from ozobot.web.conversions import (
     ir_message_from_web,
     led_to_web_json,
 )
-from ozobot.web.rpctypes import ClassifiedColor, ReadIrResponse
+from ozobot.linefollower.driver.web.rpctypes import ClassifiedColor, ReadIrResponse
+from ozobot.linefollower.exceptions import SingleDirectionRequiredError
 
 
 @pytest.mark.parametrize(

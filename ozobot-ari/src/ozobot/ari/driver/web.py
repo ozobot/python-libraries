@@ -1,9 +1,14 @@
 from ozobot.ari import conversions
 from ozobot.ari.webprotocol import types as webtypes
 from ozobot.linefollower.datatypes import Color, Direction
+from ozobot.linefollower.driver.web import (
+    LineFollowerWebDriver,
+    Rpc,
+    WebDataAccessReadWatch,
+    WebMemoryRegions,
+    rpctypes,
+)
 from ozobot.userio.web import UserIoWebDriverComponent
-from ozobot.web import rpctypes
-from ozobot.web.driver import Rpc, WebDataAccessReadWatch, WebDriver, WebMemoryRegions
 
 
 class AriWebMemoryRegions(WebMemoryRegions):
@@ -18,7 +23,7 @@ class AriWebMemoryRegions(WebMemoryRegions):
         )
 
 
-class AriWebDriver(WebDriver):
+class AriWebDriver(LineFollowerWebDriver):
     @property
     def memory(self) -> AriWebMemoryRegions:
         return self._ari_memory

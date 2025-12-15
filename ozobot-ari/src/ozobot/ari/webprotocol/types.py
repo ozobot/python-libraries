@@ -1,6 +1,6 @@
 import typing
 
-from ozobot.web import rpctypes
+from ozobot.linefollower.driver.web import rpctypes
 
 
 class PlayAudioRequest(rpctypes.BaseRequest):

@@ -1,8 +1,13 @@
 from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.webprotocol import types as webtypes
-from ozobot.web import conversions
-from ozobot.web.driver import Rpc, WebDataAccessReadWatch, WebDriver, WebMemoryRegions
-from ozobot.web.rpctypes import ReadIrResponse, ValidatedInt, ValidatedNone
+from ozobot.linefollower.driver.web import (
+    LineFollowerWebDriver,
+    Rpc,
+    WebDataAccessReadWatch,
+    WebMemoryRegions,
+    conversions,
+)
+from ozobot.linefollower.driver.web.rpctypes import ReadIrResponse, ValidatedInt, ValidatedNone
 
 
 class EvoWebMemoryRegions(WebMemoryRegions):
@@ -49,7 +54,7 @@ class EvoWebMemoryRegions(WebMemoryRegions):
         )
 
 
-class EvoWebDriver(WebDriver):
+class EvoWebDriver(LineFollowerWebDriver):
     @property
     def memory(self) -> EvoWebMemoryRegions:
         return self._evo_memory

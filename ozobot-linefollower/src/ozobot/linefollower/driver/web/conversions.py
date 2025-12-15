@@ -3,7 +3,8 @@ import typing
 from ozobot.linefollower.conversions import is_named_color
 from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, LEDMask
 from ozobot.linefollower.exceptions import SingleDirectionRequiredError
-from ozobot.web.rpctypes import ALLOWED_NAMED_DIRECTIONS, ClassifiedColor, ReadIrResponse, TWebDirection
+
+from .rpctypes import ALLOWED_NAMED_DIRECTIONS, ClassifiedColor, ReadIrResponse, TWebDirection
 
 
 def led_to_web_json(mask: LEDMask) -> dict[str, bool]:

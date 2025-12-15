@@ -5,9 +5,10 @@ import typing
 import pydantic
 from loguru import logger
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
-from ozobot.web import rpctypes
 from ozobot.web.browser import _rpcCoroutine
-from ozobot.web.conversions import (
+
+from . import rpctypes
+from .conversions import (
     color_code_from_web,
     color_from_web,
     direction_to_web,
@@ -15,7 +16,7 @@ from ozobot.web.conversions import (
     ir_message_from_web,
     led_to_web_json,
 )
-from ozobot.web.exceptions import (
+from .exceptions import (
     InvalidWebRobotSelectorError,
     MemoryReadUnsuccessfulError,
     MissingRobotSelectorError,
@@ -238,7 +239,7 @@ class WebMemoryRegions:
         )
 
 
-class WebDriver:
+class LineFollowerWebDriver:
     @property
     def memory(self) -> WebMemoryRegions:
         return self._memory
