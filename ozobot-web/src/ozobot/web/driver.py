@@ -6,6 +6,7 @@ import pydantic
 from loguru import logger
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
 from ozobot.web import rpctypes
+from ozobot.web.browser import _rpcCoroutine
 from ozobot.web.conversions import (
     color_code_from_web,
     color_from_web,
@@ -19,19 +20,6 @@ from ozobot.web.exceptions import (
     MemoryReadUnsuccessfulError,
     MissingRobotSelectorError,
 )
-
-try:
-    # this library is only present in web-python web application distribution
-    # if the import fails, we are running natively, and we can create a mock function instead
-    from _ozo import _rpcCoroutine  # type: ignore[import]
-
-except ImportError:
-    logger.warning(
-        "`_ozo` module could not be imported which is expected to happen when a web driver is used outside of the pyodide environment"
-    )
-
-    async def _rpcCoroutine(object_name: str, func_name: str, args: list[typing.Any]) -> typing.Any:
-        raise NotImplementedError("`_rpcCoroutine` is only available in the pyodide environment")
 
 
 @typing.runtime_checkable
