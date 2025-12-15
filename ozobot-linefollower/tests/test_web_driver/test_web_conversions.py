@@ -1,5 +1,14 @@
 import pytest
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, LEDMask, TNamedColor
+from ozobot.linefollower.datatypes import (
+    Color,
+    ColorCode,
+    Colors,
+    Direction,
+    IRMessage,
+    LEDMask,
+    RobotGeometry,
+    TNamedColor,
+)
 from ozobot.linefollower.driver.web.conversions import (
     color_code_from_web,
     color_from_web,
@@ -7,8 +16,9 @@ from ozobot.linefollower.driver.web.conversions import (
     intersection_from_web,
     ir_message_from_web,
     led_to_web_json,
+    robot_geometry_from_web,
 )
-from ozobot.linefollower.driver.web.rpctypes import ClassifiedColor, ReadIrResponse
+from ozobot.linefollower.driver.web.rpctypes import ClassifiedColor, ReadIrResponse, RobotGeometryResponse
 from ozobot.linefollower.exceptions import SingleDirectionRequiredError
 
 
@@ -92,3 +102,21 @@ def test_color_from_web(web: TNamedColor, lib: Color) -> None:
 
 def test_ir_message_from_web() -> None:
     assert ir_message_from_web(ReadIrResponse(message=10, intensity=20)) == IRMessage(message=10, intensity=20)
+
+
+def test_robot_geometry_from_web() -> None:
+    assert robot_geometry_from_web(
+        RobotGeometryResponse(
+            ticks_per_meter=22281.69,
+            wheel_track=0.0315,
+            wheel_diameter=0.012,
+            encoder_ticks_per_wheel_revolution=16 * 2 * 21 * 15 / 12.0,
+            max_speed_limit=0.3,
+        )
+    ) == RobotGeometry(
+        ticks_per_meter=22281.69,
+        wheel_track=0.0315,
+        wheel_diameter=0.012,
+        encoder_ticks_per_wheel_revolution=16 * 2 * 21 * 15 / 12.0,
+        max_speed_limit=0.3,
+    )

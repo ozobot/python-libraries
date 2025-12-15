@@ -1,10 +1,10 @@
 import typing
 
 from ozobot.linefollower.conversions import is_named_color
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, LEDMask
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, LEDMask, RobotGeometry
 from ozobot.linefollower.exceptions import SingleDirectionRequiredError
 
-from .rpctypes import ALLOWED_NAMED_DIRECTIONS, ClassifiedColor, ReadIrResponse, TWebDirection
+from .rpctypes import ALLOWED_NAMED_DIRECTIONS, ClassifiedColor, ReadIrResponse, RobotGeometryResponse, TWebDirection
 
 
 def led_to_web_json(mask: LEDMask) -> dict[str, bool]:
@@ -116,4 +116,14 @@ def ir_message_from_web(ir_message: ReadIrResponse) -> IRMessage:
     return IRMessage(
         message=ir_message.message,
         intensity=ir_message.intensity,
+    )
+
+
+def robot_geometry_from_web(robot_geometry: RobotGeometryResponse) -> RobotGeometry:
+    return RobotGeometry(
+        ticks_per_meter=robot_geometry.ticks_per_meter,
+        wheel_track=robot_geometry.wheel_track,
+        wheel_diameter=robot_geometry.wheel_diameter,
+        encoder_ticks_per_wheel_revolution=robot_geometry.encoder_ticks_per_wheel_revolution,
+        max_speed_limit=robot_geometry.max_speed_limit,
     )

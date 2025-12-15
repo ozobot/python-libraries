@@ -206,3 +206,11 @@ class ColorCodeResponse(BaseResponse):
 class ReadIrResponse(BaseResponse):
     message: int
     intensity: int
+
+
+class RobotGeometryResponse(BaseResponse):
+    ticks_per_meter: float
+    wheel_track: float
+    wheel_diameter: float
+    encoder_ticks_per_wheel_revolution: float
+    max_speed_limit: float

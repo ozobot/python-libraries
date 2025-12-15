@@ -70,3 +70,11 @@ class DataWatcherProxy[T, U]:
                     yield Sample(self._convert(sample.value), sample.timestamp)
 
             yield _reader_converted()
+
+
+class DataReadConstant[T]:
+    def __init__(self, factory: typing.Callable[[], T]) -> None:
+        self._factory = factory
+
+    async def read(self) -> Sample[T]:
+        return Sample.now(self._factory())

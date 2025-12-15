@@ -20,9 +20,9 @@ from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
-from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.data_access import DataReadConstant, EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, Sample, TimeOfFlight
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, RobotGeometry, Sample, TimeOfFlight
 from ozobot.userio import conversions as userio_conversions
 from ozobot.userio.exceptions import UnexpectedUserIoPromptResponseReceivedError
 from ozobot.webrtc import messaging
@@ -129,6 +129,16 @@ class NativeMemoryRegions:
         self.time_of_flight = NativeTimeOfFlightWatcher(
             executor,
             request_id,
+        )
+
+        self.geometry = DataReadConstant(
+            lambda: RobotGeometry(
+                ticks_per_meter=22281.69,
+                wheel_track=0.0315,
+                wheel_diameter=0.012,
+                encoder_ticks_per_wheel_revolution=16 * 2 * 21 * 15 / 12.0,
+                max_speed_limit=0.3,
+            )
         )
 
 

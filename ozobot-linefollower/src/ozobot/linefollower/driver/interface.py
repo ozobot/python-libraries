@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import AbstractAsyncContextManager
 from typing import Protocol, Self
 
-from ozobot.linefollower.datatypes import Color, ColorCode, Direction, IRMessage, LEDMask, Sample
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, IRMessage, LEDMask, RobotGeometry, Sample
 
 
 class Deserializable(Protocol):
@@ -32,6 +32,9 @@ class ReadableWatchableRegion[T](ReadableRegion[T], WatchableRegion[T], Protocol
 
 
 class VirtualMemoryRegions(Protocol):
+    @property
+    def geometry(self) -> ReadableRegion[RobotGeometry]: ...
+
     @property
     def line_following_speed(self) -> ReadableWritableRegion[float]: ...
 

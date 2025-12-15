@@ -11,9 +11,9 @@ from ozobot.evo.api.watchers import LineFollowerWatcher, WatcherSubscription
 from ozobot.evo.driver.responses import handle_events, handle_response
 from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
-from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.data_access import DataReadConstant, DataWatcherProxy, EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
+from ozobot.linefollower.datatypes import Direction, LEDMask, RobotGeometry, Sample
 from ozobot.linefollower.driver.interface import Deserializable, Serializable
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
@@ -109,6 +109,16 @@ class NativeMemoryRegions:
         self.button = NativeDataWatcher(control, VirtualMemory.button, button_watcher, lambda b: b.press)
         self.charger = NativeDataWatcher(
             control, VirtualMemory.chargerState, charger_watcher, conversions.charger_state_from_protocol
+        )
+
+        self.geometry = DataReadConstant(
+            lambda: RobotGeometry(
+                ticks_per_meter=18851,
+                wheel_track=0.023,
+                wheel_diameter=0.01182,
+                encoder_ticks_per_wheel_revolution=8 * 2 * 21 * 25 / 12,
+                max_speed_limit=0.3,
+            )
         )
 
 
