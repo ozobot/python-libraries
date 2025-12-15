@@ -632,14 +632,10 @@ name = "ozobot-web"
 source = { editable = "ozobot-web" }
 dependencies = [
     { name = "ozobot-common" },
-    { name = "ozobot-linefollower" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "ozobot-common", editable = "ozobot-common" },
-    { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
-]
+requires-dist = [{ name = "ozobot-common", editable = "ozobot-common" }]
 
 [[package]]
 name = "ozobot-webrtc"
