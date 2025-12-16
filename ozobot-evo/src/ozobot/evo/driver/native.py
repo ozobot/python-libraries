@@ -208,7 +208,7 @@ async def create_memory_regions_structure(control: AsyncControl) -> typing.Async
         yield NativeMemoryRegions(control, typing.cast(_TWatchers, subscriptions))
 
 
-class NativeDriver:
+class EvoNativeDriver:
     def __init__(self, control: AsyncControl, memory: NativeMemoryRegions) -> None:
         self._control = control
         self.memory = memory
@@ -220,7 +220,7 @@ class NativeDriver:
         address: str | None = None,
         id: str | None = None,
         name: str | None = None,
-    ) -> typing.AsyncIterator[NativeDriver]:
+    ) -> typing.AsyncIterator[EvoNativeDriver]:
         async with open_client(address=address, id=id, name=name) as client:
             char = client.get_characteristic(_SERVICE_UUID, _CHARACTERISTIC_UUID)
             control = AsyncControl(char)

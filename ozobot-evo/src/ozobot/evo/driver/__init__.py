@@ -1,55 +1,13 @@
 import sys
 import typing
 
-from ozobot.linefollower.datatypes import IRMessage
-from ozobot.linefollower.driver.interface import Driver, ReadableWatchableRegion, VirtualMemoryRegions
-
-__all__ = ["get_driver"]
-
-
-class EvoVirtualMemory(VirtualMemoryRegions, typing.Protocol):
-    @property
-    def proximity_right_rear(self) -> ReadableWatchableRegion[int]: ...
-
-    @property
-    def proximity_left_rear(self) -> ReadableWatchableRegion[int]: ...
-
-    @property
-    def ir_message_left_rear(self) -> ReadableWatchableRegion[IRMessage]: ...
-
-    @property
-    def ir_message_right_rear(self) -> ReadableWatchableRegion[IRMessage]: ...
-
-    @property
-    def charger(self) -> ReadableWatchableRegion[typing.Literal["Connected", "Disconnected", "LowPower"]]: ...
-
-    @property
-    def button(self) -> ReadableWatchableRegion[bool]: ...
-
-
-# this enables verbose errors when memory region implementations do not
-# match the interfaces
 if typing.TYPE_CHECKING:
-    _vm: EvoVirtualMemory
-    from ozobot.evo.driver.native import NativeMemoryRegions
-    from ozobot.evo.driver.web import EvoWebMemoryRegions
+    from ozobot.evo.driver.native import EvoNativeDriver
+    from ozobot.evo.driver.web import EvoWebDriver
 
-    _vm = EvoWebMemoryRegions()  # type: ignore[call-arg]
-    _vm = NativeMemoryRegions()  # type: ignore[call-arg]
-
-
-class EvoDriver(Driver, typing.Protocol):
-    @property
-    def memory(self) -> EvoVirtualMemory: ...
-
-    @classmethod
-    def open(
-        cls,
-        *,
-        address: str | None = None,
-        id: str | None = None,
-        name: str | None = None,
-    ) -> typing.AsyncContextManager[typing.Self]: ...
+    type EvoDriver = EvoWebDriver | EvoNativeDriver
+else:
+    type EvoDriver = typing.Any
 
 
 def get_driver() -> type[EvoDriver]:
@@ -61,6 +19,6 @@ def get_driver() -> type[EvoDriver]:
 
         return EvoWebDriver
     else:
-        from ozobot.evo.driver.native import NativeDriver
+        from ozobot.evo.driver.native import EvoNativeDriver
 
-        return NativeDriver
+        return EvoNativeDriver

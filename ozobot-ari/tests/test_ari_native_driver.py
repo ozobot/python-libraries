@@ -5,7 +5,7 @@ import typing
 from unittest.mock import ANY, Mock, patch
 
 import pytest
-from ozobot.ari.driver.native import NativeDriver
+from ozobot.ari.driver.native import AriNativeDriver
 from ozobot.ari.protocol import memread, memwrite, methods, notification, request, response, types
 from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, Sample
 
@@ -45,7 +45,7 @@ def _create_query(response=None, notifications=None):
 def test_import_native() -> None:
     from ozobot.ari.driver import get_driver
 
-    assert issubclass(get_driver(), NativeDriver)
+    assert issubclass(get_driver(), AriNativeDriver)
 
 
 async def test_open_ble() -> None:
@@ -54,8 +54,8 @@ async def test_open_ble() -> None:
 
     with patch("ozobot.ari.driver.native._get_routing_key_from_ble", side_effect=_get_rk_mock) as routing_key_mock:
         with patch("ozobot.ari.driver.native._create_webrtc_channel") as channel_mock:
-            async with NativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
-                assert isinstance(driver, NativeDriver)
+            async with AriNativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
+                assert isinstance(driver, AriNativeDriver)
                 routing_key_mock.assert_called_with(
                     address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF", out_queue=ANY
                 )
@@ -64,8 +64,8 @@ async def test_open_ble() -> None:
 
 async def test_open_connection_key() -> None:
     with patch("ozobot.ari.driver.native._create_webrtc_channel") as channel_mock:
-        async with NativeDriver.open(connection_key="1234abcd") as driver:
-            assert isinstance(driver, NativeDriver)
+        async with AriNativeDriver.open(connection_key="1234abcd") as driver:
+            assert isinstance(driver, AriNativeDriver)
             channel_mock.assert_called_once_with("anvil.1234abcd")
 
 
@@ -153,7 +153,7 @@ async def test_command_with_response(
 ) -> None:
     query_cls, query_cls_mock = _create_query()
     with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = NativeDriver(Mock())
+        driver = AriNativeDriver(Mock())
 
         function = getattr(driver, function_name)
         await function(*command_parameters)
@@ -176,7 +176,7 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
         ]
     )
     with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = NativeDriver(Mock())
+        driver = AriNativeDriver(Mock())
 
         async with driver.memory.intersection.watch() as intersection_it, driver.memory.color_code.watch() as cc_it:
             await driver.line_navigation(Direction.LEFT, follow_bool)
@@ -201,7 +201,7 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
 async def test_request_id_counter() -> None:
     query_cls, query_cls_mock = _create_query()
     with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = NativeDriver(Mock())
+        driver = AriNativeDriver(Mock())
         await driver.move(0, 0)
         await driver.move(1, 1)
 
@@ -227,7 +227,7 @@ async def test_request_id_counter() -> None:
 async def test_set_led(command_lights: LEDMask, rpc_lights: types.Lights) -> None:
     query_cls, query_cls_mock = _create_query()
     with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = NativeDriver(Mock())
+        driver = AriNativeDriver(Mock())
 
         await driver.set_led(command_lights, 10, 20, 30)
 
@@ -247,7 +247,7 @@ async def test_set_led(command_lights: LEDMask, rpc_lights: types.Lights) -> Non
 async def test_native_data_access_read() -> None:
     query_cls, query_cls_mock = _create_query(response=memread.MemReadResponseLinearVelocity(velocity=1.23))
     with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = NativeDriver(Mock())
+        driver = AriNativeDriver(Mock())
 
         assert await driver.memory.line_following_speed.read() == 1230
 
@@ -265,7 +265,7 @@ async def test_native_data_access_read() -> None:
 async def test_native_data_access_write() -> None:
     query_cls, query_cls_mock = _create_query()
     with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = NativeDriver(Mock())
+        driver = AriNativeDriver(Mock())
 
         await driver.memory.line_following_speed.write(1230)
 
@@ -337,7 +337,7 @@ async def test_user_io_prompt(
 ) -> None:
     query_cls, query_cls_mock = _create_query(response=response_body)
     with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = NativeDriver(Mock())
+        driver = AriNativeDriver(Mock())
 
         result = await driver.user_io_prompt("Choose an option", prompt_type, options)
         assert result == expected_result
@@ -380,7 +380,7 @@ async def test_native_data_access_watch() -> None:
         ],
     )
     with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = NativeDriver(Mock())
+        driver = AriNativeDriver(Mock())
 
         async with driver.memory.line_color.watch() as it:
             notifications = [await anext(it) for _ in range(3)]

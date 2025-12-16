@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, Mock, patch, sentinel
 
 import pytest
 from ozobot.evo.driver.native import (
+    EvoNativeDriver,
     NativeDataAccessRead,
     NativeDataAccessReadWrite,
     NativeDataWatcher,
-    NativeDriver,
 )
 from ozobot.evo.protocol import Types, VirtualMemory
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
@@ -35,7 +35,7 @@ def _create_command(
 def test_import_native() -> None:
     from ozobot.evo.driver import get_driver
 
-    assert issubclass(get_driver(), NativeDriver)
+    assert issubclass(get_driver(), EvoNativeDriver)
 
 
 async def test_open() -> None:
@@ -44,8 +44,8 @@ async def test_open() -> None:
         patch("ozobot.evo.driver.native.create_memory_regions_structure"),
         patch("ozobot.evo.driver.native._stop_execution"),
     ):
-        async with NativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
-            assert isinstance(driver, NativeDriver)
+        async with EvoNativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
+            assert isinstance(driver, EvoNativeDriver)
             open_client_mock.assert_called_with(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF")
 
 
@@ -76,7 +76,7 @@ async def test_command_with_events(
         **{command_name: cmd_mock},
         get_next_request_id=lambda: sentinel.request_id,
     )
-    driver = NativeDriver(control, Mock())
+    driver = EvoNativeDriver(control, Mock())
 
     function = getattr(driver, function_name)
     await function(*command_parameters)
@@ -102,7 +102,7 @@ async def test_line_navigation() -> None:
         get_next_request_id=lambda: sentinel.request_id,
     )
     memory = AsyncMock()
-    driver = NativeDriver(control, memory)
+    driver = EvoNativeDriver(control, memory)
 
     await driver.line_navigation(Direction.LEFT, False)
     cmd_mock.assert_called_once_with(
@@ -133,7 +133,7 @@ async def test_set_led(command_direction: LEDMask, rpc_direction: Types.LEDsMask
         )
     )
     control = Mock(SetLED=cmd_mock)
-    driver = NativeDriver(control, Mock())
+    driver = EvoNativeDriver(control, Mock())
 
     await driver.set_led(command_direction, 0, 100, 200)
     cmd_mock.assert_called_once_with(rpc_direction, 0, 100, 200, 255)
@@ -180,7 +180,7 @@ async def test_cancellation(
         **{command_name: cmd_mock, "StopExecution": stop_mock},
         get_next_request_id=lambda: sentinel.request_id,
     )
-    driver = NativeDriver(control, Mock())
+    driver = EvoNativeDriver(control, Mock())
 
     function = getattr(driver, function_name)
     with pytest.raises(asyncio.CancelledError):

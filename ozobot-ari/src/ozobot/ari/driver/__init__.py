@@ -1,40 +1,13 @@
 import sys
 import typing
 
-from ozobot.linefollower.datatypes import TimeOfFlight
-from ozobot.linefollower.driver.interface import Driver, ReadableWatchableRegion, VirtualMemoryRegions
-from ozobot.userio.interface import UserIoInterface
-
-
-class AriVirtualMemory(VirtualMemoryRegions, typing.Protocol):
-    @property
-    def time_of_flight(self) -> ReadableWatchableRegion[TimeOfFlight]: ...
-
-
-class AriDriver(Driver, UserIoInterface, typing.Protocol):
-    @property
-    def memory(self) -> AriVirtualMemory: ...
-
-    @classmethod
-    def open(
-        cls,
-        *,
-        address: str | None = None,
-        id: str | None = None,
-        name: str | None = None,
-        connection_key: str | None = None,
-    ) -> typing.AsyncContextManager[typing.Self]: ...
-
-
-# this enables verbose errors when memory region implementations do not
-# match the interfaces
 if typing.TYPE_CHECKING:
-    _vm: AriVirtualMemory
-    from ozobot.ari.driver.native import NativeMemoryRegions
-    from ozobot.ari.driver.web import AriWebMemoryRegions
+    from ozobot.ari.driver.native import AriNativeDriver
+    from ozobot.ari.driver.web import AriWebDriver
 
-    _vm = AriWebMemoryRegions()  # type: ignore[call-arg]
-    _vm = NativeMemoryRegions()  # type: ignore[call-arg]
+    type AriDriver = AriWebDriver | AriNativeDriver
+else:
+    type AriDriver = typing.Any
 
 
 def get_driver() -> type[AriDriver]:
@@ -46,6 +19,6 @@ def get_driver() -> type[AriDriver]:
 
         return AriWebDriver
     else:
-        from ozobot.ari.driver.native import NativeDriver
+        from ozobot.ari.driver.native import AriNativeDriver
 
-        return NativeDriver
+        return AriNativeDriver

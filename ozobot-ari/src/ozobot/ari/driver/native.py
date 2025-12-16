@@ -235,9 +235,10 @@ class NativeTimeOfFlightWatcher:
         self._executor = executor
         self._request_id = request_id
 
-    async def read(self) -> Sample[TimeOfFlight]:
+    async def read(self) -> TimeOfFlight:
         async with self.watch() as it:
-            return await anext(it)
+            sample = await anext(it)
+            return sample.value
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[TimeOfFlight]]]:
@@ -287,7 +288,7 @@ async def _create_webrtc_channel(connection_key: str) -> Channel:
     return channels[0]
 
 
-class NativeDriver:
+class AriNativeDriver:
     @property
     def memory(self) -> NativeMemoryRegions:
         return self._memory
@@ -306,7 +307,7 @@ class NativeDriver:
         id: str | None = None,
         name: str | None = None,
         connection_key: str | None = None,
-    ) -> typing.AsyncIterator[NativeDriver]:
+    ) -> typing.AsyncIterator[AriNativeDriver]:
         if connection_key:
             routing_key = f"anvil.{connection_key}"
             rk_task = None

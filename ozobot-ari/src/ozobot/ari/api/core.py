@@ -1,6 +1,25 @@
-from ozobot.ari.driver import AriDriver, AriVirtualMemory
+import typing
+
+from ozobot.ari.driver import AriDriver
 from ozobot.linefollower.api.core import LineFollower
-from ozobot.linefollower.datatypes import Color, Direction
+from ozobot.linefollower.datatypes import Color, Direction, TimeOfFlight
+from ozobot.linefollower.driver.interface import ReadableWatchableRegion, VirtualMemoryRegions
+
+
+class AriVirtualMemory(VirtualMemoryRegions, typing.Protocol):
+    @property
+    def time_of_flight(self) -> ReadableWatchableRegion[TimeOfFlight]: ...
+
+
+# this enables verbose errors when memory region implementations do not
+# match the interfaces
+if typing.TYPE_CHECKING:
+    _vm: AriVirtualMemory
+    from ozobot.ari.driver.native import NativeMemoryRegions
+    from ozobot.ari.driver.web import AriWebMemoryRegions
+
+    _vm = AriWebMemoryRegions()  # type: ignore[call-arg]
+    _vm = NativeMemoryRegions()  # type: ignore[call-arg]
 
 
 class Ari(LineFollower):
