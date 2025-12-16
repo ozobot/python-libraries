@@ -33,9 +33,6 @@ class EventWatcher[T]:
     def __init__(self, queue: EventWatcherQueue[T]):
         self._queue = queue
 
-    async def read(self) -> T:
-        return self._queue.last.value
-
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[T]]]:
         with self._queue.output() as events:
