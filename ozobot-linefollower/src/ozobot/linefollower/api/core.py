@@ -10,7 +10,6 @@ from ozobot.linefollower.datatypes import (
     Direction,
     LEDMask,
     RawColor,
-    RobotGeometry,
     TNote,
 )
 from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
@@ -18,16 +17,6 @@ from ozobot.linefollower.exceptions import InvalidClassifiedColorError
 
 
 class LineFollower:
-    @property
-    def geometry(self) -> RobotGeometry:
-        return RobotGeometry(
-            ticks_per_meter=0,
-            wheel_track=0,
-            wheel_diameter=0,
-            encoder_ticks_per_wheel_revolution=0,
-            max_speed_limit=0,
-        )
-
     @property
     def memory(self) -> VirtualMemoryRegions:
         return self._driver.memory
