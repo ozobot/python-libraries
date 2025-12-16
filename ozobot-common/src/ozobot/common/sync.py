@@ -18,7 +18,7 @@ def as_sync[**P, T](func: typing.Callable[P, typing.Awaitable[T]]) -> typing.Cal
 
 
 @contextlib.contextmanager
-def as_sync_context_manager[T](async_context_manager: typing.AsyncContextManager[T]) -> typing.Iterator[T]:
+def as_sync_context_manager[T](async_context_manager: contextlib.AbstractAsyncContextManager[T]) -> typing.Iterator[T]:
     exit_stack = contextlib.AsyncExitStack()
     try:
         yield _runner.run(exit_stack.enter_async_context(async_context_manager))
