@@ -2,13 +2,21 @@ import asyncio
 import contextlib
 import typing
 from asyncio.queues import QueueEmpty
+from unittest.mock import patch
 
 import pytest
+import pytest_asyncio
 from ozobot.common.sync import as_sync, as_sync_context_manager
 
 
-@pytest.mark.asyncio(loop_scope="module")
-def test_async_function() -> None:
+@pytest_asyncio.fixture(scope="function")
+async def patched_runner() -> typing.AsyncIterator[None]:
+    """This patches the singleton runner for each test. Otherwise we'd get 'loop closed' errors (pytest-asyncio closes the loop)"""
+    with patch("ozobot.common.sync._runner", asyncio.Runner()):
+        yield
+
+
+def test_async_function(patched_runner) -> None:
     q = asyncio.Queue[str]()
 
     @as_sync
@@ -20,8 +28,7 @@ def test_async_function() -> None:
     assert q.get_nowait() == "boo!"
 
 
-@pytest.mark.asyncio(loop_scope="module")
-async def test_async_function_from_async_context() -> None:
+async def test_async_function_from_async_context(patched_runner) -> None:
     q = asyncio.Queue[str]()
 
     @as_sync
@@ -34,8 +41,7 @@ async def test_async_function_from_async_context() -> None:
     assert q.empty()
 
 
-@pytest.mark.asyncio(loop_scope="module")
-def test_async_context_manager() -> None:
+def test_async_context_manager(patched_runner) -> None:
     q = asyncio.Queue[str]()
 
     @contextlib.asynccontextmanager
@@ -52,8 +58,7 @@ def test_async_context_manager() -> None:
     assert q.get_nowait() == "bye"
 
 
-@pytest.mark.asyncio(loop_scope="module")
-async def test_async_context_manager_from_async_context() -> None:
+async def test_async_context_manager_from_async_context(patched_runner) -> None:
     q = asyncio.Queue[str]()
 
     @contextlib.asynccontextmanager
