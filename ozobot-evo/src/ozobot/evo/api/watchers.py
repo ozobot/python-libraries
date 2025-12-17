@@ -208,7 +208,7 @@ class LineFollowerWatcher:
             | Types.WatcherFlags.SendInitialValue
         )
         for watcher_id in watcher_ids:
-            async with self._control.WatcherSetup(watcher_id, flags, 40, 200) as (resp, _):
+            async with self._control.WatcherSetup(watcher_id, flags, 40, 0) as (resp, _):
                 handle_response("WatcherSetup", resp)
 
         try:
@@ -216,7 +216,7 @@ class LineFollowerWatcher:
         finally:
             logger.debug("Deinitializing watchers", watcher_ids=watcher_ids)
             for watcher_id in watcher_ids:
-                async with self._control.WatcherSetup(watcher_id, Types.WatcherFlags(0), 40, 200) as (resp, _):
+                async with self._control.WatcherSetup(watcher_id, Types.WatcherFlags(0), 0, 0) as (resp, _):
                     handle_response("WatcherSetup", resp)
 
     @contextlib.asynccontextmanager

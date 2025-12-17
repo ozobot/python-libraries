@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import math
 import typing
@@ -173,15 +174,29 @@ class NativeDataWatcher[T: Deserializable, U]:
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
         async with self._watcher.watch() as reader:
+            q = asyncio.Queue[Sample[U]]()
 
-            async def _reader_converted() -> typing.AsyncIterator[Sample[U]]:
+            async def _queue_to_aiter() -> typing.AsyncIterator[Sample[U]]:
+                while True:
+                    try:
+                        yield await q.get()
+                    except asyncio.QueueShutDown:
+                        return
+
+            async def _reader_converted() -> None:
                 async for r in reader:
                     if isinstance(r, _HasTimestamp):
-                        yield sample_from_protocol(r, self._from_protocol)
+                        await q.put(sample_from_protocol(r, self._from_protocol))
                     else:
-                        yield Sample.now(self._from_protocol(r))
+                        await q.put(Sample.now(self._from_protocol(r)))
 
-            yield _reader_converted()
+            async with asyncio.TaskGroup() as tg:
+                t = tg.create_task(_reader_converted())
+                try:
+                    yield _queue_to_aiter()
+                finally:
+                    t.cancel()
+                    q.shutdown()
 
 
 @contextlib.asynccontextmanager
