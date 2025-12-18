@@ -1,7 +1,6 @@
 import typing
 
 from ozobot.ari.protocol import memread, notification, types
-from ozobot.ari.webprotocol import types as webtypes
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     ColorCode,
@@ -118,13 +117,6 @@ def ir_message_from_protocol(ir_message: memread.MemReadResponseReadIr) -> IRMes
 
 
 def time_of_flight_from_protocol(time_of_flight: notification.TimeOfFlightNotificationBody) -> TimeOfFlight:
-    return TimeOfFlight(
-        distance=time_of_flight.distance * 1000,
-        deviation=time_of_flight.deviation * 1000,
-    )
-
-
-def time_of_flight_from_web(time_of_flight: webtypes.TimeOfFlightResponse) -> TimeOfFlight:
     return TimeOfFlight(
         distance=time_of_flight.distance * 1000,
         deviation=time_of_flight.deviation * 1000,

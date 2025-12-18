@@ -1,4 +1,4 @@
-from ozobot.ari import conversions
+from ozobot.ari.driver.web_conversions import time_of_flight_from_web
 from ozobot.ari.webprotocol import types as webtypes
 from ozobot.linefollower.datatypes import ClassifiedColor, Direction
 from ozobot.linefollower.driver.web import (
@@ -19,7 +19,7 @@ class AriWebMemoryRegions(WebMemoryRegions):
             rpc,
             "timeOfFlight",
             response_type=webtypes.TimeOfFlightResponse,
-            from_protocol=conversions.time_of_flight_from_web,
+            from_protocol=time_of_flight_from_web,
         )
 
 
