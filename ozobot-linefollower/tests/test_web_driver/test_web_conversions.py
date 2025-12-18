@@ -7,7 +7,6 @@ from ozobot.linefollower.datatypes import (
     IRMessage,
     LEDMask,
     RobotGeometry,
-    TNamedColor,
 )
 from ozobot.linefollower.driver.web.conversions import (
     color_code_from_web,
@@ -15,10 +14,12 @@ from ozobot.linefollower.driver.web.conversions import (
     direction_to_web,
     intersection_from_web,
     ir_message_from_web,
+    is_web_color,
+    is_web_direction,
     led_to_web_json,
     robot_geometry_from_web,
 )
-from ozobot.linefollower.driver.web.rpctypes import ClassifiedColor, ReadIrResponse, RobotGeometryResponse
+from ozobot.linefollower.driver.web.rpctypes import ReadIrResponse, RobotGeometryResponse, TWebColor, TWebDirection
 from ozobot.linefollower.exceptions import SingleDirectionRequiredError
 
 
@@ -80,9 +81,8 @@ def test_intersection_from_web(json_input, expected):
 
 
 def test_color_code_from_web() -> None:
-    colors = ["Red", "Black", "Blue"]
-    responses = [ClassifiedColor(red=0, green=0, blue=0, name=c) for c in colors]
-    assert color_code_from_web(responses) == ColorCode(colors=(Colors.RED, Colors.BLACK, Colors.BLUE))
+    colors: list[TWebColor] = ["Red", "Black", "Blue"]
+    assert color_code_from_web(colors) == ColorCode(colors=(Colors.RED, Colors.BLACK, Colors.BLUE))
 
 
 @pytest.mark.parametrize(
@@ -96,8 +96,8 @@ def test_color_code_from_web() -> None:
         ("Unknown", Colors.UNKNOWN),
     ],
 )
-def test_color_from_web(web: TNamedColor, lib: Color) -> None:
-    assert color_from_web(ClassifiedColor(red=0, green=0, blue=0, name=web)) == lib
+def test_color_from_web(web: TWebColor, lib: Color) -> None:
+    assert color_from_web(web) == lib
 
 
 def test_ir_message_from_web() -> None:
@@ -120,3 +120,56 @@ def test_robot_geometry_from_web() -> None:
         encoder_ticks_per_wheel_revolution=16 * 2 * 21 * 15 / 12.0,
         max_speed_limit=0.3,
     )
+
+
+@pytest.mark.parametrize(
+    ["color"],
+    [
+        ["Red"],
+        ["Blue"],
+        ["Green"],
+        ["Black"],
+        ["White"],
+    ],
+)
+def test_is_web_color(color: TWebColor) -> None:
+    assert is_web_color(color)
+
+
+@pytest.mark.parametrize(
+    ["color"],
+    [
+        ["Hello"],
+        ["World"],
+        [None],
+        [1234],
+    ],
+)
+def test_is_not_web_color(color: TWebColor) -> None:
+    assert not is_web_color(color)
+
+
+@pytest.mark.parametrize(
+    ["direction"],
+    [
+        ["Straight"],
+        ["Backward"],
+        ["Left"],
+        ["Right"],
+    ],
+)
+def test_is_web_direction(direction: TWebDirection) -> None:
+    assert is_web_direction(direction)
+
+
+@pytest.mark.parametrize(
+    ["direction"],
+    [
+        ["Hello"],
+        ["World"],
+        [None],
+        [1234],
+    ],
+)
+def test_is_not_web_direction(direction: TWebDirection) -> None:
+    assert not is_web_direction(direction)

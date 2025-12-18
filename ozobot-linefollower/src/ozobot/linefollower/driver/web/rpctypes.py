@@ -3,11 +3,14 @@ from typing import Annotated
 from typing import Literal as L
 
 from annotated_types import Ge, Le
+from ozobot.linefollower.conversions import ALLOWED_NAMED_COLORS
 from ozobot.linefollower.datatypes import TNamedColor
 from pydantic import AliasGenerator, BaseModel, ConfigDict, RootModel, alias_generators
 
-TWebDirection = L["Straight", "Backward", "Left", "Right"]
-ALLOWED_NAMED_DIRECTIONS = ["Straight", "Backward", "Left", "Right"]
+type TWebDirection = L["Straight", "Backward", "Left", "Right"]
+type TWebColor = TNamedColor
+ALLOWED_WEB_COLORS = ALLOWED_NAMED_COLORS
+ALLOWED_WEB_DIRECTIONS = typing.get_args(TWebDirection.__value__)
 
 
 class Base(BaseModel):
@@ -179,6 +182,10 @@ class ValidatedBool(RootModel[bool]):
     pass
 
 
+class ValidatedWebColor(RootModel[TWebColor]):
+    pass
+
+
 class ValidatedAny(RootModel[typing.Any]):
     pass
 
@@ -188,19 +195,12 @@ class Sample[T](BaseResponse):
     timestamp: float
 
 
-class ClassifiedColor(BaseModel):
-    name: TNamedColor
-    red: float
-    green: float
-    blue: float
-
-
 class IntersectionResponse(RootModel[dict[TWebDirection, bool]]):
     pass
 
 
 class ColorCodeResponse(BaseResponse):
-    colors: list[ClassifiedColor]
+    colors: list[TWebColor]
 
 
 class ReadIrResponse(BaseResponse):

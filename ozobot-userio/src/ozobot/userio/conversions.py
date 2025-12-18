@@ -3,7 +3,6 @@ import typing
 from ozobot.ari import conversions as ari_conversions
 from ozobot.linefollower.datatypes import Color, Direction, TDirection, TNamedColor
 from ozobot.linefollower.driver.web import conversions as web_conversions
-from ozobot.linefollower.driver.web.rpctypes import ClassifiedColor
 from ozobot.userio.datatypes import TUserIoPrompt, TWebUserIoPrompt
 from ozobot.userio.exceptions import (
     UnexpectedUserIoPromptOptionTypeError,
@@ -63,12 +62,12 @@ def get_type_options[T: (str, float, int, bool, Color, Direction)](
 
 def get_web_type_options[T: (str, float, int, bool, Color, Direction)](
     options: list[T], _type: type[T]
-) -> list[str | float | int | bool | ClassifiedColor | TDirection]:
+) -> list[str | float | int | bool | TNamedColor | TDirection]:
     for opt in options:
         if not isinstance(opt, _type):
             raise UnexpectedUserIoPromptOptionTypeError(opt, _type)
 
-    protocol_options: list[str | float | int | bool | ClassifiedColor | TDirection] = []
+    protocol_options: list[str | float | int | bool | TNamedColor | TDirection] = []
     for opt in options:
         if isinstance(opt, Color):
             protocol_options.append(web_conversions.color_to_web(opt))
@@ -89,9 +88,9 @@ def cast_web_prompt_response[T](_type: type[T], value: typing.Any) -> T:
         return typing.cast(T, float(value))
     elif _type is bool:
         return typing.cast(T, bool(value))
-    elif _type is Color and web_conversions.is_color_web(value):
+    elif _type is Color and web_conversions.is_web_color(value):
         return typing.cast(T, web_conversions.color_from_web(value))
-    elif _type is Direction and web_conversions.is_named_web_direction(value):
+    elif _type is Direction and web_conversions.is_web_direction(value):
         return typing.cast(T, web_conversions.direction_from_web(value))
     else:
         raise UnexpectedUserIoPromptResponseReceivedError(value, _type)

@@ -121,11 +121,11 @@ async def test_commands(
             Colors.BLUE,
             "color",
             [
-                {"red": 0, "green": 0, "blue": 0, "name": "Black"},
-                {"red": 0, "green": 0, "blue": 1, "name": "Blue"},
-                {"red": 1, "green": 0, "blue": 0, "name": "Red"},
+                "Black",
+                "Blue",
+                "Red",
             ],
-            {"red": 0, "green": 0, "blue": 1, "name": "Blue"},
+            "Blue",
         ),
         (
             Direction,

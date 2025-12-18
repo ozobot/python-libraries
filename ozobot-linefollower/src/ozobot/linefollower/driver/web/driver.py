@@ -191,15 +191,15 @@ class WebMemoryRegions:
         self.surface_color = WebDataAccessReadWatch(
             rpc,
             "surfaceColor",
-            response_type=rpctypes.ClassifiedColor,
-            from_protocol=lambda x: color_from_web(x),
+            response_type=rpctypes.ValidatedWebColor,
+            from_protocol=lambda x: color_from_web(x.root),
         )
 
         self.line_color = WebDataAccessReadWatch(
             rpc,
             "lineColor",
-            response_type=rpctypes.ClassifiedColor,
-            from_protocol=lambda x: color_from_web(x),
+            response_type=rpctypes.ValidatedWebColor,
+            from_protocol=lambda x: color_from_web(x.root),
         )
 
         self.proximity_left_front = WebDataAccessReadWatch(

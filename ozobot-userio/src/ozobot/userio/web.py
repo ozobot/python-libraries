@@ -8,6 +8,7 @@ from ozobot.linefollower.datatypes import (
     Color,
     Direction,
     TDirection,
+    TNamedColor,
 )
 from ozobot.linefollower.driver.web import Rpc, rpctypes
 from ozobot.userio import conversions
@@ -49,14 +50,11 @@ class UserIoPromptRequest(rpctypes.BaseRequest):
     message: str
     cancellable: bool
     type: TWebUserIoPrompt
-    options: list[str | int | float | bool | rpctypes.ClassifiedColor | TDirection]
+    options: list[str | int | float | bool | TNamedColor | TDirection]
 
     @property
     def args(self) -> tuple:
-        serialized_options = [
-            opt.model_dump() if isinstance(opt, rpctypes.ClassifiedColor) else opt for opt in self.options
-        ]
-        return (self.message, self.type, serialized_options, self.cancellable)
+        return (self.message, self.type, self.options, self.cancellable)
 
 
 class UserIoWebDriverComponent:
@@ -89,9 +87,7 @@ class UserIoWebDriverComponent:
             options=protocol_options,
             cancellable=cancellable,
         )
-        response_model: pydantic.TypeAdapter[str | float | bool | rpctypes.ClassifiedColor] = pydantic.TypeAdapter(
-            str | float | bool | rpctypes.ClassifiedColor
-        )
+        response_model: pydantic.TypeAdapter[str | float | bool] = pydantic.TypeAdapter(str | float | bool)
         with _handle_ts_cancellation_error():
             response = await self._rpc.execute(req, response_model)
         return conversions.cast_web_prompt_response(_type, response)

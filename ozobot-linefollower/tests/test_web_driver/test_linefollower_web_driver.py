@@ -109,9 +109,9 @@ async def test_mem_watch_structure() -> None:
     num_data = 3
 
     responses_flat = [
-        {"value": {"red": 1, "green": 0, "blue": 0, "name": "Red"}, "timestamp": 1},
-        {"value": {"red": 0, "green": 0, "blue": 0, "name": "Black"}, "timestamp": 2},
-        {"value": {"red": 0, "green": 0, "blue": 1, "name": "Blue"}, "timestamp": 3},
+        {"value": "Red", "timestamp": 1},
+        {"value": "Black", "timestamp": 2},
+        {"value": "Blue", "timestamp": 3},
     ]
 
     rpc_responses = [
