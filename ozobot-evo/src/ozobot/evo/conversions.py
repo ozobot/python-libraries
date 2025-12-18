@@ -1,11 +1,11 @@
 import typing
 
-from ozobot.evo.exceptions import OzobotDataTypeError
+from ozobot.evo.exceptions import OzobotDataTypeError, UnsupportedColorCodeNumberError
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, IRProximity, LEDMask
+from ozobot.linefollower.datatypes import ClassifiedColor, ColorCode, Colors, Direction, IRMessage, IRProximity, LEDMask
 
 
-def _color_from_color_code_number(num: int) -> Color:
+def _color_from_color_code_number(num: int) -> ClassifiedColor:
     if num == 0:
         return Colors.BLACK
     elif num == 1:
@@ -14,14 +14,14 @@ def _color_from_color_code_number(num: int) -> Color:
         return Colors.GREEN
     elif num == 4:
         return Colors.BLUE
-    else:
-        return Colors.UNKNOWN
+
+    raise UnsupportedColorCodeNumberError(num)
 
 
 def color_code_from_protocol(color_code: Types.ColorCode) -> ColorCode:
     if not isinstance(color_code, Types.ColorCode):
         raise OzobotDataTypeError(Types.ColorCode, type(color_code))
-    colors: list[Color] = []
+    colors: list[ClassifiedColor] = []
     num = color_code.code
     while num > 0:
         mod = num & 0b111
@@ -30,7 +30,7 @@ def color_code_from_protocol(color_code: Types.ColorCode) -> ColorCode:
     return ColorCode(colors=tuple(colors))
 
 
-def surface_color_from_protocol(surface_color: Types.SurfaceColor) -> Color:
+def surface_color_from_protocol(surface_color: Types.SurfaceColor) -> ClassifiedColor | None:
     if not isinstance(surface_color, Types.SurfaceColor):
         raise OzobotDataTypeError(Types.SurfaceColor, type(surface_color))
 
@@ -46,12 +46,12 @@ def surface_color_from_protocol(surface_color: Types.SurfaceColor) -> Color:
         case Types.SurfaceColorEnum.White:
             return Colors.WHITE
         case Types.SurfaceColorEnum.Unknown:
-            return Colors.UNKNOWN
+            return None
         case _:
             typing.assert_never(surface_color.color)
 
 
-def line_color_from_protocol(line_color: Types.LineColor) -> Color:
+def line_color_from_protocol(line_color: Types.LineColor) -> ClassifiedColor | None:
     if not isinstance(line_color, Types.LineColor):
         raise OzobotDataTypeError(Types.LineColor, type(line_color))
 
@@ -65,7 +65,7 @@ def line_color_from_protocol(line_color: Types.LineColor) -> Color:
         case Types.LineColorEnum.Red:
             return Colors.RED
         case Types.LineColorEnum.Unknown:
-            return Colors.UNKNOWN
+            return None
         case _:
             typing.assert_never(line_color.color)
 

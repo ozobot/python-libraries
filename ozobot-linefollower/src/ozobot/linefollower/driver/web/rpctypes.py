@@ -182,7 +182,7 @@ class ValidatedBool(RootModel[bool]):
     pass
 
 
-class ValidatedWebColor(RootModel[TWebColor]):
+class ValidatedWebColorOrUnknown(RootModel[TWebColor | None]):
     pass
 
 

@@ -9,22 +9,12 @@ from dataclasses import dataclass
 _IS_COLOR_EPSILON = 0.01
 
 
-def _is_unknown_color_representation(color: object) -> typing.TypeIs[typing.Literal["Unknown"]]:
-    return color == "Unknown"
-
-
-type TNamedColor = typing.Literal["Green", "Black", "Red", "Blue", "White", "Unknown"]
+type TNamedColor = typing.Literal["Green", "Black", "Red", "Blue", "White"]
 type TDirection = typing.Literal["Forward", "Back", "Left", "Right"]
 
 
 class Color:
-    def __new__(cls, *args, **kwargs) -> Color:
-        if cls is Color:
-            return RawColor(*args, **kwargs)
-        else:
-            return super().__new__(cls)
-
-    def is_color(self, other: Color, *, epsilon: float = _IS_COLOR_EPSILON) -> bool:
+    def is_color(self, other: Color | None, *, epsilon: float = _IS_COLOR_EPSILON) -> bool:
         return False
 
 
@@ -39,8 +29,10 @@ class RawColor(Color):
             if value < 0 or value > 1:
                 raise ValueError(f"Color component out of bounds [0, 1]: {name}={value}")
 
-    def is_color(self, other: Color, *, epsilon: float = _IS_COLOR_EPSILON) -> bool:
-        if isinstance(other, RawColor):
+    def is_color(self, other: Color | None, *, epsilon: float = _IS_COLOR_EPSILON) -> bool:
+        if other is None:
+            return False
+        elif isinstance(other, RawColor):
             values = zip(
                 (self.red, self.green, self.blue),
                 (other.red, other.green, other.blue),
@@ -72,12 +64,9 @@ class RawColor(Color):
 @dataclass(frozen=True, eq=False, repr=False)
 class ClassifiedColor(Color):
     name: TNamedColor
-    _representation: RawColor | typing.Literal["Unknown"]
+    _representation: RawColor
 
-    def is_color(self, other: Color, *, epsilon: float = _IS_COLOR_EPSILON) -> bool:
-        if _is_unknown_color_representation(self._representation):
-            return False
-
+    def is_color(self, other: Color | None, *, epsilon: float = _IS_COLOR_EPSILON) -> bool:
         if isinstance(other, ClassifiedColor):
             return self == other
         elif isinstance(other, RawColor):
@@ -86,9 +75,6 @@ class ClassifiedColor(Color):
             return False
 
     def to_raw_color(self) -> RawColor:
-        if _is_unknown_color_representation(self._representation):
-            raise Exception("UNKNOWN color")  # TODO: fix
-
         return self._representation
 
     def __eq__(self, other: object) -> bool:
@@ -103,9 +89,6 @@ class ClassifiedColor(Color):
         return hash((self.__class__, self.name))
 
     def __str__(self) -> str:
-        if _is_unknown_color_representation(self._representation):
-            return self._representation
-
         return self.name
 
     def __repr__(self) -> str:
@@ -118,7 +101,6 @@ class Colors:
     GREEN = ClassifiedColor("Green", RawColor(0, 1.0, 0))
     BLUE = ClassifiedColor("Blue", RawColor(0, 0, 1.0))
     WHITE = ClassifiedColor("White", RawColor(1.0, 1.0, 1.0))
-    UNKNOWN = ClassifiedColor("Unknown", "Unknown")
 
 
 class LEDMask(enum.Flag):
@@ -146,7 +128,7 @@ type TNote = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#"
 
 @dataclass(frozen=True, kw_only=True)
 class ColorCode:
-    colors: tuple[Color, ...]
+    colors: tuple[ClassifiedColor, ...]
 
 
 @dataclass(frozen=True, kw_only=True)

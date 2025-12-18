@@ -1,7 +1,17 @@
 import typing
 
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, LEDMask, RobotGeometry
-from ozobot.linefollower.exceptions import SingleDirectionRequiredError
+from ozobot.linefollower.datatypes import (
+    ClassifiedColor,
+    ColorCode,
+    Colors,
+    Direction,
+    IRMessage,
+    LEDMask,
+    RobotGeometry,
+    TNamedColor,
+)
+from ozobot.linefollower.driver.web.exceptions import InvalidColorCodeError
+from ozobot.linefollower.exceptions import InvalidClassifiedColorError, SingleDirectionRequiredError
 
 from .rpctypes import (
     ALLOWED_WEB_COLORS,
@@ -73,7 +83,7 @@ def intersection_from_web(intersection_json: dict[TWebDirection, bool]) -> Direc
     return direction
 
 
-def color_from_web(color: TWebColor) -> Color:
+def color_from_web(color: TWebColor) -> ClassifiedColor:
     match color:
         case "Green":
             return Colors.GREEN
@@ -85,13 +95,11 @@ def color_from_web(color: TWebColor) -> Color:
             return Colors.BLUE
         case "White":
             return Colors.WHITE
-        case "Unknown":
-            return Colors.UNKNOWN
         case _:
             typing.assert_never(color.name)
 
 
-def color_to_web(color: Color) -> TWebColor:
+def color_to_web(color: ClassifiedColor) -> TNamedColor:
     if color == Colors.GREEN:
         return "Green"
     elif color == Colors.BLACK:
@@ -102,12 +110,19 @@ def color_to_web(color: Color) -> TWebColor:
         return "Blue"
     elif color == Colors.WHITE:
         return "White"
-    else:
-        return "Unknown"
+
+    raise InvalidClassifiedColorError(color)
 
 
-def color_code_from_web(colors: list[TWebColor]) -> ColorCode:
-    return ColorCode(colors=tuple(color_from_web(c) for c in colors))
+def color_code_from_web(web_colors: list[TWebColor]) -> ColorCode:
+    colors: list[ClassifiedColor] = []
+    for web_color in web_colors:
+        color = color_from_web(web_color)
+        if not isinstance(color, ClassifiedColor):
+            raise InvalidColorCodeError(color)
+        colors.append(color)
+
+    return ColorCode(colors=tuple(colors))
 
 
 def is_web_direction(value: typing.Any) -> typing.TypeGuard[TWebDirection]:

@@ -5,7 +5,7 @@ import typing
 import pydantic
 from ozobot.common.exceptions import TSError
 from ozobot.linefollower.datatypes import (
-    Color,
+    ClassifiedColor,
     Direction,
     TDirection,
     TNamedColor,
@@ -70,7 +70,7 @@ class UserIoWebDriverComponent:
         with _handle_ts_cancellation_error():
             _ = await self._rpc.execute(req, rpctypes.ValidatedAny)
 
-    async def prompt[T: (str, float, int, bool, Color, Direction)](
+    async def prompt[T: (str, float, int, bool, ClassifiedColor, Direction)](
         self,
         message: str,
         _type: type[T],

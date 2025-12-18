@@ -110,14 +110,14 @@ class MemReadResponsePickupADC(Model):
 
 class MemReadResponseLineColor(Model):
     type: L["lineColor"] = "lineColor"
-    color: TNamedColor
+    color: TNamedColor | None
     light_source: bool
     timestamp: int
 
 
 class MemReadResponseSurfaceColor(Model):
     type: L["surfaceColor"] = "surfaceColor"
-    color: TNamedColor
+    color: TNamedColor | None
     counter: int
     light_source: bool
     timestamp: int

@@ -22,7 +22,15 @@ from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import DataReadConstant, EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, RobotGeometry, Sample, TimeOfFlight
+from ozobot.linefollower.datatypes import (
+    ClassifiedColor,
+    ColorCode,
+    Direction,
+    LEDMask,
+    RobotGeometry,
+    Sample,
+    TimeOfFlight,
+)
 from ozobot.userio import conversions as userio_conversions
 from ozobot.userio.exceptions import UnexpectedUserIoPromptResponseReceivedError
 from ozobot.webrtc import messaging
@@ -72,14 +80,14 @@ class NativeMemoryRegions:
             request_id,
             "surfaceColor",
             response_type=memread.MemReadResponseSurfaceColor,
-            from_protocol=lambda resp: conversions.color_from_protocol(resp.color),
+            from_protocol=lambda resp: None if resp.color is None else conversions.color_from_protocol(resp.color),
         )
         self.line_color = NativeDataAccessRead(
             executor,
             request_id,
             "lineColor",
             response_type=memread.MemReadResponseLineColor,
-            from_protocol=lambda resp: conversions.color_from_protocol(resp.color),
+            from_protocol=lambda resp: None if resp.color is None else conversions.color_from_protocol(resp.color),
         )
 
         self.proximity_left_front = NativeDataAccessRead(
@@ -439,7 +447,7 @@ class AriNativeDriver:
         async with Query(req, methods.USER_IO_ALERT).execute(self._executor) as q:
             _ = await q.response
 
-    async def user_io_prompt[T: (str, float, int, bool, Color, Direction)](
+    async def user_io_prompt[T: (str, float, int, bool, ClassifiedColor, Direction)](
         self,
         message: str,
         _type: type[T],

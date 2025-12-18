@@ -1,8 +1,21 @@
+import typing
+
 import pytest
 from ozobot.ari import conversions
 from ozobot.ari.conversions import color_code_from_protocol, color_from_protocol, color_to_protocol
 from ozobot.ari.protocol import types
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, TDirection, TNamedColor
+from ozobot.linefollower.datatypes import (
+    ClassifiedColor,
+    Color,
+    ColorCode,
+    Colors,
+    Direction,
+    LEDMask,
+    RawColor,
+    TDirection,
+    TNamedColor,
+)
+from ozobot.linefollower.exceptions import InvalidClassifiedColorError
 
 
 @pytest.mark.parametrize(
@@ -73,7 +86,6 @@ def test_intersection_bitmap_from_protocol(intersection: types.Intersection, exp
         (Colors.GREEN, "Green"),
         (Colors.BLUE, "Blue"),
         (Colors.WHITE, "White"),
-        (Colors.UNKNOWN, "Unknown"),
     ],
     ids=lambda x: repr(x),
 )
@@ -89,12 +101,23 @@ def test_color_from_protocol(color: Color, protocol_color: TNamedColor) -> None:
         (Colors.GREEN, "Green"),
         (Colors.BLUE, "Blue"),
         (Colors.WHITE, "White"),
-        (Colors.UNKNOWN, "Unknown"),
     ],
     ids=lambda x: repr(x),
 )
-def test_color_to_protocol(color: Color, protocol_color: TNamedColor) -> None:
+def test_color_to_protocol(color: ClassifiedColor, protocol_color: TNamedColor) -> None:
     assert color_to_protocol(color) == protocol_color
+
+
+def test_none_color_to_protocol() -> None:
+    with pytest.raises(InvalidClassifiedColorError):
+        c = typing.cast(ClassifiedColor, None)
+        _ = color_to_protocol(c)
+
+
+def test_unknown_color_to_protocol() -> None:
+    with pytest.raises(InvalidClassifiedColorError):
+        c = typing.cast(ClassifiedColor, RawColor(0.5, 0.5, 0.5))
+        _ = color_to_protocol(c)
 
 
 def test_color_code_from_protocol() -> None:

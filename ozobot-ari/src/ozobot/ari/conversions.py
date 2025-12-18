@@ -3,7 +3,7 @@ import typing
 from ozobot.ari.protocol import memread, notification, types
 from ozobot.ari.webprotocol import types as webtypes
 from ozobot.linefollower.datatypes import (
-    Color,
+    ClassifiedColor,
     ColorCode,
     Colors,
     Direction,
@@ -13,6 +13,7 @@ from ozobot.linefollower.datatypes import (
     TimeOfFlight,
     TNamedColor,
 )
+from ozobot.linefollower.exceptions import InvalidClassifiedColorError
 
 
 def led_to_protocol(mask: LEDMask) -> types.Lights:
@@ -74,7 +75,7 @@ def intersection_bitmap_from_protocol(intersection_mask: types.Intersection) -> 
     return intersection
 
 
-def color_from_protocol(color: TNamedColor) -> Color:
+def color_from_protocol(color: TNamedColor) -> ClassifiedColor:
     match color:
         case "Green":
             return Colors.GREEN
@@ -86,13 +87,11 @@ def color_from_protocol(color: TNamedColor) -> Color:
             return Colors.BLUE
         case "White":
             return Colors.WHITE
-        case "Unknown":
-            return Colors.UNKNOWN
         case _:
             typing.assert_never(color)
 
 
-def color_to_protocol(color: Color) -> TNamedColor:
+def color_to_protocol(color: ClassifiedColor) -> TNamedColor:
     if color == Colors.GREEN:
         return "Green"
     elif color == Colors.BLACK:
@@ -103,8 +102,8 @@ def color_to_protocol(color: Color) -> TNamedColor:
         return "Blue"
     elif color == Colors.WHITE:
         return "White"
-    else:
-        return "Unknown"
+
+    raise InvalidClassifiedColorError(color)
 
 
 def color_code_from_protocol(color_code: list[TNamedColor]) -> ColorCode:

@@ -1,7 +1,7 @@
 import typing
 
 from ozobot.ari import conversions as ari_conversions
-from ozobot.linefollower.datatypes import Color, Direction, TDirection, TNamedColor
+from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, TDirection, TNamedColor
 from ozobot.linefollower.driver.web import conversions as web_conversions
 from ozobot.userio.datatypes import TUserIoPrompt, TWebUserIoPrompt
 from ozobot.userio.exceptions import (
@@ -41,16 +41,15 @@ def get_web_type_name(_type: type[str | int | float | bool | Color | Direction])
         raise UnexpectedUserIoPromptTypeError(_type)
 
 
-def get_type_options[T: (str, float, int, bool, Color, Direction)](
+def get_type_options[T: (str, float, int, bool, ClassifiedColor, Direction)](
     options: list[T], _type: type[T]
 ) -> list[str | float | int | bool | TNamedColor | TDirection]:
+    protocol_options: list[str | float | int | bool | TNamedColor | TDirection] = []
     for opt in options:
         if not isinstance(opt, _type):
             raise UnexpectedUserIoPromptOptionTypeError(opt, _type)
 
-    protocol_options: list[str | float | int | bool | TNamedColor | TDirection] = []
-    for opt in options:
-        if isinstance(opt, Color):
+        if isinstance(opt, ClassifiedColor):
             protocol_options.append(ari_conversions.color_to_protocol(opt))
         elif isinstance(opt, Direction):
             protocol_options.append(ari_conversions.intersection_direction_to_protocol(opt))
@@ -60,7 +59,7 @@ def get_type_options[T: (str, float, int, bool, Color, Direction)](
     return protocol_options
 
 
-def get_web_type_options[T: (str, float, int, bool, Color, Direction)](
+def get_web_type_options[T: (str, float, int, bool, ClassifiedColor, Direction)](
     options: list[T], _type: type[T]
 ) -> list[str | float | int | bool | TNamedColor | TDirection]:
     for opt in options:
@@ -69,7 +68,7 @@ def get_web_type_options[T: (str, float, int, bool, Color, Direction)](
 
     protocol_options: list[str | float | int | bool | TNamedColor | TDirection] = []
     for opt in options:
-        if isinstance(opt, Color):
+        if isinstance(opt, ClassifiedColor):
             protocol_options.append(web_conversions.color_to_web(opt))
         elif isinstance(opt, Direction):
             protocol_options.append(web_conversions.direction_to_web(opt))

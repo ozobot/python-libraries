@@ -1,16 +1,21 @@
+import typing
+
 import pytest
 from ozobot.linefollower.datatypes import (
+    ClassifiedColor,
     Color,
     ColorCode,
     Colors,
     Direction,
     IRMessage,
     LEDMask,
+    RawColor,
     RobotGeometry,
 )
 from ozobot.linefollower.driver.web.conversions import (
     color_code_from_web,
     color_from_web,
+    color_to_web,
     direction_to_web,
     intersection_from_web,
     ir_message_from_web,
@@ -19,8 +24,13 @@ from ozobot.linefollower.driver.web.conversions import (
     led_to_web_json,
     robot_geometry_from_web,
 )
-from ozobot.linefollower.driver.web.rpctypes import ReadIrResponse, RobotGeometryResponse, TWebColor, TWebDirection
-from ozobot.linefollower.exceptions import SingleDirectionRequiredError
+from ozobot.linefollower.driver.web.rpctypes import (
+    ReadIrResponse,
+    RobotGeometryResponse,
+    TWebColor,
+    TWebDirection,
+)
+from ozobot.linefollower.exceptions import InvalidClassifiedColorError, SingleDirectionRequiredError
 
 
 @pytest.mark.parametrize(
@@ -93,11 +103,36 @@ def test_color_code_from_web() -> None:
         ("Green", Colors.GREEN),
         ("Black", Colors.BLACK),
         ("White", Colors.WHITE),
-        ("Unknown", Colors.UNKNOWN),
     ],
 )
 def test_color_from_web(web: TWebColor, lib: Color) -> None:
     assert color_from_web(web) == lib
+
+
+@pytest.mark.parametrize(
+    ["web", "lib"],
+    [
+        ("Red", Colors.RED),
+        ("Blue", Colors.BLUE),
+        ("Green", Colors.GREEN),
+        ("Black", Colors.BLACK),
+        ("White", Colors.WHITE),
+    ],
+)
+def test_color_to_web(web: TWebColor | None, lib: ClassifiedColor) -> None:
+    assert color_to_web(lib) == web
+
+
+def test_none_color_to_web() -> None:
+    with pytest.raises(InvalidClassifiedColorError):
+        c = typing.cast(ClassifiedColor, None)
+        assert color_to_web(c)
+
+
+def test_unknown_color_to_web() -> None:
+    with pytest.raises(InvalidClassifiedColorError):
+        c = typing.cast(ClassifiedColor, RawColor(0.5, 0.5, 0.5))
+        assert color_to_web(c)
 
 
 def test_ir_message_from_web() -> None:

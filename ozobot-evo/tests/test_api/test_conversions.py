@@ -28,11 +28,11 @@ def test_color_code_from_protocol() -> None:
         (Types.SurfaceColorEnum.Green, Colors.GREEN),
         (Types.SurfaceColorEnum.Red, Colors.RED),
         (Types.SurfaceColorEnum.White, Colors.WHITE),
-        (Types.SurfaceColorEnum.Unknown, Colors.UNKNOWN),
+        (Types.SurfaceColorEnum.Unknown, None),
     ],
     ids=lambda x: repr(x),
 )
-def test_surface_color_from_protocol(protocol_color: Types.SurfaceColorEnum, library_color: Color) -> None:
+def test_surface_color_from_protocol(protocol_color: Types.SurfaceColorEnum, library_color: Color | None) -> None:
     assert surface_color_from_protocol(Types.SurfaceColor(protocol_color, 0, 0, 0)) == library_color
 
 
@@ -43,11 +43,11 @@ def test_surface_color_from_protocol(protocol_color: Types.SurfaceColorEnum, lib
         (Types.LineColorEnum.Blue, Colors.BLUE),
         (Types.LineColorEnum.Green, Colors.GREEN),
         (Types.LineColorEnum.Red, Colors.RED),
-        (Types.LineColorEnum.Unknown, Colors.UNKNOWN),
+        (Types.LineColorEnum.Unknown, None),
     ],
     ids=lambda x: repr(x),
 )
-def test_line_color_from_protocol(protocol_color: Types.LineColorEnum, library_color: Color) -> None:
+def test_line_color_from_protocol(protocol_color: Types.LineColorEnum, library_color: Color | None) -> None:
     assert line_color_from_protocol(Types.LineColor(protocol_color, 0, 0)) == library_color
 
 

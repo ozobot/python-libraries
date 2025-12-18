@@ -23,3 +23,8 @@ class OzobotProtocolCommandError(EvoError):
 class OzobotDataTypeError(EvoError):
     def __init__(self, expected_type: type, received_type: type) -> None:
         super().__init__(f"Unexpected type: expected '{expected_type}' but got '{received_type}'")
+
+
+class UnsupportedColorCodeNumberError(EvoError):
+    def __init__(self, number: int) -> None:
+        super().__init__(f"Received color code has unsupported color segment: {number}")
