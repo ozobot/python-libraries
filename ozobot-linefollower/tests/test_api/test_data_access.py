@@ -4,14 +4,14 @@ from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, 
 from ozobot.linefollower.datatypes import Sample
 
 
-class _ReadableEventWatcher[T](EventWatcher[T]):
+class _ReadableEventWatcher[T](EventWatcher[Sample[T]]):
     async def read(self) -> T:
         return self._queue.last.value
 
 
 async def test_event_watcher() -> None:
-    q = EventWatcherQueue[int](Sample(0, 0))
-    w = EventWatcher[int](q)
+    q = EventWatcherQueue(Sample(0, 0))
+    w = EventWatcher(q)
 
     async with w.watch() as reader:
         await q.write(Sample(2, 0))
@@ -26,7 +26,7 @@ async def test_watcher_proxy() -> None:
         data_int: int
         data_str: str
 
-    source_queue = EventWatcherQueue(Sample.now(Data(0, "")))
+    source_queue = EventWatcherQueue(Sample(Data(0, ""), 0))
     source = _ReadableEventWatcher(source_queue)
 
     proxy_int = DataWatcherProxy(source, convert=lambda m: m.data_int)

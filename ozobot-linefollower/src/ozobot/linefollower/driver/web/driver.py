@@ -24,11 +24,6 @@ from .exceptions import (
 )
 
 
-@typing.runtime_checkable
-class _HasTimestamp(typing.Protocol):
-    timestamp: int
-
-
 class Rpc:
     def __init__(self, robot_name: str) -> None:
         self._name = robot_name

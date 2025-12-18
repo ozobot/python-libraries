@@ -7,7 +7,7 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 from ozobot.ari.driver.native import AriNativeDriver
 from ozobot.ari.protocol import memread, memwrite, methods, notification, request, response, types
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, Sample
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, Sample, SampleWithoutTimestamp
 
 
 def _create_query(response=None, notifications=None):
@@ -165,7 +165,6 @@ async def test_command_with_response(
     [(True, "Follow"), (False, "DoNotFollow")],
     ids=lambda x: repr(x),
 )
-@patch("ozobot.linefollower.datatypes.Sample.now", lambda d: Sample(d, 0))
 async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
     query_cls, query_cls_mock = _create_query(
         notifications=[
@@ -181,10 +180,9 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
         async with driver.memory.intersection.watch() as intersection_it, driver.memory.color_code.watch() as cc_it:
             await driver.line_navigation(Direction.LEFT, follow_bool)
 
-            assert await anext(intersection_it) == Sample(Direction.BACKWARD, 0)
-            assert await anext(cc_it) == Sample(
+            assert await anext(intersection_it) == SampleWithoutTimestamp(Direction.BACKWARD)
+            assert await anext(cc_it) == SampleWithoutTimestamp(
                 ColorCode(colors=(Colors.RED, Colors.BLACK, Colors.BLUE)),
-                0,
             )
 
         query_cls_mock.assert_called_once_with(
@@ -243,7 +241,6 @@ async def test_set_led(command_lights: LEDMask, rpc_lights: types.Lights) -> Non
         )
 
 
-@patch("ozobot.linefollower.datatypes.Sample.now", lambda d: Sample(d, 0))
 async def test_native_data_access_read() -> None:
     query_cls, query_cls_mock = _create_query(response=memread.MemReadResponseLinearVelocity(velocity=1.23))
     with patch("ozobot.ari.driver.native.Query", query_cls):

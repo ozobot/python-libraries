@@ -15,7 +15,7 @@ from ozobot.ari.exceptions import (
     MemoryWriteUnsuccessfulError,
 )
 from ozobot.ari.protocol import base, memread, memwrite, methods, notification, request, response, types
-from ozobot.ari.protocol.memread import MemReadResponseBody
+from ozobot.ari.protocol.memread import MemReadResponseBody, MemWatchResponseBody
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
@@ -29,6 +29,7 @@ from ozobot.linefollower.datatypes import (
     LEDMask,
     RobotGeometry,
     Sample,
+    SampleWithoutTimestamp,
     TimeOfFlight,
 )
 from ozobot.userio import conversions as userio_conversions
@@ -43,11 +44,6 @@ _ROUTING_KEY_SERVICE_UUID = UUID(
 _ROUTING_KEY_CHARACTERISTIC_UUID = UUID("6b63040a-520e-4d24-0000-65c78f1d0001")
 
 
-@typing.runtime_checkable
-class _HasTimestamp(typing.Protocol):
-    timestamp: int
-
-
 class _HasResultType(typing.Protocol):
     @property
     def type(self) -> typing.Literal["finished"] | str: ...
@@ -60,10 +56,10 @@ class _HasResult(typing.Protocol):
 
 class NativeMemoryRegions:
     def __init__(self, executor: Executor, request_id: _RequestIdCounter) -> None:
-        self.intersection_queue = EventWatcherQueue(Sample.now(Direction(0)))
+        self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(0)))
         self.intersection = EventWatcher(self.intersection_queue)
 
-        self.color_code_queue = EventWatcherQueue(Sample.now(ColorCode(colors=tuple())))
+        self.color_code_queue = EventWatcherQueue(SampleWithoutTimestamp(ColorCode(colors=tuple())))
         self.color_code = EventWatcher(self.color_code_queue)
 
         self.line_following_speed = NativeDataAccessReadWrite(
@@ -75,14 +71,14 @@ class NativeMemoryRegions:
             to_protocol=lambda v: memwrite.MemWriteRequestLineFollowingSpeedParams(value=v / 1000),
         )
 
-        self.surface_color = NativeDataAccessRead(
+        self.surface_color = NativeDataAccessWatch(
             executor,
             request_id,
             "surfaceColor",
             response_type=memread.MemReadResponseSurfaceColor,
             from_protocol=lambda resp: None if resp.color is None else conversions.color_from_protocol(resp.color),
         )
-        self.line_color = NativeDataAccessRead(
+        self.line_color = NativeDataAccessWatch(
             executor,
             request_id,
             "lineColor",
@@ -90,28 +86,28 @@ class NativeMemoryRegions:
             from_protocol=lambda resp: None if resp.color is None else conversions.color_from_protocol(resp.color),
         )
 
-        self.proximity_left_front = NativeDataAccessRead(
+        self.proximity_left_front = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityLeft",
             response_type=memread.MemReadResponseProximity,
             from_protocol=lambda m: m.value,
         )
-        self.proximity_right_front = NativeDataAccessRead(
+        self.proximity_right_front = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityRight",
             response_type=memread.MemReadResponseProximity,
             from_protocol=lambda m: m.value,
         )
-        self.proximity_left_rear = NativeDataAccessRead(
+        self.proximity_left_rear = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityEdgeLeft",
             response_type=memread.MemReadResponseProximity,
             from_protocol=lambda m: m.value,
         )
-        self.proximity_right_rear = NativeDataAccessRead(
+        self.proximity_right_rear = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityEdgeRight",
@@ -119,14 +115,14 @@ class NativeMemoryRegions:
             from_protocol=lambda m: m.value,
         )
 
-        self.ir_message_left_front = NativeDataAccessRead(
+        self.ir_message_left_front = NativeDataAccessWatch(
             executor,
             request_id,
             "readIrLeft",
             response_type=memread.MemReadResponseReadIr,
             from_protocol=conversions.ir_message_from_protocol,
         )
-        self.ir_message_right_front = NativeDataAccessRead(
+        self.ir_message_right_front = NativeDataAccessWatch(
             executor,
             request_id,
             "readIrRight",
@@ -185,6 +181,23 @@ class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
             resp = await q.response
             return self._from_protocol(typing.cast(TProtoFrom, resp.result))
 
+
+class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAccessRead[TProtoFrom, TLib]):
+    def __init__(
+        self,
+        executor: Executor,
+        id_counter: _RequestIdCounter,
+        name: str,
+        *,
+        response_type: type[TProtoFrom],
+        from_protocol: typing.Callable[[TProtoFrom], TLib],
+    ) -> None:
+        self._executor = executor
+        self._name = name
+        self._type = response_type
+        self._from_protocol = from_protocol
+        self._request_id_counter = id_counter
+
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[TLib]]]:
         req = memread.WatchRequest(
@@ -202,10 +215,7 @@ class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
 
     def _convert_sample_from_protocol(self, val: MemReadResponseBody) -> Sample[TLib]:
         if isinstance(val, self._type):
-            if isinstance(val, _HasTimestamp):
-                return sample_from_protocol(val, self._from_protocol)
-            else:
-                return Sample.now(self._from_protocol(val))
+            return sample_from_protocol(val, self._from_protocol)
         else:
             raise MemoryReadUnsuccessfulError(self._name, "unexpected type received")
 
@@ -422,11 +432,11 @@ class AriNativeDriver:
             match msg.result:
                 case types.Intersection():
                     intersection = conversions.intersection_bitmap_from_protocol(msg.result)
-                    sample_intersection = Sample.now(intersection)
+                    sample_intersection = SampleWithoutTimestamp(intersection)
                     await self.memory.intersection_queue.write(sample_intersection)
                 case notification.LineNavigationColorNotificationBody():
                     color_code = conversions.color_code_from_protocol(msg.result.colors)
-                    sample_color_code = Sample.now(color_code)
+                    sample_color_code = SampleWithoutTimestamp(color_code)
                     await self.memory.color_code_queue.write(sample_color_code)
                 case _:
                     typing.assert_never(msg.result)

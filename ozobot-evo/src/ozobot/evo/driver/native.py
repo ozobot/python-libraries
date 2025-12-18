@@ -14,20 +14,19 @@ from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 from ozobot.linefollower.api.data_access import DataReadConstant, DataWatcherProxy, EventWatcher, EventWatcherQueue
 from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import Direction, LEDMask, RobotGeometry, Sample
+from ozobot.linefollower.datatypes import Direction, LEDMask, RobotGeometry, Sample, SampleWithoutTimestamp
 from ozobot.linefollower.driver.interface import Deserializable, Serializable
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
 _CHARACTERISTIC_UUID = UUID("8903136c-5f13-4548-a885-c58779136802")
 
 
-@typing.runtime_checkable
-class _HasTimestamp(typing.Protocol):
-    timestamp: int
-
-
 class _DeserializeAndSerializable(Deserializable, Serializable, typing.Protocol):
     pass
+
+
+class _DeserializableWithTimestamp(Deserializable, typing.Protocol):
+    timestamp: int
 
 
 class MemoryProperty[T](typing.Protocol):
@@ -63,7 +62,7 @@ class NativeMemoryRegions:
         ir_right_front_watcher, ir_left_front_watcher, ir_right_rear_watcher, ir_left_rear_watcher = watchers[4:8]
         button_watcher, charger_watcher = watchers[8:10]
 
-        self.intersection_queue = EventWatcherQueue(Sample(Direction(0), 0))
+        self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(0)))
         self.intersection = EventWatcher(self.intersection_queue)
 
         self.line_following_speed = NativeDataAccessReadWrite(
@@ -156,7 +155,7 @@ class NativeDataAccessReadWrite[T: _DeserializeAndSerializable, U](NativeDataAcc
             handle_response("MemWrite", resp)
 
 
-class NativeDataWatcher[T: Deserializable, U]:
+class NativeDataWatcher[T: _DeserializableWithTimestamp, U]:
     def __init__(
         self,
         control: AsyncControl,
@@ -185,10 +184,7 @@ class NativeDataWatcher[T: Deserializable, U]:
 
             async def _reader_converted() -> None:
                 async for r in reader:
-                    if isinstance(r, _HasTimestamp):
-                        await q.put(sample_from_protocol(r, self._from_protocol))
-                    else:
-                        await q.put(Sample.now(self._from_protocol(r)))
+                    await q.put(sample_from_protocol(r, self._from_protocol))
 
             async with asyncio.TaskGroup() as tg:
                 t = tg.create_task(_reader_converted())
@@ -308,7 +304,7 @@ class EvoNativeDriver:
                 event = await handle_events("LineNavigation", evts)
 
         intersection = conversions.intersection_bitmap_from_protocol(event.intersection)
-        sample = Sample.now(intersection)
+        sample = SampleWithoutTimestamp(intersection)
         await self.memory.intersection_queue.write(sample)
 
     @contextlib.asynccontextmanager

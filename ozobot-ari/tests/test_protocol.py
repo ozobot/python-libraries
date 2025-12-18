@@ -162,17 +162,6 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         memread.MemReadResponse(
             id=1,
-            result=memread.MemReadResponseLineSensorsCalibration(
-                black=[1, 2, 3],
-                white=[4, 5, 6],
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineSensorsCalibration","black":[1,2,3],"white":[4,5,6]}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
             result=memread.MemReadResponseLineSensors(
                 position=1.0,
                 width=2.0,
@@ -184,16 +173,6 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
             ),
         ),
         '{"id":1,"jsonrpc":"2.0","result":{"type":"lineSensors","position":1.0,"width":2.0,"underLeft":true,"underRight":false,"underAll":true,"activeSensors":[true,false],"timestamp":123}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
-            result=memread.MemReadResponseLineSensorsRaw(
-                sensors=[10, 20, 30],
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineSensorsRaw","sensors":[10,20,30]}}',
         memread.MemReadRequest,
     ),
     (
@@ -248,17 +227,6 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         memread.MemReadResponse(
             id=1,
-            result=memread.MemReadResponseSentIr(
-                message=6,
-                active=False,
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"sentIr","message":6,"active":false}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
             result=memread.MemReadResponseVersion(
                 ir=types.VersionPair(
                     bundled=types.Version(version="1.0", hash="abc"),
@@ -283,28 +251,6 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
             ),
         ),
         '{"id":1,"jsonrpc":"2.0","result":{"type":"wheels","countLeft":100,"countRight":200,"timestamp":303}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
-            result=memread.MemReadResponseHardwareState(
-                sensor="sensor1",
-                ir="ir1",
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"state","sensor":"sensor1","ir":"ir1"}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
-            result=memread.MemReadResponseLog(
-                level=2,
-                message="log message",
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"log","level":2,"message":"log message"}}',
         memread.MemReadRequest,
     ),
     (
@@ -346,29 +292,6 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         memread.MemReadResponse(
             id=1,
-            result=memread.MemReadResponseEncoderDACReference(
-                reference=[0.1, 0.2, 0.3],
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"encoderDACReference","reference":[0.1,0.2,0.3]}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
-            result=memread.MemReadResponseEncoderDACReferenceRange(
-                ranges=[
-                    memread.FloatRange(start=0.0, end=1.0),
-                    memread.FloatRange(start=1.0, end=2.0),
-                ],
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"encoderDACReferenceRange","ranges":[{"start":0.0,"end":1.0},{"start":1.0,"end":2.0}]}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
             result=memread.MemReadResponseLinearVelocity(
                 velocity=3.14,
             ),
@@ -379,43 +302,11 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         memread.MemReadResponse(
             id=1,
-            result=memread.MemReadResponseEncoderDACReference(
-                reference=[0.1, 0.2, 0.3],
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"encoderDACReference","reference":[0.1,0.2,0.3]}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
             result=memread.MemReadResponseLinearVelocity(
                 velocity=3.14,
             ),
         ),
         '{"id":1,"jsonrpc":"2.0","result":{"type":"linearVelocity","velocity":3.14}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
-            result=memread.MemReadResponseColorSensorCalibration(
-                red=memread.FloatRange(start=0.0, end=1.0),
-                green=memread.FloatRange(start=1.0, end=2.0),
-                blue=memread.FloatRange(start=2.0, end=3.0),
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"colorSensorCalibration","red":{"start":0.0,"end":1.0},"green":{"start":1.0,"end":2.0},"blue":{"start":2.0,"end":3.0}}}',
-        memread.MemReadRequest,
-    ),
-    (
-        memread.MemReadResponse(
-            id=1,
-            result=memread.MemReadResponsePickupThreshold(
-                threshold=10,
-            ),
-        ),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"pickupThreshold","threshold":10}}',
         memread.MemReadRequest,
     ),
     (

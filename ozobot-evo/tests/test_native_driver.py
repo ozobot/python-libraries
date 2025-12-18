@@ -12,7 +12,7 @@ from ozobot.evo.driver.native import (
     NativeDataWatcher,
 )
 from ozobot.evo.protocol import Types, VirtualMemory
-from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
+from ozobot.linefollower.datatypes import Direction, LEDMask, Sample, SampleWithoutTimestamp
 
 
 def _create_command(
@@ -83,7 +83,6 @@ async def test_command_with_events(
     cmd_mock.assert_called_once_with(sentinel.request_id, *rpc_parameters)
 
 
-@patch("ozobot.linefollower.datatypes.Sample.now", lambda d: Sample(d, 0))
 async def test_line_navigation() -> None:
     cmd_mock = Mock(
         return_value=_create_command(
@@ -108,7 +107,7 @@ async def test_line_navigation() -> None:
     cmd_mock.assert_called_once_with(
         sentinel.request_id, Types.IntersectionDirection.Left, Types.LineNavigationAction.DoNotFollow
     )
-    memory.intersection_queue.write.assert_called_once_with(Sample(Direction.LEFT | Direction.STRAIGHT, 0))
+    memory.intersection_queue.write.assert_called_once_with(SampleWithoutTimestamp(Direction.LEFT | Direction.STRAIGHT))
 
 
 @pytest.mark.parametrize(

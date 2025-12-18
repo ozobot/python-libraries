@@ -4,7 +4,8 @@ from ozobot.linefollower.datatypes import Sample, TDirection, TNamedColor
 
 
 class _HasTimestamp(typing.Protocol):
-    timestamp: int
+    @property
+    def timestamp(self) -> int: ...
 
 
 def sample_from_protocol[T: _HasTimestamp, U](protocol_data: T, convertor: typing.Callable[[T], U]) -> Sample[U]:

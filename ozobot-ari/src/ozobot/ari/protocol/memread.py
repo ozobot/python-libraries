@@ -3,7 +3,7 @@ from typing import Literal as L
 from ozobot.linefollower.datatypes import TNamedColor
 
 from .base import Model, Notification, Request, Response
-from .types import FloatRange, VersionPair
+from .types import VersionPair
 
 
 class MemReadResponseColorSensor(Model):
@@ -20,12 +20,6 @@ class MemReadResponseColorSensor(Model):
     timestamp: int
 
 
-class MemReadResponseLineSensorsCalibration(Model):
-    type: L["lineSensorsCalibration"] = "lineSensorsCalibration"
-    black: list[int]
-    white: list[int]
-
-
 class MemReadResponseLineSensors(Model):
     type: L["lineSensors"] = "lineSensors"
     position: float
@@ -35,11 +29,6 @@ class MemReadResponseLineSensors(Model):
     under_all: bool
     active_sensors: list[bool]
     timestamp: int
-
-
-class MemReadResponseLineSensorsRaw(Model):
-    type: L["lineSensorsRaw"] = "lineSensorsRaw"
-    sensors: list[int]
 
 
 class MemReadResponsePickup(Model):
@@ -71,12 +60,6 @@ class MemReadResponseReadIr(Model):
     timestamp: int
 
 
-class MemReadResponseSentIr(Model):
-    type: L["sentIr"] = "sentIr"
-    message: int
-    active: bool
-
-
 class MemReadResponseVersion(Model):
     type: L["version"] = "version"
     ir: VersionPair
@@ -88,18 +71,6 @@ class MemReadResponseWheels(Model):
     count_left: int
     count_right: int
     timestamp: int
-
-
-class MemReadResponseHardwareState(Model):
-    type: L["state"] = "state"
-    sensor: str
-    ir: str
-
-
-class MemReadResponseLog(Model):
-    type: L["log"] = "log"
-    level: int
-    message: str
 
 
 class MemReadResponsePickupADC(Model):
@@ -123,56 +94,26 @@ class MemReadResponseSurfaceColor(Model):
     timestamp: int
 
 
-class MemReadResponseEncoderDACReference(Model):
-    type: L["encoderDACReference"] = "encoderDACReference"
-    reference: list[float]
-
-
-class MemReadResponseEncoderDACReferenceRange(Model):
-    type: L["encoderDACReferenceRange"] = "encoderDACReferenceRange"
-    ranges: list[FloatRange]
-
-
 class MemReadResponseLinearVelocity(Model):
     type: L["linearVelocity"] = "linearVelocity"
     velocity: float
 
 
-class MemReadResponseColorSensorCalibration(Model):
-    type: L["colorSensorCalibration"] = "colorSensorCalibration"
-    red: FloatRange
-    green: FloatRange
-    blue: FloatRange
-
-
-class MemReadResponsePickupThreshold(Model):
-    type: L["pickupThreshold"] = "pickupThreshold"
-    threshold: int
-
-
-type MemReadResponseBody = (
+type MemWatchResponseBody = (
     MemReadResponseColorSensor
-    | MemReadResponseLineSensorsCalibration
     | MemReadResponseLineSensors
-    | MemReadResponseLineSensorsRaw
     | MemReadResponsePickup
     | MemReadResponsePosition
     | MemReadResponseProximity
     | MemReadResponseReadIr
-    | MemReadResponseSentIr
-    | MemReadResponseVersion
     | MemReadResponseWheels
-    | MemReadResponseHardwareState
-    | MemReadResponseLog
     | MemReadResponsePickupADC
     | MemReadResponseLineColor
     | MemReadResponseSurfaceColor
-    | MemReadResponseEncoderDACReference
-    | MemReadResponseEncoderDACReferenceRange
-    | MemReadResponseLinearVelocity
-    | MemReadResponseColorSensorCalibration
-    | MemReadResponsePickupThreshold
 )
+
+
+type MemReadResponseBody = MemWatchResponseBody | MemReadResponseVersion | MemReadResponseLinearVelocity
 
 
 class MemReadRequestParams(Model):

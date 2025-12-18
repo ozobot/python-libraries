@@ -15,16 +15,16 @@ class _Watcher[T](typing.Protocol):
 
 
 class EventWatcherQueue[T]:
-    def __init__(self, initial_value: Sample[T]) -> None:
+    def __init__(self, initial_value: T) -> None:
         self.last = initial_value
-        self._broadcast = BroadcastManager[Sample[T]]()
+        self._broadcast = BroadcastManager[T]()
 
-    async def write(self, value: Sample[T]) -> None:
+    async def write(self, value: T) -> None:
         self.last = value
         await self._broadcast.broadcast(value)
 
     @contextlib.contextmanager
-    def output(self) -> typing.Iterator[asyncio.Queue[Sample[T]]]:
+    def output(self) -> typing.Iterator[asyncio.Queue[T]]:
         with self._broadcast.output() as out:
             yield out
 
@@ -34,10 +34,10 @@ class EventWatcher[T]:
         self._queue = queue
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[T]]]:
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
         with self._queue.output() as events:
 
-            async def _reader() -> typing.AsyncIterator[Sample[T]]:
+            async def _reader() -> typing.AsyncIterator[T]:
                 while True:
                     yield await events.get()
 

@@ -151,13 +151,23 @@ class TimeOfFlight:
     deviation: float
 
 
-class Sample[T]:
-    @classmethod
-    def now(cls, data: T) -> Sample[T]:
-        return Sample(data, datetime.datetime.now())
-
-    def __init__(self, value: T, timestamp: datetime.datetime | float) -> None:
+class SampleWithoutTimestamp[T]:
+    def __init__(self, value: T) -> None:
         self.value = value
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SampleWithoutTimestamp):
+            return False
+
+        return other.value == self.value
+
+    def __hash__(self) -> int:
+        return hash((SampleWithoutTimestamp, self.value))
+
+
+class Sample[T](SampleWithoutTimestamp[T]):
+    def __init__(self, value: T, timestamp: datetime.datetime | float) -> None:
+        super().__init__(value)
         self.timestamp = (
             timestamp if isinstance(timestamp, datetime.datetime) else datetime.datetime.fromtimestamp(timestamp / 1000)
         )
@@ -170,6 +180,9 @@ class Sample[T]:
             return False
 
         return other.timestamp == self.timestamp
+
+    def __hash__(self) -> int:
+        return hash((Sample, self.value, self.timestamp))
 
 
 @dataclass(frozen=True, kw_only=True)

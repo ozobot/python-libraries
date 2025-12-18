@@ -51,11 +51,6 @@ class VersionPair(Model):
     current: Version
 
 
-class FloatRange(Model):
-    start: float
-    end: float
-
-
 type TNamedColorLowercase = Annotated[
     TNamedColor, pydantic.BeforeValidator(lambda x: str(x).capitalize()), pydantic.PlainSerializer(str.lower)
 ]

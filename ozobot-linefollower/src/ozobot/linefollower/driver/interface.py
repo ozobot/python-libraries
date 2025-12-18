@@ -12,6 +12,7 @@ from ozobot.linefollower.datatypes import (
     LEDMask,
     RobotGeometry,
     Sample,
+    SampleWithoutTimestamp,
 )
 
 
@@ -36,6 +37,12 @@ class WatchableRegion[T](Protocol):
     def watch(self) -> AbstractAsyncContextManager[AsyncIterator[Sample[T]]]: ...
 
 
+# Currently we don't have timestamps with all the monitored data, so we won't provide any
+#     until this is resolved
+class WatchableRegionWithoutTimestamp[T](Protocol):
+    def watch(self) -> AbstractAsyncContextManager[AsyncIterator[SampleWithoutTimestamp[T]]]: ...
+
+
 class ReadableWatchableRegion[T](ReadableRegion[T], WatchableRegion[T], Protocol): ...
 
 
@@ -47,7 +54,7 @@ class VirtualMemoryRegions(Protocol):
     def line_following_speed(self) -> ReadableWritableRegion[float]: ...
 
     @property
-    def color_code(self) -> WatchableRegion[ColorCode]: ...
+    def color_code(self) -> WatchableRegionWithoutTimestamp[ColorCode]: ...
 
     @property
     def line_color(self) -> ReadableWatchableRegion[ClassifiedColor | None]: ...
@@ -56,7 +63,7 @@ class VirtualMemoryRegions(Protocol):
     def surface_color(self) -> ReadableWatchableRegion[ClassifiedColor | None]: ...
 
     @property
-    def intersection(self) -> WatchableRegion[Direction]: ...
+    def intersection(self) -> WatchableRegionWithoutTimestamp[Direction]: ...
 
     @property
     def ir_message_left_front(self) -> ReadableWatchableRegion[IRMessage]: ...
