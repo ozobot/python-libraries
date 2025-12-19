@@ -3,7 +3,7 @@ name: Build and publish
 on:
   push:
     tags:
-      - "*-*"
+      - "ozobot-*-v*"
 
 jobs:
   build:
