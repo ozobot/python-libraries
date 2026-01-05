@@ -1,13 +1,14 @@
 from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.webprotocol import types as webtypes
+from ozobot.linefollower.datatypes import Sample
 from ozobot.linefollower.driver.web import (
     LineFollowerWebDriver,
     Rpc,
     WebDataAccessReadWatch,
     WebMemoryRegions,
-    conversions,
+    rpctypes,
 )
-from ozobot.linefollower.driver.web.rpctypes import ReadIrResponse, ValidatedInt, ValidatedNone
+from ozobot.linefollower.driver.web.conversions import ir_message_from_web
 
 
 class EvoWebMemoryRegions(WebMemoryRegions):
@@ -17,40 +18,40 @@ class EvoWebMemoryRegions(WebMemoryRegions):
         self.ir_message_left_rear = WebDataAccessReadWatch(
             rpc,
             "irMessageLeftRear",
-            response_type=ReadIrResponse,
-            from_protocol=conversions.ir_message_from_web,
+            response_type=rpctypes.ReadIrResponse,
+            from_protocol=lambda m: Sample(ir_message_from_web(m), m.timestamp),
         )
         self.ir_message_right_rear = WebDataAccessReadWatch(
             rpc,
             "irMessageRightRear",
-            response_type=ReadIrResponse,
-            from_protocol=conversions.ir_message_from_web,
+            response_type=rpctypes.ReadIrResponse,
+            from_protocol=lambda m: Sample(ir_message_from_web(m), m.timestamp),
         )
 
         self.proximity_left_rear = WebDataAccessReadWatch(
             rpc,
             "proximityLeftRear",
-            response_type=ValidatedInt,
-            from_protocol=lambda m: m.root,
+            response_type=rpctypes.IrProximityResponse,
+            from_protocol=lambda m: Sample(m.value, m.timestamp),
         )
         self.proximity_right_rear = WebDataAccessReadWatch(
             rpc,
             "proximityRightRear",
-            response_type=ValidatedInt,
-            from_protocol=lambda m: m.root,
+            response_type=rpctypes.IrProximityResponse,
+            from_protocol=lambda m: Sample(m.value, m.timestamp),
         )
 
         self.button = WebDataAccessReadWatch(
             rpc,
             "button",
             response_type=webtypes.ButtonResponse,
-            from_protocol=lambda m: m.press,
+            from_protocol=lambda m: Sample(m.press, m.timestamp),
         )
         self.charger = WebDataAccessReadWatch(
             rpc,
             "charger",
             response_type=webtypes.ChargerStateResponse,
-            from_protocol=lambda m: m.state,
+            from_protocol=lambda m: Sample(m.state, m.timestamp),
         )
 
 
@@ -67,4 +68,4 @@ class EvoWebDriver(LineFollowerWebDriver):
         req = webtypes.PlayAudioRequest(
             filename=map_audio_name_to_filename(audio_name),
         )
-        _ = await self._rpc.execute(req, ValidatedNone)
+        _ = await self._rpc.execute(req, rpctypes.ValidatedNone)

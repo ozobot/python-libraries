@@ -182,35 +182,31 @@ class ValidatedBool(RootModel[bool]):
     pass
 
 
-class ValidatedWebColorOrUnknown(RootModel[TWebColor | None]):
-    pass
-
-
 class ValidatedAny(RootModel[typing.Any]):
     pass
 
 
-class Sample[T](BaseResponse):
-    value: T
+class IntersectionResponse(BaseResponse):
+    intersection: dict[TWebDirection, bool]
     timestamp: float
-
-
-class IntersectionResponse(RootModel[dict[TWebDirection, bool]]):
-    pass
 
 
 class ColorCodeResponse(BaseResponse):
     colors: list[TWebColor]
+    timestamp: float
+
+
+class ColorResponse(BaseResponse):
+    color: TWebColor | None
+    timestamp: float
 
 
 class ReadIrResponse(BaseResponse):
     message: int
     intensity: int
+    timestamp: float
 
 
-class RobotGeometryResponse(BaseResponse):
-    ticks_per_meter: float
-    wheel_track: float
-    wheel_diameter: float
-    encoder_ticks_per_wheel_revolution: float
-    max_speed_limit: float
+class IrProximityResponse(BaseResponse):
+    value: float
+    timestamp: float

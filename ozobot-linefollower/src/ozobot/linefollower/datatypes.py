@@ -143,6 +143,7 @@ class IRProximity:
     left_front: int
     right_rear: int
     left_rear: int
+    timestamp: int
 
 
 @dataclass(frozen=True, kw_only=True)

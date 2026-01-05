@@ -21,7 +21,6 @@ from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import DataReadConstant, EventWatcher, EventWatcherQueue
-from ozobot.linefollower.conversions import sample_from_protocol
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     ColorCode,
@@ -76,14 +75,18 @@ class NativeMemoryRegions:
             request_id,
             "surfaceColor",
             response_type=memread.MemReadResponseSurfaceColor,
-            from_protocol=lambda resp: None if resp.color is None else conversions.color_from_protocol(resp.color),
+            from_protocol=lambda resp: Sample(
+                None if resp.color is None else conversions.color_from_protocol(resp.color), resp.timestamp
+            ),
         )
         self.line_color = NativeDataAccessWatch(
             executor,
             request_id,
             "lineColor",
             response_type=memread.MemReadResponseLineColor,
-            from_protocol=lambda resp: None if resp.color is None else conversions.color_from_protocol(resp.color),
+            from_protocol=lambda resp: Sample(
+                None if resp.color is None else conversions.color_from_protocol(resp.color), resp.timestamp
+            ),
         )
 
         self.proximity_left_front = NativeDataAccessWatch(
@@ -91,28 +94,28 @@ class NativeMemoryRegions:
             request_id,
             "proximityLeft",
             response_type=memread.MemReadResponseProximity,
-            from_protocol=lambda m: m.value,
+            from_protocol=lambda m: Sample(float(m.value), m.timestamp),
         )
         self.proximity_right_front = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityRight",
             response_type=memread.MemReadResponseProximity,
-            from_protocol=lambda m: m.value,
+            from_protocol=lambda m: Sample(float(m.value), m.timestamp),
         )
         self.proximity_left_rear = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityEdgeLeft",
             response_type=memread.MemReadResponseProximity,
-            from_protocol=lambda m: m.value,
+            from_protocol=lambda m: Sample(float(m.value), m.timestamp),
         )
         self.proximity_right_rear = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityEdgeRight",
             response_type=memread.MemReadResponseProximity,
-            from_protocol=lambda m: m.value,
+            from_protocol=lambda m: Sample(float(m.value), m.timestamp),
         )
 
         self.ir_message_left_front = NativeDataAccessWatch(
@@ -120,14 +123,14 @@ class NativeMemoryRegions:
             request_id,
             "readIrLeft",
             response_type=memread.MemReadResponseReadIr,
-            from_protocol=conversions.ir_message_from_protocol,
+            from_protocol=lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
         self.ir_message_right_front = NativeDataAccessWatch(
             executor,
             request_id,
             "readIrRight",
             response_type=memread.MemReadResponseReadIr,
-            from_protocol=conversions.ir_message_from_protocol,
+            from_protocol=lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
 
         self.time_of_flight = NativeTimeOfFlightWatcher(
@@ -144,6 +147,7 @@ class NativeMemoryRegions:
                 max_speed_limit=0.3,
             )
         )
+
 
 
 class _RequestIdCounter:
@@ -199,7 +203,7 @@ class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAc
         self._request_id_counter = id_counter
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[TLib]]]:
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[TLib]]:
         req = memread.WatchRequest(
             id=self._request_id_counter.get_next(),
             params=memread.MemReadRequestParams(segment=self._name),
@@ -207,15 +211,13 @@ class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAc
         async with Query(req, methods.WATCH).execute(self._executor) as q:
             yield self._watch_iter(q.notifications)
 
-    async def _watch_iter(
-        self, iter: typing.AsyncIterator[memread.WatchNotification]
-    ) -> typing.AsyncIterator[Sample[TLib]]:
+    async def _watch_iter(self, iter: typing.AsyncIterator[memread.WatchNotification]) -> typing.AsyncIterator[TLib]:
         async for val in iter:
             yield self._convert_sample_from_protocol(val.notification)
 
-    def _convert_sample_from_protocol(self, val: MemReadResponseBody) -> Sample[TLib]:
+    def _convert_sample_from_protocol(self, val: MemReadResponseBody) -> TLib:
         if isinstance(val, self._type):
-            return sample_from_protocol(val, self._from_protocol)
+            return self._from_protocol(val)
         else:
             raise MemoryReadUnsuccessfulError(self._name, "unexpected type received")
 
@@ -253,10 +255,9 @@ class NativeTimeOfFlightWatcher:
         self._executor = executor
         self._request_id = request_id
 
-    async def read(self) -> TimeOfFlight:
+    async def read(self) -> Sample[TimeOfFlight]:
         async with self.watch() as it:
-            sample = await anext(it)
-            return sample.value
+            return await anext(it)
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[TimeOfFlight]]]:

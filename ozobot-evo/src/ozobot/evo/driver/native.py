@@ -12,9 +12,13 @@ from ozobot.evo.api.watchers import LineFollowerWatcher, WatcherSubscription
 from ozobot.evo.driver.responses import handle_events, handle_response
 from ozobot.evo.driver.shared import map_audio_name_to_filename
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
-from ozobot.linefollower.api.data_access import DataReadConstant, DataWatcherProxy, EventWatcher, EventWatcherQueue
-from ozobot.linefollower.conversions import sample_from_protocol
-from ozobot.linefollower.datatypes import Direction, LEDMask, RobotGeometry, Sample, SampleWithoutTimestamp
+from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue
+from ozobot.linefollower.datatypes import (
+    Direction,
+    LEDMask,
+    Sample,
+    SampleWithoutTimestamp,
+)
 from ozobot.linefollower.driver.interface import Deserializable, Serializable
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
@@ -72,43 +76,69 @@ class NativeMemoryRegions:
             lambda fl: Types.S8_24(fl / 1000),
         )
         self.color_code = NativeDataWatcher(
-            control, VirtualMemory.colorCode, color_code_watcher, conversions.color_code_from_protocol
+            control,
+            VirtualMemory.colorCode,
+            color_code_watcher,
+            lambda c: SampleWithoutTimestamp(conversions.color_code_from_protocol(c)),
         )
         self.line_color = NativeDataWatcher(
-            control, VirtualMemory.lineColor, line_color_watcher, conversions.line_color_from_protocol
+            control,
+            VirtualMemory.lineColor,
+            line_color_watcher,
+            lambda c: Sample(conversions.line_color_from_protocol(c), c.timestamp),
         )
         self.surface_color = NativeDataWatcher(
-            control, VirtualMemory.surfaceColor, surface_color_watcher, conversions.surface_color_from_protocol
+            control,
+            VirtualMemory.surfaceColor,
+            surface_color_watcher,
+            lambda c: Sample(conversions.surface_color_from_protocol(c), c.timestamp),
         )
 
         proximity = NativeDataWatcher(
             control, VirtualMemory.irProximity, proximity_watcher, conversions.proximity_from_protocol
         )
 
-        self.proximity_right_front = DataWatcherProxy(proximity, convert=lambda p: p.right_front)
-        self.proximity_left_front = DataWatcherProxy(proximity, convert=lambda p: p.left_front)
-        self.proximity_right_rear = DataWatcherProxy(proximity, convert=lambda p: p.right_rear)
-        self.proximity_left_rear = DataWatcherProxy(proximity, convert=lambda p: p.left_rear)
+        self.proximity_right_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.right_front, p.timestamp))
+        self.proximity_left_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.left_front, p.timestamp))
+        self.proximity_right_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.right_rear, p.timestamp))
+        self.proximity_left_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.left_rear, p.timestamp))
 
         self.ir_message_right_front = NativeDataWatcher(
-            control, VirtualMemory.irMessageRightFront, ir_right_front_watcher, conversions.ir_message_from_protocol
+            control,
+            VirtualMemory.irMessageRightFront,
+            ir_right_front_watcher,
+            lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
 
         self.ir_message_left_front = NativeDataWatcher(
-            control, VirtualMemory.irMessageLeftFront, ir_left_front_watcher, conversions.ir_message_from_protocol
+            control,
+            VirtualMemory.irMessageLeftFront,
+            ir_left_front_watcher,
+            lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
 
         self.ir_message_right_rear = NativeDataWatcher(
-            control, VirtualMemory.irMessageRightRear, ir_right_rear_watcher, conversions.ir_message_from_protocol
+            control,
+            VirtualMemory.irMessageRightRear,
+            ir_right_rear_watcher,
+            lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
 
         self.ir_message_left_rear = NativeDataWatcher(
-            control, VirtualMemory.irMessageLeftRear, ir_left_rear_watcher, conversions.ir_message_from_protocol
+            control,
+            VirtualMemory.irMessageLeftRear,
+            ir_left_rear_watcher,
+            lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
 
-        self.button = NativeDataWatcher(control, VirtualMemory.button, button_watcher, lambda b: b.press)
+        self.button = NativeDataWatcher(
+            control, VirtualMemory.button, button_watcher, lambda b: Sample(b.press, b.timestamp)
+        )
         self.charger = NativeDataWatcher(
-            control, VirtualMemory.chargerState, charger_watcher, conversions.charger_state_from_protocol
+            control,
+            VirtualMemory.chargerState,
+            charger_watcher,
+            lambda c: Sample(conversions.charger_state_from_protocol(c), c.timestamp),
         )
 
         self.geometry = DataReadConstant(
@@ -120,6 +150,7 @@ class NativeMemoryRegions:
                 max_speed_limit=0.3,
             )
         )
+
 
 
 class NativeDataAccessRead[T: Deserializable, U]:
@@ -171,11 +202,11 @@ class NativeDataWatcher[T: _DeserializableWithTimestamp, U]:
         return await self._reader.read()
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[U]]:
         async with self._watcher.watch() as reader:
-            q = asyncio.Queue[Sample[U]]()
+            q = asyncio.Queue[U]()
 
-            async def _queue_to_aiter() -> typing.AsyncIterator[Sample[U]]:
+            async def _queue_to_aiter() -> typing.AsyncIterator[U]:
                 while True:
                     try:
                         yield await q.get()
@@ -184,7 +215,7 @@ class NativeDataWatcher[T: _DeserializableWithTimestamp, U]:
 
             async def _reader_converted() -> None:
                 async for r in reader:
-                    await q.put(sample_from_protocol(r, self._from_protocol))
+                    await q.put(self._from_protocol(r))
 
             async with asyncio.TaskGroup() as tg:
                 t = tg.create_task(_reader_converted())

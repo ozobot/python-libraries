@@ -7,7 +7,6 @@ from ozobot.linefollower.datatypes import (
     Direction,
     IRMessage,
     LEDMask,
-    RobotGeometry,
     TNamedColor,
 )
 from ozobot.linefollower.driver.web.exceptions import InvalidColorCodeError
@@ -17,7 +16,6 @@ from .rpctypes import (
     ALLOWED_WEB_COLORS,
     ALLOWED_WEB_DIRECTIONS,
     ReadIrResponse,
-    RobotGeometryResponse,
     TWebColor,
     TWebDirection,
 )
@@ -137,14 +135,4 @@ def ir_message_from_web(ir_message: ReadIrResponse) -> IRMessage:
     return IRMessage(
         message=ir_message.message,
         intensity=ir_message.intensity,
-    )
-
-
-def robot_geometry_from_web(robot_geometry: RobotGeometryResponse) -> RobotGeometry:
-    return RobotGeometry(
-        ticks_per_meter=robot_geometry.ticks_per_meter,
-        wheel_track=robot_geometry.wheel_track,
-        wheel_diameter=robot_geometry.wheel_diameter,
-        encoder_ticks_per_wheel_revolution=robot_geometry.encoder_ticks_per_wheel_revolution,
-        max_speed_limit=robot_geometry.max_speed_limit,
     )

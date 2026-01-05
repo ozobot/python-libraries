@@ -10,7 +10,6 @@ from ozobot.linefollower.datatypes import (
     IRMessage,
     LEDMask,
     RawColor,
-    RobotGeometry,
 )
 from ozobot.linefollower.driver.web.conversions import (
     color_code_from_web,
@@ -22,11 +21,9 @@ from ozobot.linefollower.driver.web.conversions import (
     is_web_color,
     is_web_direction,
     led_to_web_json,
-    robot_geometry_from_web,
 )
 from ozobot.linefollower.driver.web.rpctypes import (
     ReadIrResponse,
-    RobotGeometryResponse,
     TWebColor,
     TWebDirection,
 )
@@ -136,25 +133,13 @@ def test_unknown_color_to_web() -> None:
 
 
 def test_ir_message_from_web() -> None:
-    assert ir_message_from_web(ReadIrResponse(message=10, intensity=20)) == IRMessage(message=10, intensity=20)
-
-
-def test_robot_geometry_from_web() -> None:
-    assert robot_geometry_from_web(
-        RobotGeometryResponse(
-            ticks_per_meter=22281.69,
-            wheel_track=0.0315,
-            wheel_diameter=0.012,
-            encoder_ticks_per_wheel_revolution=16 * 2 * 21 * 15 / 12.0,
-            max_speed_limit=0.3,
+    assert ir_message_from_web(
+        ReadIrResponse(
+            message=10,
+            intensity=20,
+            timestamp=30,
         )
-    ) == RobotGeometry(
-        ticks_per_meter=22281.69,
-        wheel_track=0.0315,
-        wheel_diameter=0.012,
-        encoder_ticks_per_wheel_revolution=16 * 2 * 21 * 15 / 12.0,
-        max_speed_limit=0.3,
-    )
+    ) == IRMessage(message=10, intensity=20)
 
 
 @pytest.mark.parametrize(

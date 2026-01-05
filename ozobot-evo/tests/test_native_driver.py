@@ -235,8 +235,8 @@ async def test_native_data_watcher() -> None:
     @contextlib.asynccontextmanager
     async def _watch() -> typing.AsyncIterator[Types.Battery]:
         async def _iter():
-            yield Types.Battery(voltage=10, remainingPower=2, fields=0, timestamp=0)
-            yield Types.Battery(voltage=20, remainingPower=2, fields=0, timestamp=0)
+            yield Types.Battery(voltage=10, remainingPower=2, fields=0, timestamp=1)
+            yield Types.Battery(voltage=20, remainingPower=2, fields=0, timestamp=2)
 
         yield _iter()
 
@@ -253,7 +253,7 @@ async def test_native_data_watcher() -> None:
     )
     property = Mock(type=Types.Battery)
     watcher = Mock(watch=_watch)
-    da = NativeDataWatcher(control, property, watcher, lambda v: v.voltage)
+    da = NativeDataWatcher(control, property, watcher, lambda v: Sample(v.voltage, v.timestamp))
 
     # test watching
     async with da.watch() as it:
@@ -265,6 +265,6 @@ async def test_native_data_watcher() -> None:
 
     # test reading
     ret = await da.read()
-    assert ret == 1
+    assert ret == Sample(1, 0)
 
     cmd_mock.assert_called_once_with(property.address, property.size)

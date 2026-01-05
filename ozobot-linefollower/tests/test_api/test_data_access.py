@@ -53,8 +53,8 @@ async def test_watcher_proxy() -> None:
             ),
         )
 
-        assert (await anext(it_int)).value == 1
-        assert (await anext(it_int)).value == 2
+        assert (await anext(it_int)) == 1
+        assert (await anext(it_int)) == 2
 
-        assert (await anext(it_str)).value == "hello"
-        assert (await anext(it_str)).value == "world"
+        assert (await anext(it_str)) == "hello"
+        assert (await anext(it_str)) == "world"

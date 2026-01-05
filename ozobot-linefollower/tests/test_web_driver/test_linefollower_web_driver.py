@@ -109,16 +109,14 @@ async def test_mem_watch_structure() -> None:
     num_data = 3
 
     responses_flat = [
-        {"value": "Red", "timestamp": 1},
-        {"value": "Black", "timestamp": 2},
-        {"value": "Blue", "timestamp": 3},
+        {"color": "Red", "timestamp": 1},
+        {"color": "Black", "timestamp": 2},
+        {"color": "Blue", "timestamp": 3},
     ]
 
     rpc_responses = [
         [responses_flat[0], responses_flat[1]],
-        [
-            responses_flat[2],
-        ],
+        [responses_flat[2]],
     ]
     with patch(_RPC_COROUTINE_MODULE_PATH, side_effect=rpc_responses) as mock_coro:
         driver = LineFollowerWebDriver(robot_name)
@@ -153,9 +151,9 @@ async def test_mem_watch_simple_type() -> None:
     num_data = 3
 
     responses_flat = [
-        {"timestamp": 0, "value": 0.1},
-        {"timestamp": 0, "value": 0.2},
-        {"timestamp": 0, "value": 0.3},
+        0.1,
+        0.2,
+        0.3,
     ]
 
     rpc_responses = [
@@ -168,8 +166,7 @@ async def test_mem_watch_simple_type() -> None:
         driver = LineFollowerWebDriver(robot_name)
 
         async with driver.memory.line_following_speed.watch() as it:
-            samples = [await anext(it) for _ in range(num_data)]
-            data = [sample.value for sample in samples]
+            data = [await anext(it) for _ in range(num_data)]
         assert len(data) == num_data
         assert data == [100, 200, 300]
 

@@ -4,7 +4,7 @@ import typing
 
 from ozobot.actors.actors import ActorDispatcher, context
 from ozobot.linefollower.api.core import LineFollower
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, LEDMask, Sample, TNote
+from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, LEDMask, TNote
 from ozobot.linefollower.driver.interface import ReadableRegion, ReadableWatchableRegion, VirtualMemoryRegions
 
 
@@ -29,7 +29,7 @@ class _ProxyDataWatcher[T]:
         obj = self._dispatcher.get_property(self._value_type, self._name)
         return await obj.read()
 
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[T]]]:
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
         obj = self._dispatcher.get_property(self._value_type, self._name)
         async with obj.watch() as reader:
             yield reader

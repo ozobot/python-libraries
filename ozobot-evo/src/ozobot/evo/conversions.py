@@ -159,6 +159,7 @@ def proximity_from_protocol(proximity: Types.IRProximity) -> IRProximity:
         left_front=proximity.leftFront,
         right_rear=proximity.rightRear,
         left_rear=proximity.leftRear,
+        timestamp=proximity.timestamp,
     )
 
 

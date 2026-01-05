@@ -59,12 +59,12 @@ class DataWatcherProxy[T, U]:
         return self._convert(value)
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[U]]]:
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[U]]:
         async with self._watcher.watch() as reader:
 
-            async def _reader_converted() -> typing.AsyncIterator[Sample[U]]:
+            async def _reader_converted() -> typing.AsyncIterator[U]:
                 async for sample in reader:
-                    yield Sample(self._convert(sample.value), sample.timestamp)
+                    yield self._convert(sample.value)
 
             yield _reader_converted()
 

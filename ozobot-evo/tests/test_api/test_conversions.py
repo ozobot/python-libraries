@@ -119,7 +119,11 @@ def test_intersection_mask_from_protocol() -> None:
 
 def test_proximity_from_protocol() -> None:
     assert proximity_from_protocol(Types.IRProximity(1, 2, 3, 4, 5)) == IRProximity(
-        right_front=4, left_front=2, right_rear=3, left_rear=1
+        right_front=4,
+        left_front=2,
+        right_rear=3,
+        left_rear=1,
+        timestamp=5,
     )
 
 

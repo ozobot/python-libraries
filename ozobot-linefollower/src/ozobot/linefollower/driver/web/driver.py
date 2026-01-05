@@ -4,7 +4,7 @@ import typing
 
 import pydantic
 from loguru import logger
-from ozobot.linefollower.datatypes import Direction, LEDMask, Sample
+from ozobot.linefollower.datatypes import Direction, LEDMask, Sample, SampleWithoutTimestamp
 from ozobot.web.browser import _rpcCoroutine
 
 from . import rpctypes
@@ -51,8 +51,8 @@ class Rpc:
 #     a generic type (e.g., TProtoFrom: pydantic.BaseModel bound to a function) and mypy fails when T is a
 #     runtime type (e.g, T = type(int)). We use the following to satisfy both...
 #     https://github.com/python/mypy/issues/13619
-def _get_response_model_list[T](_type: type[T]) -> type[list[rpctypes.Sample[T]]]:
-    response_model = list[rpctypes.Sample[_type]]  # type: ignore[valid-type]
+def _get_response_model_list[T](_type: type[T]) -> type[list[T]]:
+    response_model = list[_type]  # type: ignore[valid-type]
     return response_model
 
 
@@ -71,28 +71,28 @@ class WebDataAccessWatch[TProtoFrom: pydantic.BaseModel, TLib]:
         self._from_protocol = from_protocol
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[TLib]]]:
+    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[TLib]]:
         yield self._watch_iter()
 
-    async def _watch_iter(self) -> typing.AsyncIterator[Sample[TLib]]:
-        last_sample: rpctypes.Sample[TProtoFrom] | None = None
+    async def _watch_iter(self) -> typing.AsyncIterator[TLib]:
+        last_value: TProtoFrom | None = None
 
         while True:
             req = rpctypes.MemWatchRequest.create(
-                name=self._property_name, last_value=last_sample.model_dump() if last_sample else None
+                name=self._property_name, last_value=last_value.model_dump() if last_value else None
             )
             response_model = pydantic.TypeAdapter(_get_response_model_list(self._type))
-            samples = await self._rpc.execute(req, response_model)
-            last_sample = samples[-1]
-            for sample in samples:
+            values = await self._rpc.execute(req, response_model)
+            last_value = values[-1]
+            for sample in values:
                 yield self._convert_from_protocol(sample)
 
-    def _convert_from_protocol(self, sample: rpctypes.Sample[TProtoFrom]) -> Sample[TLib]:
-        if isinstance(sample.value, self._type):
-            converted_val = self._from_protocol(sample.value)
-            return Sample(converted_val, timestamp=sample.timestamp / 1000)
+    def _convert_from_protocol(self, value: TProtoFrom) -> TLib:
+        if isinstance(value, self._type):
+            converted_val = self._from_protocol(value)
+            return converted_val
         else:
-            raise MemoryReadUnsuccessfulError(self._property_name, f"got unexpected type {type(sample.value)}")
+            raise MemoryReadUnsuccessfulError(self._property_name, f"got unexpected type {type(value)}")
 
 
 class WebDataAccessRead[TProtoFrom: pydantic.BaseModel, TLib]:
@@ -127,7 +127,7 @@ class WebDataAccessReadWatch[TProtoFrom: pydantic.BaseModel, TLib]:
         self._read = WebDataAccessRead(rpc, property_name, response_type=response_type, from_protocol=from_protocol)
         self._watch = WebDataAccessWatch(rpc, property_name, response_type=response_type, from_protocol=from_protocol)
 
-    def watch(self) -> typing.AsyncContextManager[typing.AsyncIterator[Sample[TLib]]]:
+    def watch(self) -> typing.AsyncContextManager[typing.AsyncIterator[TLib]]:
         return self._watch.watch()
 
     async def read(self) -> TLib:
@@ -164,14 +164,14 @@ class WebMemoryRegions:
             rpc,
             "colorCode",
             response_type=rpctypes.ColorCodeResponse,
-            from_protocol=lambda x: color_code_from_web(x.colors),
+            from_protocol=lambda x: SampleWithoutTimestamp(color_code_from_web(x.colors)),
         )
 
         self.intersection = WebDataAccessWatch(
             rpc,
             "intersection",
             response_type=rpctypes.IntersectionResponse,
-            from_protocol=lambda x: intersection_from_web(x.root),
+            from_protocol=lambda x: SampleWithoutTimestamp(intersection_from_web(x.intersection)),
         )
 
         self.line_following_speed = WebDataAccessReadWrite(
@@ -186,41 +186,41 @@ class WebMemoryRegions:
         self.surface_color = WebDataAccessReadWatch(
             rpc,
             "surfaceColor",
-            response_type=rpctypes.ValidatedWebColorOrUnknown,
-            from_protocol=lambda x: None if x.root is None else color_from_web(x.root),
+            response_type=rpctypes.ColorResponse,
+            from_protocol=lambda x: Sample(None if x.color is None else color_from_web(x.color), x.timestamp),
         )
 
         self.line_color = WebDataAccessReadWatch(
             rpc,
             "lineColor",
-            response_type=rpctypes.ValidatedWebColorOrUnknown,
-            from_protocol=lambda x: None if x.root is None else color_from_web(x.root),
+            response_type=rpctypes.ColorResponse,
+            from_protocol=lambda x: Sample(None if x.color is None else color_from_web(x.color), x.timestamp),
         )
 
         self.proximity_left_front = WebDataAccessReadWatch(
             rpc,
             "proximityLeftFront",
-            response_type=rpctypes.ValidatedInt,
-            from_protocol=lambda m: m.root,
+            response_type=rpctypes.IrProximityResponse,
+            from_protocol=lambda m: Sample(m.value, m.timestamp),
         )
         self.proximity_right_front = WebDataAccessReadWatch(
             rpc,
             "proximityRightFront",
-            response_type=rpctypes.ValidatedInt,
-            from_protocol=lambda m: m.root,
+            response_type=rpctypes.IrProximityResponse,
+            from_protocol=lambda m: Sample(m.value, m.timestamp),
         )
 
         self.ir_message_left_front = WebDataAccessReadWatch(
             rpc,
             "irMessageLeftFront",
             response_type=rpctypes.ReadIrResponse,
-            from_protocol=ir_message_from_web,
+            from_protocol=lambda m: Sample(ir_message_from_web(m), m.timestamp),
         )
         self.ir_message_right_front = WebDataAccessReadWatch(
             rpc,
             "irMessageRightFront",
             response_type=rpctypes.ReadIrResponse,
-            from_protocol=ir_message_from_web,
+            from_protocol=lambda m: Sample(ir_message_from_web(m), m.timestamp),
         )
 
         self.geometry = WebDataAccessRead(
