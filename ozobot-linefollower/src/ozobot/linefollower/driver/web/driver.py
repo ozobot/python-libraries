@@ -15,7 +15,6 @@ from .conversions import (
     intersection_from_web,
     ir_message_from_web,
     led_to_web_json,
-    robot_geometry_from_web,
 )
 from .exceptions import (
     InvalidWebRobotSelectorError,
@@ -221,13 +220,6 @@ class WebMemoryRegions:
             "irMessageRightFront",
             response_type=rpctypes.ReadIrResponse,
             from_protocol=lambda m: Sample(ir_message_from_web(m), m.timestamp),
-        )
-
-        self.geometry = WebDataAccessRead(
-            rpc,
-            "geometry",
-            response_type=rpctypes.RobotGeometryResponse,
-            from_protocol=robot_geometry_from_web,
         )
 
 

@@ -1,4 +1,4 @@
-from ozobot.evo.driver.shared import map_audio_name_to_filename
+from ozobot.evo.driver.shared import geometry, map_audio_name_to_filename
 from ozobot.evo.webprotocol import types as webtypes
 from ozobot.linefollower.datatypes import Sample
 from ozobot.linefollower.driver.web import (
@@ -53,6 +53,8 @@ class EvoWebMemoryRegions(WebMemoryRegions):
             response_type=webtypes.ChargerStateResponse,
             from_protocol=lambda m: Sample(m.state, m.timestamp),
         )
+
+        self.geometry = geometry
 
 
 class EvoWebDriver(LineFollowerWebDriver):

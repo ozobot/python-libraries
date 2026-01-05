@@ -9,6 +9,7 @@ from uuid import UUID
 
 from loguru import logger
 from ozobot.ari import conversions
+from ozobot.ari.driver.shared import geometry
 from ozobot.ari.exceptions import (
     AriProtocolCommandError,
     MemoryReadUnsuccessfulError,
@@ -20,13 +21,12 @@ from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
-from ozobot.linefollower.api.data_access import DataReadConstant, EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     ColorCode,
     Direction,
     LEDMask,
-    RobotGeometry,
     Sample,
     SampleWithoutTimestamp,
     TimeOfFlight,
@@ -138,16 +138,7 @@ class NativeMemoryRegions:
             request_id,
         )
 
-        self.geometry = DataReadConstant(
-            lambda: RobotGeometry(
-                ticks_per_meter=22281.69,
-                wheel_track=0.0315,
-                wheel_diameter=0.012,
-                encoder_ticks_per_wheel_revolution=16 * 2 * 21 * 15 / 12.0,
-                max_speed_limit=0.3,
-            )
-        )
-
+        self.geometry = geometry
 
 
 class _RequestIdCounter:

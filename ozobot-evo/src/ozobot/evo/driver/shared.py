@@ -1,3 +1,5 @@
+from ozobot.linefollower.api.data_access import DataReadConstant
+from ozobot.linefollower.datatypes import RobotGeometry
 from ozobot.linefollower.exceptions import FileNotFoundError
 
 _map_audioname_filename = {
@@ -27,3 +29,14 @@ def map_audio_name_to_filename(audio_name: str) -> str:
     if not filename:
         raise FileNotFoundError(audio_name)
     return filename
+
+
+geometry = DataReadConstant(
+    lambda: RobotGeometry(
+        ticks_per_meter=18851,
+        wheel_track=0.023,
+        wheel_diameter=0.01182,
+        encoder_ticks_per_wheel_revolution=8 * 2 * 21 * 25 / 12,
+        max_speed_limit=0.3,
+    )
+)
