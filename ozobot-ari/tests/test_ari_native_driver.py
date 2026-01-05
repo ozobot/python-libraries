@@ -227,14 +227,14 @@ async def test_set_led(command_lights: LEDMask, rpc_lights: types.Lights) -> Non
     with patch("ozobot.ari.driver.native.Query", query_cls):
         driver = AriNativeDriver(Mock())
 
-        await driver.set_led(command_lights, 10, 20, 30)
+        await driver.set_led(command_lights, 0.1, 0.2, 0.3)
 
         query_cls_mock.assert_called_once_with(
             request.SetLEDRequest(
                 id=0,
                 params=request.SetLEDRequestParams(
                     lights=rpc_lights,
-                    color=types.Color(red=10, green=20, blue=30),
+                    color=types.Color(red=25, green=51, blue=76),
                 ),
             ),
             methods.SET_LED,

@@ -278,9 +278,9 @@ class LineFollowerWebDriver:
     # async def play_audio(self, audio_name: str) -> None:
     #     robot specific implementation can be found in ari and evo packages
 
-    async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None:
+    async def set_led(self, mask: LEDMask, red: float, green: float, blue: float) -> None:
         mask_json = led_to_web_json(mask)
-        req = rpctypes.SetLedRequest(mask=mask_json, red=red, green=green, blue=blue, alpha=255)
+        req = rpctypes.SetLedRequest(mask=mask_json, red=red, green=green, blue=blue)
         _ = await self._rpc.execute(req, rpctypes.ValidatedNone)
 
     async def line_navigation(self, direction: Direction, follow: bool) -> None:

@@ -134,8 +134,8 @@ async def test_set_led(command_direction: LEDMask, rpc_direction: Types.LEDsMask
     control = Mock(SetLED=cmd_mock)
     driver = EvoNativeDriver(control, Mock())
 
-    await driver.set_led(command_direction, 0, 100, 200)
-    cmd_mock.assert_called_once_with(rpc_direction, 0, 100, 200, 255)
+    await driver.set_led(command_direction, 0, 0.1, 0.2)
+    cmd_mock.assert_called_once_with(rpc_direction, 0, 25, 51, 255)
 
 
 @pytest.mark.parametrize(

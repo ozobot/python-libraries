@@ -147,9 +147,9 @@ class LineFollower:
         elif isinstance(color, ClassifiedColor):
             raw_color = color.to_raw_color()
 
-        red = int(raw_color.red * 255)
-        green = int(raw_color.green * 255)
-        blue = int(raw_color.blue * 255)
+        red = raw_color.red
+        green = raw_color.green
+        blue = raw_color.blue
 
         await self._driver.set_led(mask, red, green, blue)
 

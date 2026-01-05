@@ -308,9 +308,12 @@ class EvoNativeDriver:
                 handle_response("ExecuteFile", resp)
                 await handle_events("ExecuteFile", evts)
 
-    async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None:
+    async def set_led(self, mask: LEDMask, red: float, green: float, blue: float) -> None:
         protocol_mask = conversions.led_to_protocol(mask)
-        async with self._control.SetLED(protocol_mask, red, green, blue, 255) as (response, _):
+        async with self._control.SetLED(protocol_mask, int(red * 255), int(green * 255), int(blue * 255), 255) as (
+            response,
+            _,
+        ):
             handle_response("SetLED", response)
 
     async def line_navigation(self, direction: Direction, follow: bool) -> None:

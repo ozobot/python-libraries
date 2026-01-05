@@ -392,9 +392,9 @@ class AriNativeDriver:
         async with Query(req, methods.PLAY_SOUND).execute(self._executor) as q:
             await self._handle_response("PlaySound", q.response)
 
-    async def set_led(self, mask: LEDMask, red: int, green: int, blue: int) -> None:
+    async def set_led(self, mask: LEDMask, red: float, green: float, blue: float) -> None:
         lights = conversions.led_to_protocol(mask)
-        color = types.Color(red=red, green=green, blue=blue)
+        color = types.Color(red=int(red * 255), green=int(green * 255), blue=int(blue * 255))
         req = request.SetLEDRequest(
             id=self._request_id.get_next(), params=request.SetLEDRequestParams(lights=lights, color=color)
         )

@@ -90,10 +90,9 @@ TSetLedMaskItem = L[
 class SetLedRequest(BaseRequest):
     method: L["setLed"] = "setLed"
     mask: dict[TSetLedMaskItem, bool]
-    red: Annotated[int, Ge(0), Le(255)]
-    green: Annotated[int, Ge(0), Le(255)]
-    blue: Annotated[int, Ge(0), Le(255)]
-    alpha: Annotated[int, Ge(0), Le(255)]
+    red: Annotated[float, Ge(0), Le(1)]
+    green: Annotated[float, Ge(0), Le(1)]
+    blue: Annotated[float, Ge(0), Le(1)]
 
     @property
     def args(self) -> tuple:
@@ -143,7 +142,7 @@ class MemWatchRequest(BaseRequest):
     @property
     def args(self) -> tuple:
         if self.last_value is not None:
-            return ({"value": self.last_value},)
+            return (self.last_value, False)
         else:
             return (None,)
 

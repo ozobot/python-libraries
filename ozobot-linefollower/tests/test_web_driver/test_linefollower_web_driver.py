@@ -46,10 +46,10 @@ _RPC_COROUTINE_MODULE_PATH = "ozobot.linefollower.driver.web.driver._rpcCoroutin
         ),
         (
             "set_led",
-            (LEDMask.TOP | LEDMask.FRONT_LEFT, 255, 128, 0),
+            (LEDMask.TOP | LEDMask.FRONT_LEFT, 1, 0.5, 0),
             None,
             "setLed",
-            ({"top": True, "front_left": True}, 255, 128, 0),
+            ({"top": True, "front_left": True}, 1, 0.5, 0),
             None,
         ),
         (
@@ -141,7 +141,13 @@ async def test_mem_watch_structure() -> None:
         mock_coro.assert_has_calls(
             [
                 call(*call_args_prefix, (None,)),
-                call(*call_args_prefix, ({"value": responses_flat[1]},)),
+                call(
+                    *call_args_prefix,
+                    (
+                        responses_flat[1],
+                        False,
+                    ),
+                ),
             ]
         )
 
@@ -180,6 +186,12 @@ async def test_mem_watch_simple_type() -> None:
         mock_coro.assert_has_calls(
             [
                 call(*call_args_prefix, (None,)),
-                call(*call_args_prefix, ({"value": responses_flat[1]},)),
+                call(
+                    *call_args_prefix,
+                    (
+                        responses_flat[1],
+                        False,
+                    ),
+                ),
             ]
         )
