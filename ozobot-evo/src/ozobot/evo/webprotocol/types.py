@@ -14,9 +14,9 @@ class PlayAudioRequest(rpctypes.BaseRequest):
 
 class ButtonResponse(rpctypes.BaseResponse):
     press: bool
-    timestamp: float
+    timestamp: int
 
 
 class ChargerStateResponse(rpctypes.BaseResponse):
     state: typing.Literal["Connected", "Disconnected", "LowPower"]
-    timestamp: float
+    timestamp: int

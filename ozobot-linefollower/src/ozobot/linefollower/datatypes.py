@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 import enum
 import math
 import typing
@@ -167,11 +166,9 @@ class SampleWithoutTimestamp[T]:
 
 
 class Sample[T](SampleWithoutTimestamp[T]):
-    def __init__(self, value: T, timestamp: datetime.datetime | float) -> None:
+    def __init__(self, value: T, timestamp: float) -> None:
         super().__init__(value)
-        self.timestamp = (
-            timestamp if isinstance(timestamp, datetime.datetime) else datetime.datetime.fromtimestamp(timestamp / 1000)
-        )
+        self.timestamp = timestamp
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Sample):

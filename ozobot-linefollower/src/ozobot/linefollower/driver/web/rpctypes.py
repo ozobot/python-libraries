@@ -187,25 +187,25 @@ class ValidatedAny(RootModel[typing.Any]):
 
 class IntersectionResponse(BaseResponse):
     intersection: dict[TWebDirection, bool]
-    timestamp: float
+    timestamp: int
 
 
 class ColorCodeResponse(BaseResponse):
     colors: list[TWebColor]
-    timestamp: float
+    timestamp: int
 
 
 class ColorResponse(BaseResponse):
     color: TWebColor | None
-    timestamp: float
+    timestamp: int
 
 
 class ReadIrResponse(BaseResponse):
     message: int
     intensity: int
-    timestamp: float
+    timestamp: int
 
 
 class IrProximityResponse(BaseResponse):
     value: float
-    timestamp: float
+    timestamp: int

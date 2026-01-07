@@ -15,4 +15,4 @@ class PlayAudioRequest(rpctypes.BaseRequest):
 class TimeOfFlightResponse(rpctypes.BaseResponse):
     distance: float
     deviation: float
-    timestamp: float
+    timestamp: int

@@ -1,5 +1,3 @@
-import datetime
-
 from ozobot.linefollower.conversions import sample_from_protocol
 from ozobot.linefollower.datatypes import Sample
 
@@ -15,4 +13,4 @@ def test_sample_from_protocol() -> None:
 
     assert isinstance(sample, Sample)
     assert sample.value == 3
-    assert sample.timestamp == datetime.datetime.fromtimestamp(1)
+    assert sample.timestamp == 1000

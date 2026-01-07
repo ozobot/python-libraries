@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import typing
 from unittest.mock import patch, sentinel
 
@@ -26,4 +25,4 @@ def test_data_read(patched_runner) -> None:
     sample = sync_watcher.read()
     assert isinstance(sample, Sample)
     assert sample.value == sentinel.value1
-    assert sample.timestamp == datetime.datetime.fromtimestamp(0)
+    assert sample.timestamp == 0
