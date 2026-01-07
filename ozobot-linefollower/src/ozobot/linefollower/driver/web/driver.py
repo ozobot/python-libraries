@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import math
 import typing
@@ -74,16 +75,28 @@ class WebDataAccessWatch[TProtoFrom: pydantic.BaseModel, TLib]:
         yield self._watch_iter()
 
     async def _watch_iter(self) -> typing.AsyncIterator[TLib]:
-        last_value: TProtoFrom | None = None
+        q = asyncio.Queue[TLib]()
 
-        while True:
-            req = rpctypes.MemWatchRequest.create(
-                name=self._property_name, last_value=last_value.model_dump() if last_value else None
-            )
-            response_model = pydantic.TypeAdapter(_get_response_model_list(self._type))
-            values = await self._rpc.execute(req, response_model)
-            last_value = values[-1]
-            for sample in values:
+        async def _queue_to_aiter() -> typing.AsyncIterator[TLib]:
+            while True:
+                try:
+                    yield await q.get()
+                except asyncio.QueueShutDown:
+                    return
+        
+        async def _push_to_queue() -> None:
+            last_value: TProtoFrom | None = None
+
+            while True:
+                req = rpctypes.MemWatchRequest.create(
+                    name=self._property_name, last_value=last_value.model_dump() if last_value else None
+                )
+                response_model = pydantic.TypeAdapter(_get_response_model_list(self._type))
+                values = await self._rpc.execute(req, response_model)
+                last_value = values[-1]
+                for sample in values:
+                    await q.put(self._convert_from_protocol(sample))
+                
                 yield self._convert_from_protocol(sample)
 
     def _convert_from_protocol(self, value: TProtoFrom) -> TLib:

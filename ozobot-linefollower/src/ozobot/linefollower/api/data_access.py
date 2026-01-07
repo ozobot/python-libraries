@@ -75,3 +75,37 @@ class DataReadConstant[T]:
 
     async def read(self) -> T:
         return self._factory()
+
+
+@contextlib.asynccontextmanager
+async def buffered_iterator[T](
+    unbuffered_iter: typing.AsyncIterator[T],
+) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
+    """
+    An async context manager consuming an async iterator and yielding a new async iterator that can be consumed even after the former one is closed.
+
+    This is useful in cases where closing a (possibly infinite) iterator denotes an end of a lifetime of some task, but the buffered values
+    are required after that happens.
+    """
+    q = asyncio.Queue[T]()
+
+    async def _queue_to_aiter() -> typing.AsyncIterator[T]:
+        while True:
+            try:
+                yield await q.get()
+            except asyncio.QueueShutDown:
+                return
+
+    async def _read_task() -> None:
+        async for r in unbuffered_iter:
+            await q.put(r)
+
+        q.shutdown()
+
+    async with asyncio.TaskGroup() as tg:
+        t = tg.create_task(_read_task())
+        try:
+            yield _queue_to_aiter()
+        finally:
+            t.cancel()
+            q.shutdown()

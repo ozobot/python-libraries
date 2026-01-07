@@ -1,6 +1,9 @@
+import asyncio
+import typing
 from dataclasses import dataclass
 
-from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue
+import pytest
+from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue, buffered_iterator
 from ozobot.linefollower.datatypes import Sample
 
 
@@ -58,3 +61,33 @@ async def test_watcher_proxy() -> None:
 
         assert (await anext(it_str)) == "hello"
         assert (await anext(it_str)) == "world"
+
+
+async def test_buffered_iterator_finite(subtests: pytest.Subtests) -> None:
+    """Test if a finite iterator gets exhausted"""
+
+    async def _it() -> typing.AsyncIterator[int]:
+        for i in range(4):
+            yield i
+
+    with subtests.test(msg="Close after exhauston"):
+        async with buffered_iterator(_it()) as buffered_it:
+            assert [v async for v in buffered_it] == list(range(4))
+
+    with subtests.test(msg="Close before exhaustion"):
+        async with buffered_iterator(_it()) as buffered_it:
+            await asyncio.sleep(0.1)  # let the background task process the messages
+        assert [v async for v in buffered_it] == list(range(4))
+
+
+async def test_buffered_iterator_infinite() -> None:
+    """Test if an infinite iterator does not block"""
+
+    async def _it() -> typing.AsyncIterator[int]:
+        yield 0
+        yield 1
+        await asyncio.Future()  # block forever to simulate infinite iterator
+
+    async with buffered_iterator(_it()) as buffered_it:
+        await asyncio.sleep(0.1)  # let the background task process the messages
+    assert [v async for v in buffered_it] == list(range(2))
