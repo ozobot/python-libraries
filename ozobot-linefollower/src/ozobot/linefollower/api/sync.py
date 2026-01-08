@@ -91,8 +91,5 @@ class SyncLineFollower:
         return intersection_sample.value, [cc.value async for cc in color_codes]
 
     @as_sync
-    async def align_with_line(self, direction: Direction) -> Direction:
-        async with self._linefollower.memory.intersection.watch() as intersections:
-            await self._linefollower.align_with_line(direction)
-            intersection = await anext(intersections)
-            return intersection.value
+    async def align_with_line(self, direction: Direction) -> None:
+        await self._linefollower.align_with_line(direction)
