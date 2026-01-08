@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import sys
 import typing
 
 from ozobot.common.broadcast import BroadcastManager
@@ -77,6 +78,37 @@ class DataReadConstant[T]:
         return self._factory()
 
 
+# workaround for the web-python's Pyodide still having Python 3.12 which does not have `asyncio.Queue.shutdown`
+#     TODO: remove when web-python has Python 3.13
+if sys.version_info >= (3, 13):  # noqa: UP036
+    _ShuttableQueue = asyncio.Queue
+    _QueueShutDown = asyncio.QueueShutDown
+else:
+
+    class _QueueShutDown(Exception): ...
+
+    class _ShuttableQueue[T](asyncio.Queue[T]):
+        _shutdown_token = object()
+
+        def __init__(self) -> None:
+            self._shutdown = False
+            super().__init__()
+
+        def shutdown(self) -> None:
+            self.put_nowait(self._shutdown_token)
+
+        async def get(self) -> T:
+            if self._shutdown:
+                raise _QueueShutDown()
+
+            v = await super().get()
+            if v is self._shutdown_token:
+                self._shutdown = True
+                raise _QueueShutDown()
+
+            return v
+
+
 @contextlib.asynccontextmanager
 async def buffered_iterator[T](
     unbuffered_iter: typing.AsyncIterator[T],
@@ -87,13 +119,13 @@ async def buffered_iterator[T](
     This is useful in cases where closing a (possibly infinite) iterator denotes an end of a lifetime of some task, but the buffered values
     are required after that happens.
     """
-    q = asyncio.Queue[T]()
+    q = _ShuttableQueue[T]()
 
     async def _queue_to_aiter() -> typing.AsyncIterator[T]:
         while True:
             try:
                 yield await q.get()
-            except asyncio.QueueShutDown:
+            except _QueueShutDown:
                 return
 
     async def _read_task() -> None:
