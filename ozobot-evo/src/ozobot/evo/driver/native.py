@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import contextlib
 import math
 import typing
@@ -12,7 +11,7 @@ from ozobot.evo.api.watchers import LineFollowerWatcher, WatcherSubscription
 from ozobot.evo.driver.responses import handle_events, handle_response
 from ozobot.evo.driver.shared import geometry, map_audio_name_to_filename
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
-from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue, buffered_iterator
 from ozobot.linefollower.datatypes import (
     Direction,
     LEDMask,
@@ -194,27 +193,15 @@ class NativeDataWatcher[T: _DeserializableWithTimestamp, U]:
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[U]]:
-        async with self._watcher.watch() as reader:
-            q = asyncio.Queue[U]()
+        async def _convert_iterator(it: typing.AsyncIterator[T]) -> typing.AsyncIterator[U]:
+            async for data in it:
+                yield self._from_protocol(data)
 
-            async def _queue_to_aiter() -> typing.AsyncIterator[U]:
-                while True:
-                    try:
-                        yield await q.get()
-                    except asyncio.QueueShutDown:
-                        return
-
-            async def _reader_converted() -> None:
-                async for r in reader:
-                    await q.put(self._from_protocol(r))
-
-            async with asyncio.TaskGroup() as tg:
-                t = tg.create_task(_reader_converted())
-                try:
-                    yield _queue_to_aiter()
-                finally:
-                    t.cancel()
-                    q.shutdown()
+        async with (
+            self._watcher.watch() as unbuffered_reader,
+            buffered_iterator(_convert_iterator(unbuffered_reader)) as reader,
+        ):
+            yield reader
 
 
 @contextlib.asynccontextmanager

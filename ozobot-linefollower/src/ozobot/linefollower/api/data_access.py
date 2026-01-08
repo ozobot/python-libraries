@@ -99,7 +99,6 @@ async def buffered_iterator[T](
     async def _read_task() -> None:
         async for r in unbuffered_iter:
             await q.put(r)
-
         q.shutdown()
 
     async with asyncio.TaskGroup() as tg:

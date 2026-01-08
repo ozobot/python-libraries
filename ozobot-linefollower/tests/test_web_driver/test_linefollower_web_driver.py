@@ -1,3 +1,4 @@
+import asyncio
 import math
 import typing
 from unittest.mock import call, patch
@@ -114,11 +115,20 @@ async def test_mem_watch_structure() -> None:
         {"color": "Blue", "timestamp": 3},
     ]
 
-    rpc_responses = [
-        [responses_flat[0], responses_flat[1]],
-        [responses_flat[2]],
-    ]
-    with patch(_RPC_COROUTINE_MODULE_PATH, side_effect=rpc_responses) as mock_coro:
+    rpc_responses = iter(
+        [
+            [responses_flat[0], responses_flat[1]],
+            [responses_flat[2]],
+        ]
+    )
+
+    async def _mock_rpc_coroutine(*args, **kwargs) -> typing.Any:
+        try:
+            return next(rpc_responses)
+        except StopIteration:
+            await asyncio.Future()  # when the responses are exhausted, pretend we are waiting for another response
+
+    with patch(_RPC_COROUTINE_MODULE_PATH, side_effect=_mock_rpc_coroutine) as mock_coro:
         driver = LineFollowerWebDriver(robot_name)
 
         async with driver.memory.line_color.watch() as it:
@@ -162,13 +172,22 @@ async def test_mem_watch_simple_type() -> None:
         0.3,
     ]
 
-    rpc_responses = [
-        [responses_flat[0], responses_flat[1]],
+    rpc_responses = iter(
         [
-            responses_flat[2],
-        ],
-    ]
-    with patch(_RPC_COROUTINE_MODULE_PATH, side_effect=rpc_responses) as mock_coro:
+            [responses_flat[0], responses_flat[1]],
+            [
+                responses_flat[2],
+            ],
+        ]
+    )
+
+    async def _mock_rpc_coroutine(*args, **kwargs) -> typing.Any:
+        try:
+            return next(rpc_responses)
+        except StopIteration:
+            await asyncio.Future()  # when the responses are exhausted, pretend we are waiting for another response
+
+    with patch(_RPC_COROUTINE_MODULE_PATH, side_effect=_mock_rpc_coroutine) as mock_coro:
         driver = LineFollowerWebDriver(robot_name)
 
         async with driver.memory.line_following_speed.watch() as it:

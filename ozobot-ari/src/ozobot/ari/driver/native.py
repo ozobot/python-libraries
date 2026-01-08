@@ -21,7 +21,7 @@ from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
-from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue
+from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue, buffered_iterator
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     ColorCode,
@@ -200,7 +200,9 @@ class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAc
             params=memread.MemReadRequestParams(segment=self._name),
         )
         async with Query(req, methods.WATCH).execute(self._executor) as q:
-            yield self._watch_iter(q.notifications)
+            unbuffered_reader = self._watch_iter(q.notifications)
+            async with buffered_iterator(unbuffered_reader) as reader:
+                yield reader
 
     async def _watch_iter(self, iter: typing.AsyncIterator[memread.WatchNotification]) -> typing.AsyncIterator[TLib]:
         async for val in iter:
