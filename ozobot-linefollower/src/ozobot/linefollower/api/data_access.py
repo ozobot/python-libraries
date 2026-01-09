@@ -5,7 +5,9 @@ import contextlib
 import sys
 import typing
 
+from loguru import logger
 from ozobot.common.broadcast import BroadcastManager
+from ozobot.common.exceptions import OzobotError
 from ozobot.linefollower.datatypes import Sample
 
 
@@ -133,10 +135,19 @@ async def buffered_iterator[T](
             await q.put(r)
         q.shutdown()
 
-    async with asyncio.TaskGroup() as tg:
-        t = tg.create_task(_read_task())
-        try:
-            yield _queue_to_aiter()
-        finally:
-            t.cancel()
-            q.shutdown()
+    try:
+        async with asyncio.TaskGroup() as tg:
+            t = tg.create_task(_read_task())
+            try:
+                yield _queue_to_aiter()
+            finally:
+                t.cancel()
+                q.shutdown()
+    except* OzobotError as e:
+        # propagate the inner exception from _read_task()
+        group = e.subgroup(OzobotError)
+        if group:
+            exceptions = group.exceptions
+            if len(exceptions) > 1:
+                logger.warning("Dropping exceptions", dropped_exception=exceptions[1:])
+            raise exceptions[0] from e
