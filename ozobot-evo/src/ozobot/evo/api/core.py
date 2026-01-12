@@ -21,12 +21,6 @@ class EvoVirtualMemory(VirtualMemoryRegions, typing.Protocol):
     @property
     def ir_message_right_rear(self) -> ReadableWatchableRegion[Sample[IRMessage]]: ...
 
-    @property
-    def charger(self) -> ReadableWatchableRegion[Sample[typing.Literal["Connected", "Disconnected", "LowPower"]]]: ...
-
-    @property
-    def button(self) -> ReadableWatchableRegion[Sample[bool]]: ...
-
 
 # this enables verbose errors when memory region implementations do not
 # match the interfaces
