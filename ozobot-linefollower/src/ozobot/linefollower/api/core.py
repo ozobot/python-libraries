@@ -31,14 +31,14 @@ class LineFollower:
         logger.debug("Moving", distance=distance_mm, speed=speed_mmps)
         await self._driver.move(
             distance_mm,
-            speed_mmps,
+            abs(speed_mmps),
         )
 
     async def rotate(self, angle_deg: float, angular_speed_degps: float) -> None:
         logger.debug("Rotating", angle=angle_deg, anglle_speed=angular_speed_degps)
         await self._driver.rotate(
             angle_deg,
-            angular_speed_degps,
+            abs(angular_speed_degps),
         )
 
     async def set_velocity(self, linear_mmps: float, angular_degps: float, duration_s: float) -> None:
