@@ -1,0 +1,9 @@
+root: index
+subtrees:
+- entries:
+  - file: async/intro
+    entries:
+      - file: async/apidoc
+  - file: sync/intro
+  - file: datatypes
+  - file: exceptions
