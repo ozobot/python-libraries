@@ -4,6 +4,7 @@ import typing
 
 import pydantic
 from loguru import logger
+from ozobot.ari.exceptions import MemoryReadUnsuccessfulError
 from ozobot.linefollower.api.data_access import buffered_iterator
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample, SampleWithoutTimestamp
 from ozobot.web.browser import _rpcCoroutine
@@ -19,7 +20,6 @@ from .conversions import (
 )
 from .exceptions import (
     InvalidWebRobotSelectorError,
-    MemoryReadUnsuccessfulError,
     MissingRobotSelectorError,
 )
 

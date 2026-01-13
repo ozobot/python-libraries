@@ -10,16 +10,28 @@ from ozobot.linefollower.driver.interface import ReadableWatchableRegion, Virtua
 
 class EvoVirtualMemory(VirtualMemoryRegions, typing.Protocol):
     @property
-    def obstacle_right_rear(self) -> ReadableWatchableRegion[Sample[float]]: ...
+    def obstacle_right_rear(self) -> ReadableWatchableRegion[Sample[float]]:
+        """
+        Right rear IR sensor's measured intensity reflected from obstacle.
+        """
 
     @property
-    def obstacle_left_rear(self) -> ReadableWatchableRegion[Sample[float]]: ...
+    def obstacle_left_rear(self) -> ReadableWatchableRegion[Sample[float]]:
+        """
+        Left rear IR sensor's measured intensity reflected from obstacle.
+        """
 
     @property
-    def ir_message_left_rear(self) -> ReadableWatchableRegion[Sample[IRMessage]]: ...
+    def ir_message_left_rear(self) -> ReadableWatchableRegion[Sample[IRMessage]]:
+        """
+        Message received by the left rear IR sensor.
+        """
 
     @property
-    def ir_message_right_rear(self) -> ReadableWatchableRegion[Sample[IRMessage]]: ...
+    def ir_message_right_rear(self) -> ReadableWatchableRegion[Sample[IRMessage]]:
+        """
+        Message received by the right rear IR sensor.
+        """
 
 
 # this enables verbose errors when memory region implementations do not

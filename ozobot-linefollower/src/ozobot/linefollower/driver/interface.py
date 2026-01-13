@@ -26,50 +26,116 @@ class Serializable(Protocol):
 
 
 class ReadableRegion[T](Protocol):
-    async def read(self) -> T: ...
+    async def read(self) -> T:
+        """
+        Read a single data sample from the memory region.
+
+        One-time readout of data from robot. While simple, calling this in loop can be slow and
+        does not guarantee all data changes will be read out (i.e., when data changes multiple times between readouts).
+
+        Useful for initial readouts or reading constant data.
+        """
 
 
 class ReadableWritableRegion[T](ReadableRegion, Protocol):
-    async def write(self, data: T) -> None: ...
+    async def write(self, data: T) -> None:
+        """
+        Write data to the robot.
+        """
 
 
 class WatchableRegion[T](Protocol):
-    def watch(self) -> AbstractAsyncContextManager[AsyncIterator[T]]: ...
+    def watch(self) -> AbstractAsyncContextManager[AsyncIterator[T]]:
+        """
+        Watch for data changes.
+
+        Continously watches given data region, emitting a data sample on change. More verbose than :py:attr:`read` but guarantees
+        all the changes will be read.
+
+        The property is in fact an asynchronnous context manager which starts the monitoring on entering the context and
+        stops it on exitting the context. The context manager yields an asynchronnous iterator which is valid even after the context
+        has been closed.
+
+        :return: Asynchronnous context manager yielding asynchronnous iterator on enter
+
+        .. codeblock:: python
+            async with robot.data.example_region.watch() as it:
+                async for sample in it:
+                    print(sample)
+        """
 
 
 class ReadableWatchableRegion[T](ReadableRegion[T], WatchableRegion[T], Protocol): ...
 
 
 class VirtualMemoryRegions(Protocol):
-    @property
-    def geometry(self) -> ReadableRegion[RobotGeometry]: ...
+    """
+    Robot related configuration, constants and sensor readouts.
+    """
 
     @property
-    def line_following_speed(self) -> ReadableWritableRegion[float]: ...
+    def geometry(self) -> ReadableRegion[RobotGeometry]:
+        """
+        Robot geometry.
+        """
 
     @property
-    def color_code(self) -> WatchableRegion[SampleWithoutTimestamp[ColorCode]]: ...
+    def line_following_speed(self) -> ReadableWritableRegion[float]:
+        """
+        Line following speed in mm/s.
+        """
 
     @property
-    def line_color(self) -> ReadableWatchableRegion[Sample[ClassifiedColor | None]]: ...
+    def color_code(self) -> WatchableRegion[SampleWithoutTimestamp[ColorCode]]:
+        """
+        Color codes detected during line following.
+        """
 
     @property
-    def surface_color(self) -> ReadableWatchableRegion[Sample[ClassifiedColor | None]]: ...
+    def line_color(self) -> ReadableWatchableRegion[Sample[ClassifiedColor | None]]:
+        """
+        Line color detected.
+
+        Classified color detected by the line sensor. Gives `None` if the color cannot be classified.
+        """
 
     @property
-    def intersection(self) -> WatchableRegion[SampleWithoutTimestamp[Direction]]: ...
+    def surface_color(self) -> ReadableWatchableRegion[Sample[ClassifiedColor | None]]:
+        """
+        Surface color detected.
+
+        Classified color detected by the surface sensor. Gives `None` if the color cannot be classified.
+        """
 
     @property
-    def ir_message_left_front(self) -> ReadableWatchableRegion[Sample[IRMessage]]: ...
+    def intersection(self) -> WatchableRegion[SampleWithoutTimestamp[Direction]]:
+        """
+        Intersections detected during line following.
+        """
 
     @property
-    def ir_message_right_front(self) -> ReadableWatchableRegion[Sample[IRMessage]]: ...
+    def ir_message_left_front(self) -> ReadableWatchableRegion[Sample[IRMessage]]:
+        """
+        Message received by the left front IR sensor.
+        """
 
     @property
-    def obstacle_right_front(self) -> ReadableWatchableRegion[Sample[float]]: ...
+    def ir_message_right_front(self) -> ReadableWatchableRegion[Sample[IRMessage]]:
+        """
+        Message received by the right front IR sensor.
+        """
 
     @property
-    def obstacle_left_front(self) -> ReadableWatchableRegion[Sample[float]]: ...
+    def obstacle_right_front(self) -> ReadableWatchableRegion[Sample[float]]:
+        """
+        Right front IR sensor's measured intensity reflected from obstacle.
+        """
+
+    @property
+    def obstacle_left_front(self) -> ReadableWatchableRegion[Sample[float]]:
+        """
+        Left front IR sensor's measured intensity reflected from obstacle.
+        """
 
 
 class Driver(Protocol):

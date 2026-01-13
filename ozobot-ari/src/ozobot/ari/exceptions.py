@@ -36,10 +36,14 @@ class DriverError(OzobotError): ...
 
 
 class MemoryWriteUnsuccessfulError(DriverError):
+    """Virtual memory write operation fails."""
+
     def __init__(self, name: str, reason: str) -> None:
         super().__init__(f"Could not write virtual memory value: '{reason}' on {name}'")
 
 
 class MemoryReadUnsuccessfulError(DriverError):
+    """Virtual memory read operation fails."""
+
     def __init__(self, name: str, reason: str) -> None:
         super().__init__(f"Could not read virtual memory: '{reason}' on '{name}'")

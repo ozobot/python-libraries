@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import enum
 import math
 import typing
@@ -12,16 +13,50 @@ type TNamedColor = typing.Literal["Green", "Black", "Red", "Blue", "White"]
 type TDirection = typing.Literal["Forward", "Back", "Left", "Right"]
 
 
-class Color:
+class Color(abc.ABC):
+    """
+    Abstract color representation.
+
+    .. seealso::
+        You will never need to instantiate this class, take a look on the referenced implementations instead.
+
+        - :py:class:`RawColor`
+        - :py:class:`ClassifiedColor`
+    """
+
+    @abc.abstractmethod
     def is_color(self, other: Color | None, *, epsilon: float = _IS_COLOR_EPSILON) -> bool:
-        return False
+        """
+        Compare similarity with other color.
+
+        Compares with other :py:class:`ClassifiedColor` or :py:class:`RawColor`.
+
+        :param other: Color to compare this color to
+        :param epsilon: Maximum numeric RGB difference when comparing raw colors
+        """
 
 
 @dataclass(frozen=True, eq=False, repr=False)
 class RawColor(Color):
+    """
+    RGB color.
+
+    A color reading that was not classified and therefore has no known name. This color cannot be used in all places where
+    :py:class:`ClassifiedColor` can. For example, one can use this class to set LED color, but cannot use it to say color from
+    the speaker.
+
+    .. seealso::
+        A classified color with a name can be defined by :py:class:`ClassifiedColor`.
+    """
+
     red: float
+    """Red component in range 0.0 - 1.0"""
+
     green: float
+    """Green component in range 0.0 - 1.0"""
+
     blue: float
+    """Blue component in range 0.0 - 1.0"""
 
     def __post_init__(self) -> None:
         for name, value in zip(["red", "green", "blue"], [self.red, self.green, self.blue], strict=True):
@@ -62,6 +97,16 @@ class RawColor(Color):
 
 @dataclass(frozen=True, eq=False, repr=False)
 class ClassifiedColor(Color):
+    """
+    Classified color with name.
+
+    Can be compared to other colors or converted to :py:class:`RawColor`
+
+    .. seealso::
+        Predefined colors are available in :py:class:`Colors`, for example :py:attr:`Colors.BLACK`.
+        Generic (unclassified) color can be defined by :py:class:`RawColor`.
+    """
+
     name: TNamedColor
     _representation: RawColor
 
@@ -74,6 +119,9 @@ class ClassifiedColor(Color):
             return False
 
     def to_raw_color(self) -> RawColor:
+        """
+        Convert to :py:class:`RawColor`.
+        """
         return self._representation
 
     def __eq__(self, other: object) -> bool:
@@ -95,6 +143,10 @@ class ClassifiedColor(Color):
 
 
 class Colors:
+    """
+    Set of supported :py:class:`ClassifiedColor` objects
+    """
+
     BLACK = ClassifiedColor("Black", RawColor(0, 0, 0))
     RED = ClassifiedColor("Red", RawColor(1.0, 0, 0))
     GREEN = ClassifiedColor("Green", RawColor(0, 1.0, 0))
@@ -103,6 +155,22 @@ class Colors:
 
 
 class LEDMask(enum.Flag):
+    """
+    LED selector mask.
+
+    Can be combined into a broader mask by using union operator:
+    .. codeblock::
+
+        # select front center
+        mask_c = LEDMask.FRONT_CENTER
+
+        # select left and right
+        mask_lr = LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT
+
+        # convert the mask to a list
+        assert list(mask_lr) == [LEDMask.FRONT_LEFT, LEDMask.FRONT_RIGHT]
+    """
+
     FRONT_CENTER = enum.auto()
     FRONT_LEFT = enum.auto()
     FRONT_LEFT_CENTER = enum.auto()
@@ -116,6 +184,22 @@ class LEDMask(enum.Flag):
 
 
 class Direction(enum.Flag):
+    """
+    Direction.
+
+    Can be combined into a broader direction set by using union operator:
+    .. codeblock::
+
+        # select front center
+        mask_c = LEDMask.FRONT_CENTER
+
+        # select left and right
+        mask_lr = LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT
+
+        # convert the mask to a list
+        assert list(mask_lr) == [LEDMask.FRONT_LEFT, LEDMask.FRONT_RIGHT]
+    """
+
     BACKWARD = enum.auto()
     LEFT = enum.auto()
     RIGHT = enum.auto()
@@ -123,26 +207,45 @@ class Direction(enum.Flag):
 
 
 type TNote = typing.Literal["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
+"""
+Strings recognized as notes.
+"""
 
 
 @dataclass(frozen=True, kw_only=True)
 class ColorCode:
+    """
+    Color code detected by the robot.
+    """
+
     colors: tuple[ClassifiedColor, ...]
 
 
 @dataclass(frozen=True, kw_only=True)
 class IRMessage:
+    """
+    IR message sensoric data.
+    """
+
     message: int
     intensity: int
 
 
 @dataclass(frozen=True, kw_only=True)
 class TimeOfFlight:
+    """
+    Time of flight sensor readout
+    """
+
     distance_mm: float
     deviation_mm: float
 
 
 class SampleWithoutTimestamp[T]:
+    """
+    Data sample without a timestamp.
+    """
+
     def __init__(self, value: T) -> None:
         self.value = value
 
@@ -157,6 +260,10 @@ class SampleWithoutTimestamp[T]:
 
 
 class Sample[T](SampleWithoutTimestamp[T]):
+    """
+    Data sample with a timestamp.
+    """
+
     def __init__(self, value: T, timestamp: float) -> None:
         super().__init__(value)
         self.timestamp = timestamp
@@ -176,6 +283,10 @@ class Sample[T](SampleWithoutTimestamp[T]):
 
 @dataclass(frozen=True, kw_only=True)
 class RobotGeometry:
+    """
+    Parameters of the robot geometry.
+    """
+
     ticks_per_mm: float
     wheel_track_mm: float
     wheel_diameter_mm: float
