@@ -7,11 +7,10 @@ from ozobot.evo.conversions import (
     ir_message_from_protocol,
     led_to_protocol,
     line_color_from_protocol,
-    proximity_from_protocol,
     surface_color_from_protocol,
 )
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, IRProximity, LEDMask
+from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, IRMessage, LEDMask
 
 
 def test_color_code_from_protocol() -> None:
@@ -115,16 +114,6 @@ def test_intersection_mask_from_protocol() -> None:
     result = intersection_bitmap_from_protocol(Types.IntersectionBitmap.Backward | Types.IntersectionBitmap.Left)
 
     assert result == Direction.LEFT | Direction.BACKWARD
-
-
-def test_proximity_from_protocol() -> None:
-    assert proximity_from_protocol(Types.IRProximity(1, 2, 3, 4, 5)) == IRProximity(
-        right_front=4,
-        left_front=2,
-        right_rear=3,
-        left_rear=1,
-        timestamp=5,
-    )
 
 
 def test_ir_message_from_protocol() -> None:

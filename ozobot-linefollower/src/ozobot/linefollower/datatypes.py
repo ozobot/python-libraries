@@ -137,15 +137,6 @@ class IRMessage:
 
 
 @dataclass(frozen=True, kw_only=True)
-class IRProximity:
-    right_front: int
-    left_front: int
-    right_rear: int
-    left_rear: int
-    timestamp: int
-
-
-@dataclass(frozen=True, kw_only=True)
 class TimeOfFlight:
     distance: float
     deviation: float

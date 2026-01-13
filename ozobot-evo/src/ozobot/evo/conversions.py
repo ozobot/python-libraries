@@ -2,7 +2,7 @@ import typing
 
 from ozobot.evo.exceptions import OzobotDataTypeError, UnsupportedColorCodeNumberError
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import ClassifiedColor, ColorCode, Colors, Direction, IRMessage, IRProximity, LEDMask
+from ozobot.linefollower.datatypes import ClassifiedColor, ColorCode, Colors, Direction, IRMessage, LEDMask
 
 
 def _color_from_color_code_number(num: int) -> ClassifiedColor:
@@ -151,16 +151,6 @@ def intersection_bitmap_from_protocol(intersection_mask: Types.IntersectionBitma
                 typing.assert_never(dir)
 
     return intersection
-
-
-def proximity_from_protocol(proximity: Types.IRProximity) -> IRProximity:
-    return IRProximity(
-        right_front=proximity.rightFront,
-        left_front=proximity.leftFront,
-        right_rear=proximity.rightRear,
-        left_rear=proximity.leftRear,
-        timestamp=proximity.timestamp,
-    )
 
 
 def ir_message_from_protocol(ir_message: Types.IRMessage) -> IRMessage:

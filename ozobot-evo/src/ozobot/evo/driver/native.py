@@ -95,9 +95,7 @@ class NativeMemoryRegions:
             lambda c: Sample(conversions.surface_color_from_protocol(c), c.timestamp),
         )
 
-        proximity = NativeDataWatcher(
-            control, VirtualMemory.irProximity, proximity_watcher, conversions.proximity_from_protocol
-        )
+        proximity = NativeDataWatcher(control, VirtualMemory.irProximity, proximity_watcher, lambda d: d)
 
         self.obstacle_right_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.right_front, p.timestamp))
         self.obstacle_left_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.left_front, p.timestamp))
