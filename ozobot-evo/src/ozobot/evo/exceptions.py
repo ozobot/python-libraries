@@ -5,11 +5,6 @@ class EvoError(OzobotError):
     """Base EVO error"""
 
 
-class FileNotFoundError(EvoError):
-    def __init__(self, audio_name: str) -> None:
-        super().__init__(f"Audio file not found: {audio_name}")
-
-
 class OzobotProtocolCommandError(EvoError):
     def __init__(self, command: str, return_value: str, *, description: str | None = None) -> None:
         if description:
@@ -23,6 +18,11 @@ class OzobotProtocolCommandError(EvoError):
 class OzobotDataTypeError(EvoError):
     def __init__(self, expected_type: type, received_type: type) -> None:
         super().__init__(f"Unexpected type: expected '{expected_type}' but got '{received_type}'")
+
+
+class EvoFileNotFound(EvoError):
+    def __init__(self):
+        super().__init__("File not found")
 
 
 class UnsupportedColorCodeNumberError(EvoError):

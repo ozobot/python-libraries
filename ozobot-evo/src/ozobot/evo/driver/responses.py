@@ -1,6 +1,6 @@
 import typing
 
-from ozobot.evo.exceptions import OzobotProtocolCommandError
+from ozobot.evo.exceptions import EvoFileNotFound, OzobotProtocolCommandError
 from ozobot.evo.protocol import Types
 
 
@@ -32,6 +32,9 @@ async def handle_events[T: _HasExecutionState](function_name: str, events: typin
     async for event in events:
         if event.executionState == Types.ExecutionStateEnum.FinishedNormal:
             return event
+
+        if event.executionState == Types.ExecutionStateEnum.FileNotFound:
+            raise EvoFileNotFound()
 
         if event.executionState != Types.ExecutionStateEnum.Running:
             raise OzobotProtocolCommandError(

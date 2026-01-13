@@ -1,6 +1,6 @@
 from ozobot.linefollower.api.data_access import DataReadConstant
 from ozobot.linefollower.datatypes import RobotGeometry
-from ozobot.linefollower.exceptions import FileNotFoundError
+from ozobot.linefollower.exceptions import AudioFileNotFoundError
 
 _map_audioname_filename = {
     "happy": "01010100",
@@ -27,7 +27,7 @@ _map_audioname_filename = {
 def map_audio_name_to_filename(audio_name: str) -> str:
     filename = _map_audioname_filename.get(audio_name, None)
     if not filename:
-        raise FileNotFoundError(audio_name)
+        raise AudioFileNotFoundError(audio_name)
     return filename
 
 
