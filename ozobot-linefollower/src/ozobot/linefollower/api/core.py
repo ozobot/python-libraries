@@ -49,15 +49,15 @@ class LineFollower:
             int(duration_s * 1000),
         )
 
-    async def emit_tone(self, frequency_hz: int, duration_s: float, volume: int) -> None:
-        logger.debug("Emitting tone", frequency=frequency_hz, duration=duration_s, volume=volume)
+    async def emit_tone(self, frequency_hz: int, duration_s: float, volume_percent: int) -> None:
+        logger.debug("Emitting tone", frequency=frequency_hz, duration=duration_s, volume=volume_percent)
         await self._driver.play_tone(
             frequency_hz,
             int(duration_s * 1000),
-            volume,
+            int(volume_percent),
         )
 
-    async def emit_note(self, note: TNote, octave: int, duration_s: float, volume: int) -> None:
+    async def emit_note(self, note: TNote, octave: int, duration_s: float, volume_percent: int) -> None:
         notes = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
         note_idx = notes.index(note.upper())
 
@@ -68,15 +68,15 @@ class LineFollower:
         await self.emit_tone(
             frequency_hz,
             duration_s,
-            volume,
+            volume_percent,
         )
 
-    async def emit_midi(self, midi_number: int, duration_s: float, volume: int):
+    async def emit_midi(self, midi_number: int, duration_s: float, volume_percent: int):
         frequency_hz = LineFollower._convert_key_to_frequency(midi_number, reference=69)
         await self.emit_tone(
             frequency_hz,
             duration_s,
-            volume,
+            volume_percent,
         )
 
     # credit goes to https://gist.github.com/CGrassin/26a1fdf4fc5de788da9b376ff717516e

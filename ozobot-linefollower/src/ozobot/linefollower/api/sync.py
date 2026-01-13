@@ -50,16 +50,16 @@ class SyncLineFollower:
         await self._linefollower.set_velocity(linear_mps, angular_degps, duration_s)
 
     @as_sync
-    async def emit_tone(self, frequency_hz: int, duration_s: float, volume: int) -> None:
-        await self._linefollower.emit_tone(frequency_hz, duration_s, volume)
+    async def emit_tone(self, frequency_hz: int, duration_s: float, volume_percent: int) -> None:
+        await self._linefollower.emit_tone(frequency_hz, duration_s, volume_percent)
 
     @as_sync
-    async def emit_midi(self, midi_number: int, duration_s: float, volume: int) -> None:
-        await self._linefollower.emit_midi(midi_number, duration_s, volume)
+    async def emit_midi(self, midi_number: int, duration_s: float, volume_percent: int) -> None:
+        await self._linefollower.emit_midi(midi_number, duration_s, volume_percent)
 
     @as_sync
-    async def emit_note(self, note: TNote, octave: int, duration_s: float, volume: int) -> None:
-        await self._linefollower.emit_note(note, octave, duration_s, volume)
+    async def emit_note(self, note: TNote, octave: int, duration_s: float, volume_percent: int) -> None:
+        await self._linefollower.emit_note(note, octave, duration_s, volume_percent)
 
     @as_sync
     async def play_audio(self, name: str) -> None:
