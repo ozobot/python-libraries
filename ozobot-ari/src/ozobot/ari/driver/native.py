@@ -89,28 +89,28 @@ class NativeMemoryRegions:
             ),
         )
 
-        self.proximity_left_front = NativeDataAccessWatch(
+        self.obstacle_left_front = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityLeft",
             response_type=memread.MemReadResponseProximity,
             from_protocol=lambda m: Sample(float(m.value), m.timestamp),
         )
-        self.proximity_right_front = NativeDataAccessWatch(
+        self.obstacle_right_front = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityRight",
             response_type=memread.MemReadResponseProximity,
             from_protocol=lambda m: Sample(float(m.value), m.timestamp),
         )
-        self.proximity_left_rear = NativeDataAccessWatch(
+        self.obstacle_left_rear = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityEdgeLeft",
             response_type=memread.MemReadResponseProximity,
             from_protocol=lambda m: Sample(float(m.value), m.timestamp),
         )
-        self.proximity_right_rear = NativeDataAccessWatch(
+        self.obstacle_right_rear = NativeDataAccessWatch(
             executor,
             request_id,
             "proximityEdgeRight",

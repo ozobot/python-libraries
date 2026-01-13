@@ -108,10 +108,10 @@ def read_write_sensors(r, sensors):
 def sensors(r):
     read_sensorlist = [
         "surface_color",
-        "proximity_left_front",
-        "proximity_right_front",
-        "proximity_right_rear",
-        "proximity_left_rear",
+        "obstacle_left_front",
+        "obstacle_right_front",
+        "obstacle_right_rear",
+        "obstacle_left_rear",
         "time_of_flight",
     ]
 

@@ -28,13 +28,13 @@ class EvoWebMemoryRegions(WebMemoryRegions):
             from_protocol=lambda m: Sample(ir_message_from_web(m), m.timestamp),
         )
 
-        self.proximity_left_rear = WebDataAccessReadWatch(
+        self.obstacle_left_rear = WebDataAccessReadWatch(
             rpc,
             "proximityLeftRear",
             response_type=rpctypes.IrProximityResponse,
             from_protocol=lambda m: Sample(m.value, m.timestamp),
         )
-        self.proximity_right_rear = WebDataAccessReadWatch(
+        self.obstacle_right_rear = WebDataAccessReadWatch(
             rpc,
             "proximityRightRear",
             response_type=rpctypes.IrProximityResponse,

@@ -199,13 +199,13 @@ class WebMemoryRegions:
             from_protocol=lambda x: Sample(None if x.color is None else color_from_web(x.color), x.timestamp),
         )
 
-        self.proximity_left_front = WebDataAccessReadWatch(
+        self.obstacle_left_front = WebDataAccessReadWatch(
             rpc,
             "proximityLeftFront",
             response_type=rpctypes.IrProximityResponse,
             from_protocol=lambda m: Sample(m.value, m.timestamp),
         )
-        self.proximity_right_front = WebDataAccessReadWatch(
+        self.obstacle_right_front = WebDataAccessReadWatch(
             rpc,
             "proximityRightFront",
             response_type=rpctypes.IrProximityResponse,
