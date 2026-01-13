@@ -13,7 +13,7 @@ from ozobot.linefollower.datatypes import (
     TNote,
 )
 from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
-from ozobot.linefollower.exceptions import InvalidClassifiedColorError
+from ozobot.linefollower.exceptions import InvalidClassifiedColorError, InvalidDirectionError
 
 
 class LineFollower:
@@ -138,7 +138,8 @@ class LineFollower:
             case Direction.BACKWARD:
                 return await self.play_audio("backward")
             case _:
-                typing.reveal_type(direction)
+                raise InvalidDirectionError(direction)
+                typing.assert_never(direction)
 
     async def set_led(self, mask: LEDMask, color: Color) -> None:
         logger.debug("Setting LED", mask=mask, color=color)

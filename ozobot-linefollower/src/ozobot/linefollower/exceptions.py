@@ -28,3 +28,8 @@ class DriverCommandFailedError(LineFollowerError):
 class InvalidClassifiedColorError(LineFollowerError):
     def __init__(self, obj: object) -> None:
         super().__init__(f"Object does not represent a classified color: {obj}")
+
+
+class InvalidDirectionError(LineFollowerError):
+    def __init__(self, obj: object) -> None:
+        super().__init__(f"Object does not represent a direction: {obj}")
