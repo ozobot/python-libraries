@@ -33,10 +33,10 @@ def map_audio_name_to_filename(audio_name: str) -> str:
 
 geometry = DataReadConstant(
     lambda: RobotGeometry(
-        ticks_per_meter=18851,
-        wheel_track=0.023,
-        wheel_diameter=0.01182,
+        ticks_per_mm=18.851,
+        wheel_track_mm=23,
+        wheel_diameter_mm=11.82,
         encoder_ticks_per_wheel_revolution=8 * 2 * 21 * 25 / 12,
-        max_speed_limit=0.3,
+        max_speed_limit_mmps=300,
     )
 )

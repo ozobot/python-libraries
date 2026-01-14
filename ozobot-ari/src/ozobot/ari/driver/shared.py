@@ -3,10 +3,10 @@ from ozobot.linefollower.datatypes import RobotGeometry
 
 geometry = DataReadConstant(
     lambda: RobotGeometry(
-        ticks_per_meter=22281.69,
-        wheel_track=0.0315,
-        wheel_diameter=0.012,
+        ticks_per_mm=22.28169,
+        wheel_track_mm=31.5,
+        wheel_diameter_mm=12,
         encoder_ticks_per_wheel_revolution=16 * 2 * 21 * 15 / 12.0,
-        max_speed_limit=0.3,
+        max_speed_limit_mmps=300,
     )
 )

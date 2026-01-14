@@ -176,8 +176,8 @@ class Sample[T](SampleWithoutTimestamp[T]):
 
 @dataclass(frozen=True, kw_only=True)
 class RobotGeometry:
-    ticks_per_meter: float
-    wheel_track: float
-    wheel_diameter: float
+    ticks_per_mm: float
+    wheel_track_mm: float
+    wheel_diameter_mm: float
     encoder_ticks_per_wheel_revolution: float
-    max_speed_limit: float
+    max_speed_limit_mmps: float
