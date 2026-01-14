@@ -118,6 +118,6 @@ def ir_message_from_protocol(ir_message: memread.MemReadResponseReadIr) -> IRMes
 
 def time_of_flight_from_protocol(time_of_flight: notification.TimeOfFlightNotificationBody) -> TimeOfFlight:
     return TimeOfFlight(
-        distance=time_of_flight.distance * 1000,
-        deviation=time_of_flight.deviation * 1000,
+        distance_mm=time_of_flight.distance * 1000,
+        deviation_mm=time_of_flight.deviation * 1000,
     )

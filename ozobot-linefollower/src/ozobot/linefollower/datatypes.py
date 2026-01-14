@@ -138,8 +138,8 @@ class IRMessage:
 
 @dataclass(frozen=True, kw_only=True)
 class TimeOfFlight:
-    distance: float
-    deviation: float
+    distance_mm: float
+    deviation_mm: float
 
 
 class SampleWithoutTimestamp[T]:
