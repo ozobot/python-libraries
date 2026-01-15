@@ -13,7 +13,13 @@ from ozobot.linefollower.datatypes import (
     TNote,
 )
 from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
-from ozobot.linefollower.exceptions import InvalidClassifiedColorError, InvalidDirectionError
+from ozobot.linefollower.driver.shared import map_audio_name_to_filename
+from ozobot.linefollower.exceptions import (
+    AudioFileNotFoundError,
+    InvalidClassifiedColorError,
+    InvalidDirectionError,
+    LinefollowerFileNotFoundError,
+)
 
 
 class LineFollower:
@@ -96,7 +102,11 @@ class LineFollower:
 
     async def play_audio(self, name: str) -> None:
         logger.debug("Playing audio file", name=name)
-        await self._driver.play_audio(name)
+        asset_name = map_audio_name_to_filename(name)
+        try:
+            await self._driver.play_audio(asset_name)
+        except LinefollowerFileNotFoundError as err:
+            raise AudioFileNotFoundError(name) from err
 
     async def say_number(self, number: int | float) -> None:
         numint = int(number)

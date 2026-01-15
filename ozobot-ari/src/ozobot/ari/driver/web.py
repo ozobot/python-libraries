@@ -7,7 +7,6 @@ from ozobot.linefollower.driver.web import (
     Rpc,
     WebDataAccessReadWatch,
     WebMemoryRegions,
-    rpctypes,
 )
 from ozobot.userio.web import UserIoWebDriverComponent
 
@@ -35,10 +34,6 @@ class AriWebDriver(LineFollowerWebDriver):
         super().__init__(name)
         self._userio_component = UserIoWebDriverComponent(self._rpc)
         self._ari_memory = AriWebMemoryRegions(self._rpc)
-
-    async def play_audio(self, audio_name: str) -> None:
-        req = webtypes.PlayAudioRequest(filename=audio_name)
-        _ = await self._rpc.execute(req, rpctypes.ValidatedNone)
 
     async def user_io_print(self, message: str) -> None:
         return await self._userio_component.print(message)

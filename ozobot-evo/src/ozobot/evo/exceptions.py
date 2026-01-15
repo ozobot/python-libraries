@@ -20,11 +20,6 @@ class OzobotDataTypeError(EvoError):
         super().__init__(f"Unexpected type: expected '{expected_type}' but got '{received_type}'")
 
 
-class EvoFileNotFound(EvoError):
-    def __init__(self):
-        super().__init__("File not found")
-
-
 class UnsupportedColorCodeNumberError(EvoError):
     def __init__(self, number: int) -> None:
         super().__init__(f"Received color code has unsupported color segment: {number}")

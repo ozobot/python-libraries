@@ -278,8 +278,9 @@ class LineFollowerWebDriver:
         req = rpctypes.PlayToneRequest(frequency_hz=frequency_hz, duration_ms=duration_ms)
         _ = await self._rpc.execute(req, rpctypes.ValidatedNone)
 
-    # async def play_audio(self, audio_name: str) -> None:
-    #     robot specific implementation can be found in ari and evo packages
+    async def play_audio(self, asset_name: str) -> None:
+        req = rpctypes.PlayAudioRequest(filename=asset_name)
+        _ = await self._rpc.execute(req, rpctypes.ValidatedNone)
 
     async def set_led(self, mask: LEDMask, red: float, green: float, blue: float) -> None:
         mask_json = led_to_web_json(mask)

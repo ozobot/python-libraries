@@ -1,4 +1,4 @@
-from ozobot.evo.driver.shared import geometry, map_audio_name_to_filename
+from ozobot.evo.driver.shared import geometry
 from ozobot.evo.webprotocol import types as webtypes
 from ozobot.linefollower.datatypes import Sample
 from ozobot.linefollower.driver.web import (
@@ -65,9 +65,3 @@ class EvoWebDriver(LineFollowerWebDriver):
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self._evo_memory = EvoWebMemoryRegions(self._rpc)
-
-    async def play_audio(self, audio_name: str) -> None:
-        req = webtypes.PlayAudioRequest(
-            filename=map_audio_name_to_filename(audio_name),
-        )
-        _ = await self._rpc.execute(req, rpctypes.ValidatedNone)

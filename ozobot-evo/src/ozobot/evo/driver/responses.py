@@ -1,7 +1,8 @@
 import typing
 
-from ozobot.evo.exceptions import EvoFileNotFound, OzobotProtocolCommandError
+from ozobot.evo.exceptions import OzobotProtocolCommandError
 from ozobot.evo.protocol import Types
+from ozobot.linefollower.exceptions import LinefollowerFileNotFoundError
 
 
 class _HasExecutionState(typing.Protocol):
@@ -34,7 +35,7 @@ async def handle_events[T: _HasExecutionState](function_name: str, events: typin
             return event
 
         if event.executionState == Types.ExecutionStateEnum.FileNotFound:
-            raise EvoFileNotFound()
+            raise LinefollowerFileNotFoundError()
 
         if event.executionState != Types.ExecutionStateEnum.Running:
             raise OzobotProtocolCommandError(

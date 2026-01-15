@@ -33,3 +33,8 @@ class InvalidClassifiedColorError(LineFollowerError):
 class InvalidDirectionError(LineFollowerError):
     def __init__(self, obj: object) -> None:
         super().__init__(f"Object does not represent a direction: {obj}")
+
+
+class LinefollowerFileNotFoundError(LineFollowerError):
+    def __init__(self):
+        super().__init__("File not found")

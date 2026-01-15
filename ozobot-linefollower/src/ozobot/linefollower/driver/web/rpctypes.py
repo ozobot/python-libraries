@@ -75,6 +75,15 @@ class PlayToneRequest(BaseRequest):
         return (self.frequency_hz, self.duration_ms)
 
 
+class PlayAudioRequest(BaseRequest):
+    method: typing.Literal["playAudio"] = "playAudio"
+    filename: str
+
+    @property
+    def args(self) -> tuple:
+        return (self.filename,)
+
+
 TSetLedMaskItem = L[
     "top",
     "back",

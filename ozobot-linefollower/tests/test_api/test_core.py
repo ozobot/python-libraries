@@ -86,11 +86,11 @@ async def test_say_number_out_of_range(number: int) -> None:
 @pytest.mark.parametrize(
     ["color", "audio_name"],
     [
-        [Colors.BLACK, "black"],
-        [Colors.BLUE, "blue"],
-        [Colors.GREEN, "green"],
-        [Colors.RED, "red"],
-        [Colors.WHITE, "white"],
+        [Colors.BLACK, "01040200"],
+        [Colors.BLUE, "01040204"],
+        [Colors.GREEN, "01040202"],
+        [Colors.RED, "01040201"],
+        [Colors.WHITE, "01040207"],
     ],
     ids=lambda x: repr(x),
 )
@@ -114,10 +114,10 @@ async def test_say_color_invalid() -> None:
 @pytest.mark.parametrize(
     ["direction", "audio_name"],
     [
-        [Direction.LEFT, "left"],
-        [Direction.RIGHT, "right"],
-        [Direction.BACKWARD, "backward"],
-        [Direction.STRAIGHT, "forward"],
+        [Direction.LEFT, "01040102"],
+        [Direction.RIGHT, "01040104"],
+        [Direction.BACKWARD, "01040108"],
+        [Direction.STRAIGHT, "01040101"],
     ],
     ids=lambda x: repr(x),
 )
@@ -127,3 +127,37 @@ async def test_say_direction(direction: Direction, audio_name: str) -> None:
     await lf.say_direction(direction)
 
     driver.play_audio.assert_called_with(audio_name)
+
+
+@pytest.mark.parametrize(
+    ["audio_name", "asset_name"],
+    [
+        ["happy", "01010100"],
+        ["sad", "01010110"],
+        ["surprised", "01010170"],
+        ["laugh", "01010250"],
+        ["black", "01040200"],
+        ["red", "01040201"],
+        ["green", "01040202"],
+        ["blue", "01040204"],
+        ["cyan", "01040206"],
+        ["magenta", "01040205"],
+        ["yellow", "01040203"],
+        ["white", "01040207"],
+        ["forward", "01040101"],
+        ["backward", "01040108"],
+        ["left", "01040102"],
+        ["right", "01040104"],
+        ["minus", "010400FF"],
+        ["num3", "01040003"],
+        ["num10", "0104000A"],
+        ["num120", "01040078"],
+    ],
+    ids=lambda x: repr(x),
+)
+async def test_play_audio(audio_name: str, asset_name: str) -> None:
+    driver = AsyncMock()
+    lf = LineFollower(driver)
+    await lf.play_audio(audio_name)
+
+    driver.play_audio.assert_called_with(asset_name)

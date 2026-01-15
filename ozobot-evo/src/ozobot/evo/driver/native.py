@@ -9,8 +9,7 @@ from ozobot.ble.connection import open_client
 from ozobot.evo import conversions
 from ozobot.evo.api.watchers import LineFollowerWatcher, WatcherSubscription
 from ozobot.evo.driver.responses import handle_events, handle_response
-from ozobot.evo.driver.shared import geometry, map_audio_name_to_filename
-from ozobot.evo.exceptions import EvoFileNotFound
+from ozobot.evo.driver.shared import geometry
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue, buffered_iterator
 from ozobot.linefollower.datatypes import (
@@ -20,7 +19,6 @@ from ozobot.linefollower.datatypes import (
     SampleWithoutTimestamp,
 )
 from ozobot.linefollower.driver.interface import Deserializable, Serializable
-from ozobot.linefollower.exceptions import AudioFileNotFoundError
 
 _SERVICE_UUID = UUID("8903136c-5f13-4548-a885-c58779136801")
 _CHARACTERISTIC_UUID = UUID("8903136c-5f13-4548-a885-c58779136802")
@@ -285,18 +283,14 @@ class EvoNativeDriver:
             async with self._cancellation(request_id=request_id):
                 await handle_events("PlayTone", evts)
 
-    async def play_audio(self, audio_name: str) -> None:
-        filename = map_audio_name_to_filename(audio_name)
-        filepath = f"/system/audio/{filename}.wav"
+    async def play_audio(self, asset_name: str) -> None:
+        filepath = f"/system/audio/{asset_name}.wav"
 
         request_id = self._control.get_next_request_id()
         async with self._control.ExecuteFile(request_id, filepath) as (resp, evts):
             async with self._cancellation(request_id=request_id):
                 handle_response("ExecuteFile", resp)
-                try:
-                    await handle_events("ExecuteFile", evts)
-                except EvoFileNotFound as err:
-                    raise AudioFileNotFoundError(audio_name) from err
+                await handle_events("ExecuteFile", evts)
 
     async def set_led(self, mask: LEDMask, red: float, green: float, blue: float) -> None:
         protocol_mask = conversions.led_to_protocol(mask)

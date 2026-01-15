@@ -1,5 +1,5 @@
 import pytest
-from ozobot.evo.driver.shared import map_audio_name_to_filename
+from ozobot.linefollower.driver.shared import map_audio_name_to_filename
 
 
 @pytest.mark.parametrize(

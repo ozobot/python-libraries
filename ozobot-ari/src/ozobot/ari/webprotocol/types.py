@@ -1,15 +1,4 @@
-import typing
-
 from ozobot.linefollower.driver.web import rpctypes
-
-
-class PlayAudioRequest(rpctypes.BaseRequest):
-    method: typing.Literal["playAudio"] = "playAudio"
-    filename: str
-
-    @property
-    def args(self) -> tuple:
-        return (self.filename,)
 
 
 class TimeOfFlightResponse(rpctypes.BaseResponse):

@@ -19,7 +19,7 @@ def test_import_web() -> None:
     (
         (
             "play_audio",
-            ("happy",),
+            ("01010100",),
             None,
             "playAudio",
             ("01010100",),
