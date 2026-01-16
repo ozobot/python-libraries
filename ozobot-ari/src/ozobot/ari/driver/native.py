@@ -248,10 +248,6 @@ class NativeTimeOfFlightWatcher:
         self._executor = executor
         self._request_id = request_id
 
-    async def read(self) -> Sample[TimeOfFlight]:
-        async with self.watch() as it:
-            return await anext(it)
-
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[TimeOfFlight]]]:
         req = request.TimeOfFlightRequest(

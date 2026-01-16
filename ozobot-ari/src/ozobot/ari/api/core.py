@@ -3,12 +3,12 @@ import typing
 from ozobot.ari.driver import AriDriver
 from ozobot.linefollower.api.core import LineFollower
 from ozobot.linefollower.datatypes import ClassifiedColor, Direction, Sample, TimeOfFlight
-from ozobot.linefollower.driver.interface import ReadableWatchableRegion, VirtualMemoryRegions
+from ozobot.linefollower.driver.interface import VirtualMemoryRegions, WatchableRegion
 
 
 class AriVirtualMemory(VirtualMemoryRegions, typing.Protocol):
     @property
-    def time_of_flight(self) -> ReadableWatchableRegion[Sample[TimeOfFlight]]:
+    def time_of_flight(self) -> WatchableRegion[Sample[TimeOfFlight]]:
         """
         Time of flight based distance measurement.
         """

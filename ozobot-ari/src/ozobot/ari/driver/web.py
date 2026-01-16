@@ -5,9 +5,9 @@ from ozobot.linefollower.datatypes import ClassifiedColor, Direction, Sample
 from ozobot.linefollower.driver.web import (
     LineFollowerWebDriver,
     Rpc,
-    WebDataAccessReadWatch,
     WebMemoryRegions,
 )
+from ozobot.linefollower.driver.web.driver import WebDataAccessWatch
 from ozobot.userio.web import UserIoWebDriverComponent
 
 
@@ -15,7 +15,7 @@ class AriWebMemoryRegions(WebMemoryRegions):
     def __init__(self, rpc: Rpc) -> None:
         super().__init__(rpc)
 
-        self.time_of_flight = WebDataAccessReadWatch(
+        self.time_of_flight = WebDataAccessWatch(
             rpc,
             "timeOfFlight",
             response_type=webtypes.TimeOfFlightResponse,
