@@ -4,48 +4,14 @@ from dataclasses import dataclass
 
 from ozobot.common.sync import as_sync_context_manager
 from ozobot.evo.driver import EvoDriver, get_driver
+from ozobot.linefollower.api.handle import BaseHandle
 
 from .core import Evo
 from .sync import SyncEvo
 
 
 @dataclass(frozen=True, kw_only=True)
-class EvoHandle:
-    """
-    Factory dataclass for :py:class:`Evo` (asynchronnous variant).
-
-    The instance of this class holds connection filters that describe which robot to connect to. If multiple selectors are
-    specified, everyone has to match the same robot. Selector that are not defined (or set to None) are ignored.
-
-    Only :py:attr:`name` selector is supported in Web Python.
-
-
-    .. seealso::
-        - :py:class:`ozobot.evo.SyncEvoHandle` to use the synchronnous API
-        - :py:class:`ozobot.ari.AriHandle` or :py:class:`ozobot.ari.SyncAriHandle` to use Ari
-    """
-
-    address: str | None = None
-    """
-    BLE MAC address of the robot.
-
-    Accepts wildmark '*' character that matches any string.
-    """
-
-    id: str | None = None
-    """
-    Robot ID.
-
-    Accepts wildmark '*' character that matches any string.
-    """
-
-    name: str | None = None
-    """
-    Robot BLE name.
-
-    Accepts wildmark '*' character that matches any string.
-    """
-
+class EvoHandle(BaseHandle):
     @contextlib.asynccontextmanager
     async def connect(self) -> typing.AsyncIterator[Evo]:
         """
@@ -59,11 +25,7 @@ class EvoHandle:
 
 
 @dataclass(frozen=True, kw_only=True)
-class SyncEvoHandle:
-    address: str | None = None
-    id: str | None = None
-    name: str | None = None
-
+class SyncEvoHandle(BaseHandle):
     @contextlib.contextmanager
     def connect(self) -> typing.Iterator[SyncEvo]:
         """
