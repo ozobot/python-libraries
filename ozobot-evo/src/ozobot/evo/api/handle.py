@@ -3,7 +3,7 @@ import typing
 from dataclasses import dataclass
 
 from ozobot.common.sync import as_sync_context_manager
-from ozobot.evo.driver import EvoDriver, get_driver
+from ozobot.evo.driver import get_driver
 from ozobot.linefollower.api.handle import BaseHandle
 
 from .core import Evo
@@ -32,8 +32,6 @@ class SyncEvoHandle(BaseHandle):
         Return :py:class:`SyncEvo` connection context manager.
         """
 
-        Driver = get_driver()
-        cm_driver: typing.AsyncContextManager[EvoDriver] = Driver.open(address=self.address, id=self.id, name=self.name)
-        with as_sync_context_manager(cm_driver) as driver:
-            evo = SyncEvo(driver)
-            yield evo
+        cm_evo = EvoHandle(**self.__dict__).connect()
+        with as_sync_context_manager(cm_evo) as evo:
+            yield SyncEvo(evo)

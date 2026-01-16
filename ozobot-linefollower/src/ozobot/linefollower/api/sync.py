@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from ozobot.common.sync import as_sync
 from ozobot.linefollower.datatypes import ClassifiedColor, Color, ColorCode, Direction, LEDMask, TNote
-from ozobot.linefollower.driver.interface import Driver, ReadableRegion, ReadableWritableRegion
+from ozobot.linefollower.driver.interface import ReadableRegion, ReadableWritableRegion
 
 from .core import LineFollower
 
@@ -27,15 +27,15 @@ class SyncDataAccessReadWrite[T](SyncDataAccessRead[T]):
 
 
 class SyncMemoryRegions:
-    def __init__(self, driver: Driver) -> None:
-        self.line_following_speed = SyncDataAccessReadWrite(driver.memory.line_following_speed)
-        self.line_color = SyncDataAccessRead(driver.memory.line_color)
-        self.surface_color = SyncDataAccessRead(driver.memory.surface_color)
+    def __init__(self, linefollower: LineFollower) -> None:
+        self.line_following_speed = SyncDataAccessReadWrite(linefollower.data.line_following_speed)
+        self.line_color = SyncDataAccessRead(linefollower.data.line_color)
+        self.surface_color = SyncDataAccessRead(linefollower.data.surface_color)
 
 
 class SyncLineFollower:
-    def __init__(self, driver: Driver) -> None:
-        self._linefollower = LineFollower(driver)
+    def __init__(self, linefollower: LineFollower) -> None:
+        self._linefollower = linefollower
 
     @as_sync
     async def move(self, distance_m: float, speed_mps: float) -> None:
