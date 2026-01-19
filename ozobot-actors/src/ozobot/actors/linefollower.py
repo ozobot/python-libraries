@@ -4,7 +4,7 @@ import typing
 
 from ozobot.actors.actors import ActorDispatcher, context
 from ozobot.linefollower.api.core import LineFollower
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, LEDMask, TNote
+from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction, LEDMask, TAudio, TNote
 from ozobot.linefollower.driver.interface import ReadableRegion, ReadableWatchableRegion, VirtualMemoryRegions
 
 
@@ -71,7 +71,7 @@ async def emit_midi(midi_number: int, duration_s: float, volume_percent: int) ->
     await context.dispatcher.call(LineFollower.emit_midi, midi_number, duration_s, volume_percent)
 
 
-async def play_audio(name: str) -> None:
+async def play_audio(name: TAudio) -> None:
     await context.dispatcher.acall(LineFollower.play_audio, name)
 
 

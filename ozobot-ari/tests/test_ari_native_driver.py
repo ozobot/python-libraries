@@ -116,7 +116,7 @@ async def test_open_connection_key() -> None:
             ),
         ),
         (
-            "play_audio",
+            "play_audio_asset",
             "ExecuteFile",
             ["happy"],
             (

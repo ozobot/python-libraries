@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ozobot.common.sync import as_sync
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, ColorCode, Direction, LEDMask, TNote
+from ozobot.linefollower.datatypes import ClassifiedColor, Color, ColorCode, Direction, LEDMask, TAudio, TNote
 from ozobot.linefollower.driver.interface import ReadableRegion, ReadableWritableRegion
 
 from .core import LineFollower
@@ -62,7 +62,7 @@ class SyncLineFollower:
         await self._linefollower.emit_note(note, octave, duration_s, volume_percent)
 
     @as_sync
-    async def play_audio(self, name: str) -> None:
+    async def play_audio(self, name: TAudio) -> None:
         await self._linefollower.play_audio(name)
 
     @as_sync

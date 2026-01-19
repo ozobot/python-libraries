@@ -382,7 +382,7 @@ class AriNativeDriver:
         async with Query(req, methods.PLAY_TONE).execute(self._executor) as q:
             await self._handle_response("PlayTone", q.response)
 
-    async def play_audio(self, audio_name: str) -> None:
+    async def play_audio_asset(self, audio_name: str) -> None:
         req = request.PlaySoundRequest(
             id=self._request_id.get_next(),
             params=request.PlaySoundRequestParams(name=audio_name, loop=False),

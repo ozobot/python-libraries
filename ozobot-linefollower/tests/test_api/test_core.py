@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, call
 
 import pytest
 from ozobot.linefollower.api.core import LineFollower
-from ozobot.linefollower.datatypes import ClassifiedColor, Colors, Direction
+from ozobot.linefollower.datatypes import ClassifiedColor, Colors, Direction, TAudio
 from ozobot.linefollower.exceptions import InvalidClassifiedColorError
 
 
@@ -48,11 +48,11 @@ async def test_emit_midi(midi_number: int, expected_frequency: int) -> None:
 @pytest.mark.parametrize(
     ["number", "expected_sounds"],
     [
-        [0, ["num0"]],
-        [1, ["num1"]],
-        [120, ["num120"]],
-        [-127.521, ["minus", "num127"]],
-        [-112, ["minus", "num112"]],
+        [0, ["01040000"]],
+        [1, ["01040001"]],
+        [120, ["01040078"]],
+        [-127.521, ["010400FF", "0104007F"]],
+        [-112, ["010400FF", "01040070"]],
     ],
     ids=lambda x: repr(x),
 )
@@ -61,7 +61,7 @@ async def test_say_number(number: int, expected_sounds: list[str]) -> None:
     lf = LineFollower(driver)
     await lf.say_number(number)
 
-    driver.play_audio.assert_has_calls([call(sound) for sound in expected_sounds])
+    driver.play_audio_asset.assert_has_calls([call(sound) for sound in expected_sounds])
 
 
 @pytest.mark.parametrize(
@@ -80,7 +80,7 @@ async def test_say_number_out_of_range(number: int) -> None:
     with pytest.raises(ValueError):
         await lf.say_number(number)
 
-    driver.play_audio.assert_not_called()
+    driver.play_audio_asset.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -99,7 +99,7 @@ async def test_say_color(color: ClassifiedColor, audio_name: str) -> None:
     lf = LineFollower(driver)
     await lf.say_color(color)
 
-    driver.play_audio.assert_called_with(audio_name)
+    driver.play_audio_asset.assert_called_with(audio_name)
 
 
 async def test_say_color_invalid() -> None:
@@ -108,7 +108,7 @@ async def test_say_color_invalid() -> None:
     with pytest.raises(InvalidClassifiedColorError):
         await lf.say_color("not a color")  # type: ignore[arg-type]
 
-    driver.play_audio.assert_not_called()
+    driver.play_audio_asset.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -126,7 +126,7 @@ async def test_say_direction(direction: Direction, audio_name: str) -> None:
     lf = LineFollower(driver)
     await lf.say_direction(direction)
 
-    driver.play_audio.assert_called_with(audio_name)
+    driver.play_audio_asset.assert_called_with(audio_name)
 
 
 @pytest.mark.parametrize(
@@ -136,28 +136,12 @@ async def test_say_direction(direction: Direction, audio_name: str) -> None:
         ["sad", "01010110"],
         ["surprised", "01010170"],
         ["laugh", "01010250"],
-        ["black", "01040200"],
-        ["red", "01040201"],
-        ["green", "01040202"],
-        ["blue", "01040204"],
-        ["cyan", "01040206"],
-        ["magenta", "01040205"],
-        ["yellow", "01040203"],
-        ["white", "01040207"],
-        ["forward", "01040101"],
-        ["backward", "01040108"],
-        ["left", "01040102"],
-        ["right", "01040104"],
-        ["minus", "010400FF"],
-        ["num3", "01040003"],
-        ["num10", "0104000A"],
-        ["num120", "01040078"],
     ],
     ids=lambda x: repr(x),
 )
-async def test_play_audio(audio_name: str, asset_name: str) -> None:
+async def test_play_audio(audio_name: TAudio, asset_name: str) -> None:
     driver = AsyncMock()
     lf = LineFollower(driver)
     await lf.play_audio(audio_name)
 
-    driver.play_audio.assert_called_with(asset_name)
+    driver.play_audio_asset.assert_called_with(asset_name)

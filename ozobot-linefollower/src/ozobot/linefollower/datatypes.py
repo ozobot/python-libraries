@@ -212,6 +212,12 @@ Strings recognized as notes.
 """
 
 
+type TAudio = typing.Literal["laugh", "happy", "sad", "surprised"]
+"""
+    Strings recognized as audio name.
+"""
+
+
 @dataclass(frozen=True, kw_only=True)
 class ColorCode:
     """

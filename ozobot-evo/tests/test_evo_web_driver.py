@@ -18,7 +18,7 @@ def test_import_web() -> None:
     ["method_name", "method_args", "method_result", "rpc_name", "rpc_args", "rpc_result"],
     (
         (
-            "play_audio",
+            "play_audio_asset",
             ("01010100",),
             None,
             "playAudio",

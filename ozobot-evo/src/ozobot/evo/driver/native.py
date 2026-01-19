@@ -283,7 +283,7 @@ class EvoNativeDriver:
             async with self._cancellation(request_id=request_id):
                 await handle_events("PlayTone", evts)
 
-    async def play_audio(self, asset_name: str) -> None:
+    async def play_audio_asset(self, asset_name: str) -> None:
         filepath = f"/system/audio/{asset_name}.wav"
 
         request_id = self._control.get_next_request_id()

@@ -56,7 +56,7 @@ async def test_open() -> None:
         ("rotate", "Rotate", [90, 10], [math.pi / 2, math.radians(10)]),
         ("velocity", "Velocity", [100, 10, 3], [0.1, math.radians(10), 3]),
         ("play_tone", "PlayTone", [1, 2, 3], [1, 2, 3]),
-        ("play_audio", "ExecuteFile", ["01010100"], ["/system/audio/01010100.wav"]),
+        ("play_audio_asset", "ExecuteFile", ["01010100"], ["/system/audio/01010100.wav"]),
     ],
 )
 async def test_command_with_events(
@@ -145,7 +145,7 @@ async def test_set_led(command_direction: LEDMask, rpc_direction: Types.LEDsMask
         ("rotate", "Rotate", [90, 10], [math.pi / 2, math.radians(10)]),
         ("velocity", "Velocity", [100, 10, 3], [0.1, math.radians(10), 3]),
         ("play_tone", "PlayTone", [1, 2, 3], [1, 2, 3]),
-        ("play_audio", "ExecuteFile", ["01010100"], ["/system/audio/01010100.wav"]),
+        ("play_audio_asset", "ExecuteFile", ["01010100"], ["/system/audio/01010100.wav"]),
         (
             "line_navigation",
             "LineNavigation",

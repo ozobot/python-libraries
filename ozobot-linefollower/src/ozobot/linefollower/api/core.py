@@ -10,6 +10,7 @@ from ozobot.linefollower.datatypes import (
     Direction,
     LEDMask,
     RawColor,
+    TAudio,
     TNote,
 )
 from ozobot.linefollower.driver.interface import Driver, VirtualMemoryRegions
@@ -185,14 +186,11 @@ class LineFollower:
         frequency = a4 * 2 ** ((midi_number - reference) / 12)
         return int(frequency)
 
-    # TODO: link supported filenames on the docs site
-    async def play_audio(self, name: str) -> None:
+    async def play_audio(self, name: TAudio) -> None:
         """
         Play audio file.
 
-        Play audio file given by its name. Consult the documentation to list all possible file names.
-
-        :param name: Audio name, e.g., "laugh" or "left"
+        :param name: Audio name
 
         :raises AudioFileNotFoundError: When the audio file does not exist
         :See also: :py:meth:`say_color`, :py:meth:`say_direction`, :py:meth:`say_number`
@@ -200,7 +198,7 @@ class LineFollower:
         logger.debug("Playing audio file", name=name)
         asset_name = map_audio_name_to_filename(name)
         try:
-            await self._driver.play_audio(asset_name)
+            await self._driver.play_audio_asset(asset_name)
         except LinefollowerFileNotFoundError as err:
             raise AudioFileNotFoundError(name) from err
 
@@ -222,12 +220,13 @@ class LineFollower:
 
         sounds: list[str] = []
         if numint < 0:
-            sounds.append("minus")
+            sounds.append("010400FF")  # minus
 
-        sounds.append(f"num{abs(numint)}")
+        asset_name = f"010400{format(abs(numint), 'x').rjust(2, '0').upper()}"
+        sounds.append(asset_name)
 
         for sound in sounds:
-            await self._driver.play_audio(sound)
+            await self._driver.play_audio_asset(sound)
 
     async def say_color(self, color: ClassifiedColor) -> None:
         """
@@ -243,15 +242,15 @@ class LineFollower:
 
         match color:
             case Colors.BLACK:
-                return await self.play_audio("black")
+                return await self._driver.play_audio_asset("01040200")
             case Colors.RED:
-                return await self.play_audio("red")
+                return await self._driver.play_audio_asset("01040201")
             case Colors.GREEN:
-                return await self.play_audio("green")
+                return await self._driver.play_audio_asset("01040202")
             case Colors.BLUE:
-                return await self.play_audio("blue")
+                return await self._driver.play_audio_asset("01040204")
             case Colors.WHITE:
-                return await self.play_audio("white")
+                return await self._driver.play_audio_asset("01040207")
             case _:
                 raise InvalidClassifiedColorError(color)
 
@@ -269,13 +268,13 @@ class LineFollower:
 
         match direction:
             case Direction.LEFT:
-                return await self.play_audio("left")
+                return await self._driver.play_audio_asset("01040102")
             case Direction.RIGHT:
-                return await self.play_audio("right")
+                return await self._driver.play_audio_asset("01040104")
             case Direction.STRAIGHT:
-                return await self.play_audio("forward")
+                return await self._driver.play_audio_asset("01040101")
             case Direction.BACKWARD:
-                return await self.play_audio("backward")
+                return await self._driver.play_audio_asset("01040108")
             case _:
                 raise InvalidDirectionError(direction)
                 typing.assert_never(direction)
