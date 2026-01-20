@@ -2,11 +2,11 @@ import asyncio
 
 from ozobot import actors
 from ozobot.actors.linefollower import (
-    align_with_line,
     data,
     emit_midi,
     emit_note,
     emit_tone,
+    face_line_direction,
     follow_line,
     move,
     play_audio,
@@ -102,8 +102,8 @@ async def line():
 
         intersection = await follow_line(Direction.STRAIGHT)
         print(intersection)
-        await align_with_line(Direction.RIGHT)
-        await align_with_line(Direction.LEFT)
+        await face_line_direction(Direction.RIGHT)
+        await face_line_direction(Direction.LEFT)
 
         t1.cancel()
         t2.cancel()

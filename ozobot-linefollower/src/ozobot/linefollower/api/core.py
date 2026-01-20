@@ -393,7 +393,7 @@ class LineFollower:
         :raises ValueError: If zero or more than one flag is passed as the direction
         :returns: Union of directions forming the final intersection the robot stopped at
 
-        :See also: :py:meth:`align_with_line`
+        :See also: :py:meth:`face_line_direction`
 
         .. note::
             Exactly one flag needs to be passed to the `direction` parameter. For example `Direction.LEFT` is valid,
@@ -415,13 +415,17 @@ class LineFollower:
 
         return intersection_sample.value
 
-    async def align_with_line(self, direction: Direction) -> None:
+    async def face_line_direction(self, direction: Direction) -> None:
         """
-        Aligns the robot with a line on an intersection.
+        Reorient to the given direction on a line.
 
-        Direction relative to the current orientation in which the robot gets aligned. If there is no line in the given direction, the robot does not move.
+        If the robot was previously following a line (see :py:meth:`follow_line`), calling this rotates the robot to face the given direction relative to the current direction. When the direction is
+        not valid (e.g., :py:obj:`Direction.LEFT` is given on a straight line) or if the robot was not previously following a line, this is no-op.
 
-        :param direction: Direction of a line to align to
+        The call can be made on intersections, on an end of the line or on a straight line when the previous line following was cancelled. This method is semantically similar to :py:meth:`follow_line`, but it does not snap to the line
+        when the robot was not previously following a line and it does not start the actual line following process, it just reorients the robot.
+
+        :param direction: Direction of a line to orient to
         :raises ValueError: If zero or more than one flag is passed as the direction
         :See also: :py:meth:`follow_line`
 
@@ -432,8 +436,8 @@ class LineFollower:
         .. code-block:: python
 
             # make the robot rotate right on the current intersection, but do not start line following
-            await robot.align_with_line(Direction.RIGHT)
+            await robot.reorient_to_line(Direction.RIGHT)
         """
 
-        logger.debug("Aligning with line", direTction=direction)
+        logger.debug("Facing line direction", direTction=direction)
         await self._driver.line_navigation(direction, follow=False)

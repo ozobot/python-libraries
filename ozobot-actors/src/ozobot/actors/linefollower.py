@@ -95,5 +95,5 @@ async def follow_line(direction: Direction) -> None:
     await context.dispatcher.acall(LineFollower.follow_line, direction)
 
 
-async def align_with_line(direction: Direction) -> None:
-    await context.dispatcher.acall(LineFollower.align_with_line, direction)
+async def face_line_direction(direction: Direction) -> None:
+    await context.dispatcher.acall(LineFollower.face_line_direction, direction)

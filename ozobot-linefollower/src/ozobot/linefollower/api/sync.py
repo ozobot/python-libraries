@@ -89,5 +89,5 @@ class SyncLineFollower:
         return intersection, [cc.value async for cc in color_codes]
 
     @as_sync
-    async def align_with_line(self, direction: Direction) -> None:
-        await self._linefollower.align_with_line(direction)
+    async def face_line_direction(self, direction: Direction) -> None:
+        await self._linefollower.face_line_direction(direction)

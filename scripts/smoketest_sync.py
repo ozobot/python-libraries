@@ -70,9 +70,9 @@ def io(r):
 def line(r):
     s1 = r.follow_line(Direction.STRAIGHT)
     print(s1)
-    s2 = r.align_with_line(Direction.RIGHT)
+    s2 = r.face_line_direction(Direction.RIGHT)
     print(s2)
-    s3 = r.align_with_line(Direction.LEFT)
+    s3 = r.face_line_direction(Direction.LEFT)
     print(s3)
 
     s = r.data.line_color.read()
