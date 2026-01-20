@@ -83,12 +83,10 @@ class SyncLineFollower:
 
     @as_sync
     async def follow_line(self, direction: Direction) -> tuple[Direction, list[ColorCode]]:
-        mem = self._linefollower.data
-        async with mem.intersection.watch() as intersections, mem.color_code.watch() as color_codes:
-            await self._linefollower.follow_line(direction)
-            intersection_sample = await anext(intersections)
+        async with self._linefollower.data.color_code.watch() as color_codes:
+            intersection = await self._linefollower.follow_line(direction)
 
-        return intersection_sample.value, [cc.value async for cc in color_codes]
+        return intersection, [cc.value async for cc in color_codes]
 
     @as_sync
     async def align_with_line(self, direction: Direction) -> None:

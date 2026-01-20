@@ -97,17 +97,16 @@ async def _watch(n, src):
 
 async def line():
     async with asyncio.TaskGroup() as tg:
-        t1 = tg.create_task(_watch("intersections", data.intersection))
-        t2 = tg.create_task(_watch("codes", data.color_code))
-        t3 = tg.create_task(_watch("line", data.line_color))
+        t1 = tg.create_task(_watch("codes", data.color_code))
+        t2 = tg.create_task(_watch("line", data.line_color))
 
-        await follow_line(Direction.STRAIGHT)
+        intersection = await follow_line(Direction.STRAIGHT)
+        print(intersection)
         await align_with_line(Direction.RIGHT)
         await align_with_line(Direction.LEFT)
 
         t1.cancel()
         t2.cancel()
-        t3.cancel()
 
 
 async def read_watch_sensors(sensors):

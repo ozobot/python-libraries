@@ -375,7 +375,7 @@ class LineFollower:
 
         await self._driver.set_led(mask, red, green, blue)
 
-    async def follow_line(self, direction: Direction) -> None:
+    async def follow_line(self, direction: Direction) -> Direction:
         """
         Follow line until the next intersection.
 
@@ -391,6 +391,8 @@ class LineFollower:
 
         :param direction: Direction to take when the line following starts
         :raises ValueError: If zero or more than one flag is passed as the direction
+        :returns: Union of directions forming the final intersection the robot stopped at
+
         :See also: :py:meth:`align_with_line`
 
         .. note::
@@ -402,12 +404,16 @@ class LineFollower:
 
             # turn right on the current intersection, follow the line until the next intersection and collect all color codes on the line segment
             async with robot.data.color_code.watch() as codes_iterator:
-                await robot.follow_line(Direction.RIGHT)
+                intersection = await robot.follow_line(Direction.RIGHT)
 
             codes = [code async for code in codes_iterator]
         """
         logger.debug("Following line", direction=direction)
-        await self._driver.line_navigation(direction, follow=True)
+        async with self.data.intersection.watch() as intersections:
+            await self._driver.line_navigation(direction, follow=True)
+            intersection_sample = await anext(intersections)
+
+        return intersection_sample.value
 
     async def align_with_line(self, direction: Direction) -> None:
         """
