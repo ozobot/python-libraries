@@ -49,6 +49,12 @@ class LineFollower:
         :param distance_mm: Distance to move in milimeters. If negative, the robot moves backwards.
         :param speed_mmps: Movement speed at milimeters per second. The sign is ignored.
         :See also: :py:meth:`rotate`, :py:meth:`set_velocity`
+
+        .. code-block:: python
+
+            # move robot 200mm forward and backward
+            await robot.move(200, 50)
+            await robot.move(-200, 50)
         """
 
         logger.debug("Moving", distance=distance_mm, speed=speed_mmps)
@@ -66,6 +72,13 @@ class LineFollower:
         :param angle_deg: Angle to rotate counter clockwise in degrees. If negative, the robot rotates clockwise.
         :param speed_mmps: Rotation speed in degrees per second. The sign is ignored.
         :See also: :py:meth:`move`, :py:meth:`set_velocity`
+
+        .. code-block:: python
+
+            # move robot 90deg counter clockwise and clockwise
+            await robot.rotate(90, 45)
+            await robot.rotate(-90, 45)
+
         """
 
         logger.debug("Rotating", angle=angle_deg, anglle_speed=angular_speed_degps)
@@ -117,6 +130,11 @@ class LineFollower:
         :param duration_s: Sound duration
         :param volume_percent: Sound volume in percent (0 - 100)
         :See also: :py:meth:`emit_note`, :py:meth:`emit_midi`
+
+        .. code-block:: python
+
+            # emit 440 Hz (A4) for one second
+            await robot.emit_tone(440, 1, 50)
         """
 
         logger.debug("Emitting tone", frequency=frequency_hz, duration=duration_s, volume=volume_percent)
@@ -137,6 +155,11 @@ class LineFollower:
         :param duration_s: Sound duration
         :param volume_percent: Sound volume in percent (0 - 100)
         :See also: :py:meth:`emit_tone`, :py:meth:`emit_midi`
+
+        .. code-block:: python
+
+            # emit A4 (440Hz) for one second
+            await robot.emit_note("A", 4, 1, 50)
         """
 
         notes = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
@@ -162,6 +185,11 @@ class LineFollower:
         :param duration_s: Sound duration
         :param volume_percent: Sound volume in percent (0 - 100)
         :See also: :py:meth:`emit_tone`, :py:meth:`emit_note`
+
+        .. code-block:: python
+
+            # emit midi 69 (A4, 440Hz) for one second
+            await robot.emit_note(69, 1, 50)
         """
 
         frequency_hz = LineFollower._convert_key_to_frequency(midi_number, reference=69)
@@ -194,6 +222,11 @@ class LineFollower:
 
         :raises AudioFileNotFoundError: When the audio file does not exist
         :See also: :py:meth:`say_color`, :py:meth:`say_direction`, :py:meth:`say_number`
+
+        .. code-block:: python
+
+            # play audio file called "happy"
+            await robot.play_audio("happy")
         """
         logger.debug("Playing audio file", name=name)
         asset_name = map_audio_name_to_filename(name)
@@ -212,6 +245,14 @@ class LineFollower:
 
         :raises ValueError: When the number is out of bounds
         :See also: :py:meth:`say_color`, :py:meth:`say_direction`, :py:meth:`play_audio`
+
+        .. code-block:: python
+
+            # say number 95
+            await robot.say_number(95)
+
+            # say number -15
+            await robot.say_number(-15)
         """
 
         numint = int(number)
@@ -238,6 +279,13 @@ class LineFollower:
 
         :raises InvalidClassifiedColorError: If the parameter is not a known classified color.
         :See also: :py:meth:`say_direction`, :py:meth:`say_number`, :py:meth:`play_audio`
+
+        .. code-block:: python
+
+            from ozobot.linefollower import Colors
+
+            # say "red"
+            await robot.say_color(Colors.RED)
         """
 
         match color:
@@ -264,6 +312,16 @@ class LineFollower:
 
         :raises InvalidDirectionError: If the parameter is not a known classified color.
         :See also: :py:meth:`say_color`, :py:meth:`say_number`, :py:meth:`play_audio`
+
+        .. code-block:: python
+
+            from ozobot.linefollower import Direction
+
+            # say "left"
+            await robot.say_direction(Direction.LEFT)
+
+            # can't handle groupped directions, so this would fail
+            # await robot.say_direction(Direction.LEFT | Direction.STRAIGHT)
         """
 
         match direction:
@@ -293,7 +351,6 @@ class LineFollower:
             Set the color to :py:data:`~ozobot.linefollower.datatypes.Colors.BLACK` to turn the selected LED off.
 
         .. code-block:: python
-            :linenos:
 
             from ozobot.linefollower import LEDMask, RawColor, Colors
 
@@ -339,6 +396,15 @@ class LineFollower:
         .. note::
             Exactly one flag needs to be passed to the `direction` parameter. For example `Direction.LEFT` is valid,
             while `Direction.LEFT | Direction.RIGHT` is not.
+
+
+        .. code-block:: python
+
+            # turn right on the current intersection, follow the line until the next intersection and collect all color codes on the line segment
+            async with robot.data.color_code.watch() as codes_iterator:
+                await robot.follow_line(Direction.RIGHT)
+
+            codes = [code async for code in codes_iterator]
         """
         logger.debug("Following line", direction=direction)
         await self._driver.line_navigation(direction, follow=True)
@@ -356,6 +422,11 @@ class LineFollower:
         .. note::
             Exactly one flag needs to be passed to the `direction` parameter. For example `Direction.LEFT` is valid,
             while `Direction.LEFT | Direction.RIGHT` is not.
+
+        .. code-block:: python
+
+            # make the robot rotate right on the current intersection, but do not start line following
+            await robot.align_with_line(Direction.RIGHT)
         """
 
         logger.debug("Aligning with line", direTction=direction)

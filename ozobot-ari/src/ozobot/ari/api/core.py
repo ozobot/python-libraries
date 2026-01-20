@@ -41,6 +41,10 @@ class Ari(LineFollower):
         A popup is shown on the Ari screen for a few moments. Does only block until the popup is shown.
 
         :param message: Message text
+
+        .. code-block:: python
+
+            await robot.user_io_print("Hello world!")
         """
 
         await self._ari_driver.user_io_print(message)
@@ -57,6 +61,26 @@ class Ari(LineFollower):
         :param cancellable: If true, the message can also be cancelled
 
         :raises asyncio.CancelledError: Raised when a cancellable message gets cancelled.
+
+        .. code-block:: python
+
+            import asyncio
+
+            # move after after user confirmation
+            await robot.user_io_alert("Waiting for confirmation!")
+            await robot.move(100, 50)
+
+            # move after confirmation or skip the movement by cancelling
+            try:
+                await robot.user_io_alert("Waiting for confirmation!", cancellable=True)
+                move = True
+            except asyncio.CancelledError:
+                move = False
+
+            if move:
+                await robot.move(100, 50)
+            else:
+                print("Movement skipped")
         """
 
         await self._ari_driver.user_io_alert(message, cancellable=cancellable)
@@ -79,6 +103,29 @@ class Ari(LineFollower):
 
         :raises asyncio.CancelledError: Raised when a cancellable message gets cancelled.
         :return: Selected value, the type is the same as the :obj:`_type` argument
+
+        .. warning::
+            Types cannot be combined, so for example, you cannot choose between `"Hello"`, `2` and `Direction.LEFT`. You can workaround this by using strings.
+
+        .. code-block:: python
+
+            from ozobot.linefollower import Direction, Colors, ClassifiedColor
+
+            # select direction
+            dir = await robot.user_io_prompt("Select direction", Direction, [Direction.LEFT, Direction.RIGHT])
+            print(dir)  # prints either Direction.LEFT or Direction.RIGHT depending on what the user selected
+
+            # select color
+            color = await robot.user_io_prompt("Select color", ClassifiedColor, [Colors.BLACK, Colors.WHITE, Colors.BLUE])
+            print(color)  # prints one of the colors depending on what the user selected
+
+
+            # select a number
+            num = await robot.user_io_prompt("Select a number", int, list(range(5)))
+            print(num)  # prints number 0 - 4 depending on what the user selected
+
+            # types cannot be combined, this would fail
+            # selection = await robot.user_io_primpt("Select", float, ["hello", 2, Direction.LEFT])
         """
 
         return await self._ari_driver.user_io_prompt(message, _type, options, cancellable=cancellable)
