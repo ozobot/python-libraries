@@ -3,7 +3,6 @@ import contextlib
 import typing
 
 import pydantic
-from ozobot.common.exceptions import TSError
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     Direction,
@@ -13,6 +12,7 @@ from ozobot.linefollower.datatypes import (
 from ozobot.linefollower.driver.web import Rpc, rpctypes
 from ozobot.userio import conversions
 from ozobot.userio.datatypes import TWebUserIoPrompt
+from ozobot.web.exceptions import TSError
 
 
 @contextlib.contextmanager

@@ -2,7 +2,9 @@ from ozobot.common.exceptions import OzobotError
 from ozobot.linefollower.datatypes import Color
 
 
-class WebDriverError(OzobotError): ...
+class WebDriverError(OzobotError):
+    """Base web runtime driver error."""
+
 
 class InvalidWebRobotSelectorError(WebDriverError):
     """Invalid robot selector is used for the web driver."""
