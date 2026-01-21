@@ -3,7 +3,7 @@ import time
 
 from ozobot.ari import SyncAriHandle
 from ozobot.evo import SyncEvoHandle
-from ozobot.linefollower import Color, Colors, Direction, LEDMask
+from ozobot.linefollower import ClassifiedColor, Color, Direction, LEDMask
 
 name = "Ari_1"
 # name = "Evo_1"
@@ -36,8 +36,8 @@ def sound(r):
 
 
 def led(r):
-    r.set_led(LEDMask.TOP | LEDMask.FRONT_CENTER, Colors.RED)
-    r.set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, Colors.BLUE)
+    r.set_led(LEDMask.TOP | LEDMask.FRONT_CENTER, ClassifiedColor.RED)
+    r.set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, ClassifiedColor.BLUE)
 
 
 def io(r):
@@ -58,7 +58,7 @@ def io(r):
         (int, [1, 2, 3]),
         (float, [1.0, 2.0, 3.0]),
         (str, ("one", "two", "three")),
-        (Color, (Colors.RED, Colors.BLUE, Colors.GREEN)),
+        (Color, (ClassifiedColor.RED, ClassifiedColor.BLUE, ClassifiedColor.GREEN)),
         (Direction, (Direction.LEFT, Direction.RIGHT)),
     ]
 

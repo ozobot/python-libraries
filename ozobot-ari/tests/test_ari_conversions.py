@@ -8,7 +8,6 @@ from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     Color,
     ColorCode,
-    Colors,
     Direction,
     LEDMask,
     RawColor,
@@ -81,11 +80,11 @@ def test_intersection_bitmap_from_protocol(intersection: types.Intersection, exp
 @pytest.mark.parametrize(
     ["color", "protocol_color"],
     argvalues=[
-        (Colors.BLACK, "Black"),
-        (Colors.RED, "Red"),
-        (Colors.GREEN, "Green"),
-        (Colors.BLUE, "Blue"),
-        (Colors.WHITE, "White"),
+        (ClassifiedColor.BLACK, "Black"),
+        (ClassifiedColor.RED, "Red"),
+        (ClassifiedColor.GREEN, "Green"),
+        (ClassifiedColor.BLUE, "Blue"),
+        (ClassifiedColor.WHITE, "White"),
     ],
     ids=lambda x: repr(x),
 )
@@ -96,11 +95,11 @@ def test_color_from_protocol(color: Color, protocol_color: TNamedColor) -> None:
 @pytest.mark.parametrize(
     ["color", "protocol_color"],
     argvalues=[
-        (Colors.BLACK, "Black"),
-        (Colors.RED, "Red"),
-        (Colors.GREEN, "Green"),
-        (Colors.BLUE, "Blue"),
-        (Colors.WHITE, "White"),
+        (ClassifiedColor.BLACK, "Black"),
+        (ClassifiedColor.RED, "Red"),
+        (ClassifiedColor.GREEN, "Green"),
+        (ClassifiedColor.BLUE, "Blue"),
+        (ClassifiedColor.WHITE, "White"),
     ],
     ids=lambda x: repr(x),
 )
@@ -122,5 +121,5 @@ def test_unknown_color_to_protocol() -> None:
 
 def test_color_code_from_protocol() -> None:
     assert color_code_from_protocol(["Red", "Black", "Blue"]) == ColorCode(
-        colors=(Colors.RED, Colors.BLACK, Colors.BLUE)
+        colors=(ClassifiedColor.RED, ClassifiedColor.BLACK, ClassifiedColor.BLUE)
     )

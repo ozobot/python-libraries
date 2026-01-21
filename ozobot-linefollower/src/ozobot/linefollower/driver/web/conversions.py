@@ -3,7 +3,6 @@ import typing
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     ColorCode,
-    Colors,
     Direction,
     IRMessage,
     LEDMask,
@@ -84,29 +83,29 @@ def intersection_from_web(intersection_json: dict[TWebDirection, bool]) -> Direc
 def color_from_web(color: TWebColor) -> ClassifiedColor:
     match color:
         case "Green":
-            return Colors.GREEN
+            return ClassifiedColor.GREEN
         case "Black":
-            return Colors.BLACK
+            return ClassifiedColor.BLACK
         case "Red":
-            return Colors.RED
+            return ClassifiedColor.RED
         case "Blue":
-            return Colors.BLUE
+            return ClassifiedColor.BLUE
         case "White":
-            return Colors.WHITE
+            return ClassifiedColor.WHITE
         case _:
             typing.assert_never(color.name)
 
 
 def color_to_web(color: ClassifiedColor) -> TNamedColor:
-    if color == Colors.GREEN:
+    if color == ClassifiedColor.GREEN:
         return "Green"
-    elif color == Colors.BLACK:
+    elif color == ClassifiedColor.BLACK:
         return "Black"
-    elif color == Colors.RED:
+    elif color == ClassifiedColor.RED:
         return "Red"
-    elif color == Colors.BLUE:
+    elif color == ClassifiedColor.BLUE:
         return "Blue"
-    elif color == Colors.WHITE:
+    elif color == ClassifiedColor.WHITE:
         return "White"
 
     raise InvalidClassifiedColorError(color)

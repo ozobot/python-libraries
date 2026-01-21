@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, call
 
 import pytest
 from ozobot.linefollower.api.core import LineFollower
-from ozobot.linefollower.datatypes import ClassifiedColor, Colors, Direction, TAudio
+from ozobot.linefollower.datatypes import ClassifiedColor, Direction, TAudio
 from ozobot.linefollower.exceptions import InvalidClassifiedColorError
 
 
@@ -86,11 +86,11 @@ async def test_say_number_out_of_range(number: int) -> None:
 @pytest.mark.parametrize(
     ["color", "audio_name"],
     [
-        [Colors.BLACK, "01040200"],
-        [Colors.BLUE, "01040204"],
-        [Colors.GREEN, "01040202"],
-        [Colors.RED, "01040201"],
-        [Colors.WHITE, "01040207"],
+        [ClassifiedColor.BLACK, "01040200"],
+        [ClassifiedColor.BLUE, "01040204"],
+        [ClassifiedColor.GREEN, "01040202"],
+        [ClassifiedColor.RED, "01040201"],
+        [ClassifiedColor.WHITE, "01040207"],
     ],
     ids=lambda x: repr(x),
 )

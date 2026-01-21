@@ -2,18 +2,18 @@ import typing
 
 from ozobot.evo.exceptions import OzobotDataTypeError, UnsupportedColorCodeNumberError
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import ClassifiedColor, ColorCode, Colors, Direction, IRMessage, LEDMask
+from ozobot.linefollower.datatypes import ClassifiedColor, ColorCode, Direction, IRMessage, LEDMask
 
 
 def _color_from_color_code_number(num: int) -> ClassifiedColor:
     if num == 0:
-        return Colors.BLACK
+        return ClassifiedColor.BLACK
     elif num == 1:
-        return Colors.RED
+        return ClassifiedColor.RED
     elif num == 2:
-        return Colors.GREEN
+        return ClassifiedColor.GREEN
     elif num == 4:
-        return Colors.BLUE
+        return ClassifiedColor.BLUE
 
     raise UnsupportedColorCodeNumberError(num)
 
@@ -36,15 +36,15 @@ def surface_color_from_protocol(surface_color: Types.SurfaceColor) -> Classified
 
     match surface_color.color:
         case Types.SurfaceColorEnum.Black:
-            return Colors.BLACK
+            return ClassifiedColor.BLACK
         case Types.SurfaceColorEnum.Blue:
-            return Colors.BLUE
+            return ClassifiedColor.BLUE
         case Types.SurfaceColorEnum.Green:
-            return Colors.GREEN
+            return ClassifiedColor.GREEN
         case Types.SurfaceColorEnum.Red:
-            return Colors.RED
+            return ClassifiedColor.RED
         case Types.SurfaceColorEnum.White:
-            return Colors.WHITE
+            return ClassifiedColor.WHITE
         case Types.SurfaceColorEnum.Unknown:
             return None
         case _:
@@ -57,13 +57,13 @@ def line_color_from_protocol(line_color: Types.LineColor) -> ClassifiedColor | N
 
     match line_color.color:
         case Types.LineColorEnum.Black:
-            return Colors.BLACK
+            return ClassifiedColor.BLACK
         case Types.LineColorEnum.Blue:
-            return Colors.BLUE
+            return ClassifiedColor.BLUE
         case Types.LineColorEnum.Green:
-            return Colors.GREEN
+            return ClassifiedColor.GREEN
         case Types.LineColorEnum.Red:
-            return Colors.RED
+            return ClassifiedColor.RED
         case Types.LineColorEnum.Unknown:
             return None
         case _:

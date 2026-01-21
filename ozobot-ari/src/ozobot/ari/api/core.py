@@ -109,14 +109,14 @@ class Ari(LineFollower):
 
         .. code-block:: python
 
-            from ozobot.linefollower import Direction, Colors, ClassifiedColor
+            from ozobot.linefollower import Direction, ClassifiedColor
 
             # select direction
             dir = await robot.user_io_prompt("Select direction", Direction, [Direction.LEFT, Direction.RIGHT])
             print(dir)  # prints either Direction.LEFT or Direction.RIGHT depending on what the user selected
 
             # select color
-            color = await robot.user_io_prompt("Select color", ClassifiedColor, [Colors.BLACK, Colors.WHITE, Colors.BLUE])
+            color = await robot.user_io_prompt("Select color", ClassifiedColor, [ClassifiedColor.BLACK, ClassifiedColor.WHITE, ClassifiedColor.BLUE])
             print(color)  # prints one of the colors depending on what the user selected
 
 

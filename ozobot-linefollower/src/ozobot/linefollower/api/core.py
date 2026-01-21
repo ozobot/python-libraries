@@ -6,7 +6,6 @@ from loguru import logger
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     Color,
-    Colors,
     Direction,
     LEDMask,
     RawColor,
@@ -282,22 +281,22 @@ class LineFollower:
 
         .. code-block:: python
 
-            from ozobot.linefollower import Colors
+            from ozobot.linefollower import ClassifiedColor
 
             # say "red"
-            await robot.say_color(Colors.RED)
+            await robot.say_color(ClassifiedColor.RED)
         """
 
         match color:
-            case Colors.BLACK:
+            case ClassifiedColor.BLACK:
                 return await self._driver.play_audio_asset("01040200")
-            case Colors.RED:
+            case ClassifiedColor.RED:
                 return await self._driver.play_audio_asset("01040201")
-            case Colors.GREEN:
+            case ClassifiedColor.GREEN:
                 return await self._driver.play_audio_asset("01040202")
-            case Colors.BLUE:
+            case ClassifiedColor.BLUE:
                 return await self._driver.play_audio_asset("01040204")
-            case Colors.WHITE:
+            case ClassifiedColor.WHITE:
                 return await self._driver.play_audio_asset("01040207")
             case _:
                 raise InvalidClassifiedColorError(color)
@@ -348,20 +347,20 @@ class LineFollower:
         :param color: Either :py:class:`~ozobot.linefollower.datatypes.RawColor` or :py:class:`~ozobot.linefollower.datatypes.ClassifiedColor` defining the new LED color.
 
         .. note::
-            Set the color to :py:data:`~ozobot.linefollower.datatypes.Colors.BLACK` to turn the selected LED off.
+            Set the color to :py:data:`~ozobot.linefollower.datatypes.ClassifiedColor.BLACK` to turn the selected LED off.
 
         .. code-block:: python
 
-            from ozobot.linefollower import LEDMask, RawColor, Colors
+            from ozobot.linefollower import LEDMask, RawColor, ClassifiedColor
 
             # set the TOP to red
-            await robot.set_led(LEDMask.TOP, Colors.RED)
+            await robot.set_led(LEDMask.TOP, ClassifiedColor.RED)
 
             # set the LEFT and RIGHT by RGB value
             await robot.set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, RawColor(0, 0.4, 0))
 
             # turn off ALL
-            await robot.set_led(LEDMask.ALL_ROBOT, Colors.BLACK)
+            await robot.set_led(LEDMask.ALL_ROBOT, ClassifiedColor.BLACK)
         """
         logger.debug("Setting LED", mask=mask, color=color)
         if isinstance(color, RawColor):

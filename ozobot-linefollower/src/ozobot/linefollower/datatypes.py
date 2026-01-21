@@ -103,12 +103,31 @@ class ClassifiedColor(Color):
     Can be compared to other colors or converted to :py:class:`RawColor`
 
     .. seealso::
-        Predefined colors are available in :py:class:`Colors`, for example :py:attr:`Colors.BLACK`.
+        Predefined colors are available as properties of this class, for example :py:attr:`ClassifiedColor.BLACK`.
         Generic (unclassified) color can be defined by :py:class:`RawColor`.
     """
 
     name: TNamedColor
     _representation: RawColor
+
+    # we had to define the values below the clas definition because:
+    #     - direct assignment is not possible as the class is not yet fully parsed when the individual fields are being assigned to
+    #     - properties cannot be used in dataclasses
+    #     - ClassVar cannot be used with dataclass.field
+    BLACK: typing.ClassVar[ClassifiedColor]
+    """Predefined color constant - black"""
+
+    RED: typing.ClassVar[ClassifiedColor]
+    """Predefined color constant - red"""
+
+    GREEN: typing.ClassVar[ClassifiedColor]
+    """Predefined color constant - green"""
+
+    BLUE: typing.ClassVar[ClassifiedColor]
+    """Predefined color constant - blue"""
+
+    WHITE: typing.ClassVar[ClassifiedColor]
+    """Predefined color constant - white"""
 
     def is_color(self, other: Color | None, *, epsilon: float = _IS_COLOR_EPSILON) -> bool:
         if isinstance(other, ClassifiedColor):
@@ -142,16 +161,11 @@ class ClassifiedColor(Color):
         return f"{self.__class__.__name__}({self.name!r}, {self._representation!r})"
 
 
-class Colors:
-    """
-    Set of supported :py:class:`ClassifiedColor` objects
-    """
-
-    BLACK = ClassifiedColor("Black", RawColor(0, 0, 0))
-    RED = ClassifiedColor("Red", RawColor(1.0, 0, 0))
-    GREEN = ClassifiedColor("Green", RawColor(0, 1.0, 0))
-    BLUE = ClassifiedColor("Blue", RawColor(0, 0, 1.0))
-    WHITE = ClassifiedColor("White", RawColor(1.0, 1.0, 1.0))
+ClassifiedColor.BLACK = ClassifiedColor("Black", RawColor(0, 0, 0))
+ClassifiedColor.RED = ClassifiedColor("Red", RawColor(1.0, 0, 0))
+ClassifiedColor.GREEN = ClassifiedColor("Green", RawColor(0, 1.0, 0))
+ClassifiedColor.BLUE = ClassifiedColor("Blue", RawColor(0, 0, 1.0))
+ClassifiedColor.WHITE = ClassifiedColor("White", RawColor(1.0, 1.0, 1.0))
 
 
 class LEDMask(enum.Flag):

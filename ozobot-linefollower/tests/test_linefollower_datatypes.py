@@ -1,7 +1,7 @@
 import contextlib
 
 import pytest
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, Colors, RawColor
+from ozobot.linefollower.datatypes import ClassifiedColor, Color, RawColor
 
 
 @pytest.fixture
@@ -21,12 +21,12 @@ def blue() -> Color:
 
 @pytest.fixture
 def classified_red() -> ClassifiedColor:
-    return Colors.RED
+    return ClassifiedColor.RED
 
 
 @pytest.fixture
 def classified_blue() -> ClassifiedColor:
-    return Colors.BLUE
+    return ClassifiedColor.BLUE
 
 
 @pytest.mark.parametrize(

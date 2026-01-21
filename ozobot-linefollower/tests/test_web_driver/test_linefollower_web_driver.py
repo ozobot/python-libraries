@@ -4,7 +4,7 @@ import typing
 from unittest.mock import call, patch
 
 import pytest
-from ozobot.linefollower.datatypes import Colors, Direction, LEDMask
+from ozobot.linefollower.datatypes import ClassifiedColor, Direction, LEDMask
 from ozobot.linefollower.driver.web import LineFollowerWebDriver
 
 _RPC_COROUTINE_MODULE_PATH = "ozobot.linefollower.driver.web.driver._rpcCoroutine"
@@ -136,9 +136,9 @@ async def test_mem_watch_structure() -> None:
             data = [sample.value for sample in samples]
         assert len(data) == num_data
         assert data == [
-            Colors.RED,
-            Colors.BLACK,
-            Colors.BLUE,
+            ClassifiedColor.RED,
+            ClassifiedColor.BLACK,
+            ClassifiedColor.BLUE,
         ]
 
         # we expect the calls to contain the property name in the first call

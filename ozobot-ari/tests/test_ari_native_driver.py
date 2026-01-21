@@ -7,7 +7,15 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 from ozobot.ari.driver.native import AriNativeDriver
 from ozobot.ari.protocol import memread, memwrite, methods, notification, request, response, types
-from ozobot.linefollower.datatypes import Color, ColorCode, Colors, Direction, LEDMask, Sample, SampleWithoutTimestamp
+from ozobot.linefollower.datatypes import (
+    ClassifiedColor,
+    Color,
+    ColorCode,
+    Direction,
+    LEDMask,
+    Sample,
+    SampleWithoutTimestamp,
+)
 
 
 def _create_query(response=None, notifications=None):
@@ -182,7 +190,7 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
 
             assert await anext(intersection_it) == SampleWithoutTimestamp(Direction.BACKWARD)
             assert await anext(cc_it) == SampleWithoutTimestamp(
-                ColorCode(colors=(Colors.RED, Colors.BLACK, Colors.BLUE)),
+                ColorCode(colors=(ClassifiedColor.RED, ClassifiedColor.BLACK, ClassifiedColor.BLUE)),
             )
 
         query_cls_mock.assert_called_once_with(
@@ -311,10 +319,10 @@ async def test_native_data_access_write() -> None:
         ),
         (
             Color,
-            [Colors.RED, Colors.GREEN],
+            [ClassifiedColor.RED, ClassifiedColor.GREEN],
             ["Red", "Green"],
             response.UserIoPromptSurfaceColorResponseBody(value="Red"),
-            Colors.RED,
+            ClassifiedColor.RED,
         ),
         (
             Direction,
@@ -383,9 +391,9 @@ async def test_native_data_access_watch() -> None:
             notifications = [await anext(it) for _ in range(3)]
 
         assert notifications == [
-            Sample(Colors.RED, 0),
-            Sample(Colors.BLUE, 1),
-            Sample(Colors.GREEN, 2),
+            Sample(ClassifiedColor.RED, 0),
+            Sample(ClassifiedColor.BLUE, 1),
+            Sample(ClassifiedColor.GREEN, 2),
         ]
 
         query_cls_mock.assert_called_with(

@@ -478,13 +478,13 @@ class Types:
         """Enum type ErrorModuleIDs
                 Error signalization module identifier.
         Can attain one of:
-                Bluetooth, BrightnessControl, ControlProtocol, OzoVMLoadFromColors, OzoVMProgramStreamLoader, OzoVMSystemCalls, Undefined, UnsupportedOperation, VirtualMachineTask"""
+                Bluetooth, BrightnessControl, ControlProtocol, OzoVMLoadFromClassifiedColor, OzoVMProgramStreamLoader, OzoVMSystemCalls, Undefined, UnsupportedOperation, VirtualMachineTask"""
         data_width = enum.nonmember(1)
 
         Bluetooth = 4
         BrightnessControl = 8
         ControlProtocol = 9
-        OzoVMLoadFromColors = 1
+        OzoVMLoadFromClassifiedColor = 1
         OzoVMProgramStreamLoader = 0
         OzoVMSystemCalls = 2
         Undefined = 255

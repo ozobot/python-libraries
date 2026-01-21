@@ -5,7 +5,6 @@ from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     Color,
     ColorCode,
-    Colors,
     Direction,
     IRMessage,
     LEDMask,
@@ -89,17 +88,19 @@ def test_intersection_from_web(json_input, expected):
 
 def test_color_code_from_web() -> None:
     colors: list[TWebColor] = ["Red", "Black", "Blue"]
-    assert color_code_from_web(colors) == ColorCode(colors=(Colors.RED, Colors.BLACK, Colors.BLUE))
+    assert color_code_from_web(colors) == ColorCode(
+        colors=(ClassifiedColor.RED, ClassifiedColor.BLACK, ClassifiedColor.BLUE)
+    )
 
 
 @pytest.mark.parametrize(
     ["web", "lib"],
     [
-        ("Red", Colors.RED),
-        ("Blue", Colors.BLUE),
-        ("Green", Colors.GREEN),
-        ("Black", Colors.BLACK),
-        ("White", Colors.WHITE),
+        ("Red", ClassifiedColor.RED),
+        ("Blue", ClassifiedColor.BLUE),
+        ("Green", ClassifiedColor.GREEN),
+        ("Black", ClassifiedColor.BLACK),
+        ("White", ClassifiedColor.WHITE),
     ],
 )
 def test_color_from_web(web: TWebColor, lib: Color) -> None:
@@ -109,11 +110,11 @@ def test_color_from_web(web: TWebColor, lib: Color) -> None:
 @pytest.mark.parametrize(
     ["web", "lib"],
     [
-        ("Red", Colors.RED),
-        ("Blue", Colors.BLUE),
-        ("Green", Colors.GREEN),
-        ("Black", Colors.BLACK),
-        ("White", Colors.WHITE),
+        ("Red", ClassifiedColor.RED),
+        ("Blue", ClassifiedColor.BLUE),
+        ("Green", ClassifiedColor.GREEN),
+        ("Black", ClassifiedColor.BLACK),
+        ("White", ClassifiedColor.WHITE),
     ],
 )
 def test_color_to_web(web: TWebColor | None, lib: ClassifiedColor) -> None:
