@@ -37,11 +37,11 @@ class _ProxyDataWatcher[T]:
 
 class _ProxyVirtualMemoryRegions:
     def __getattr__(self, name: str) -> typing.Any:
-        memory = context.dispatcher.get_property(object, "memory")
-        if hasattr(memory, name):
-            return getattr(memory, name)
+        data = context.dispatcher.get_property(object, "data")
+        if hasattr(data, name):
+            return getattr(data, name)
 
-        raise AttributeError(f"'memory' has no attribute '{name}'")
+        raise AttributeError(f"'data' has no attribute '{name}'")
 
 
 data: VirtualMemoryRegions = _ProxyVirtualMemoryRegions()
