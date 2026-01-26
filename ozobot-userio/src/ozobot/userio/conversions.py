@@ -14,7 +14,7 @@ from ozobot.userio.exceptions import (
 def get_type_name(_type: type[str | int | float | bool | ClassifiedColor | Direction]) -> TUserIoPrompt:
     if _type == str:
         return "string"
-    elif _type == int or _type == float:
+    elif any(issubclass(c, _type) for c in [float, int]):
         return "number"
     elif _type == bool:
         return "boolean"
@@ -29,7 +29,7 @@ def get_type_name(_type: type[str | int | float | bool | ClassifiedColor | Direc
 def get_web_type_name(_type: type[str | int | float | bool | ClassifiedColor | Direction]) -> TWebUserIoPrompt:
     if _type == str:
         return "string"
-    elif _type == int or _type == float:
+    elif any(issubclass(c, _type) for c in [float, int]):
         return "number"
     elif _type == bool:
         return "boolean"
@@ -84,6 +84,8 @@ def cast_web_prompt_response[T](_type: type[T], value: typing.Any) -> T:
     elif _type is int:
         return typing.cast(T, int(value))
     elif _type is float:
+        return typing.cast(T, float(value))
+    elif any(issubclass(c, _type) for c in [float, int]):
         return typing.cast(T, float(value))
     elif _type is bool:
         return typing.cast(T, bool(value))
