@@ -1,6 +1,6 @@
 import typing
 
-from ozobot.linefollower.datatypes import Color, Direction
+from ozobot.linefollower.datatypes import ClassifiedColor, Direction
 
 
 class UserIoInterface(typing.Protocol):
@@ -8,6 +8,6 @@ class UserIoInterface(typing.Protocol):
 
     async def user_io_alert(self, message: str, *, cancellable: bool = False) -> None: ...
 
-    async def user_io_prompt[T: (str, float, int, bool, Color, Direction)](
+    async def user_io_prompt[T: (str, float, int, bool, ClassifiedColor, Direction)](
         self, message: str, _type: type[T], options: list[T], *, cancellable: bool = False
     ) -> T: ...

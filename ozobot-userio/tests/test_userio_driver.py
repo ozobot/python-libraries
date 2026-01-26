@@ -2,7 +2,7 @@ import typing
 from unittest.mock import patch
 
 import pytest
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, Direction
+from ozobot.linefollower.datatypes import ClassifiedColor, Direction
 from ozobot.linefollower.driver.web import Rpc, rpctypes
 from ozobot.userio.web import UserIoWebDriverComponent
 
@@ -112,7 +112,7 @@ async def test_commands(
             "B",
         ),
         (
-            Color,
+            ClassifiedColor,
             (
                 ClassifiedColor.BLACK,
                 ClassifiedColor.BLUE,

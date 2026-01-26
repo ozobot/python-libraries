@@ -9,7 +9,6 @@ from ozobot.ari.driver.native import AriNativeDriver
 from ozobot.ari.protocol import memread, memwrite, methods, notification, request, response, types
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
-    Color,
     ColorCode,
     Direction,
     LEDMask,
@@ -318,7 +317,7 @@ async def test_native_data_access_write() -> None:
             True,
         ),
         (
-            Color,
+            ClassifiedColor,
             [ClassifiedColor.RED, ClassifiedColor.GREEN],
             ["Red", "Green"],
             response.UserIoPromptSurfaceColorResponseBody(value="Red"),
@@ -354,7 +353,7 @@ async def test_user_io_prompt(
             type_name = "number"
         elif prompt_type == bool:
             type_name = "boolean"
-        elif prompt_type == Color:
+        elif prompt_type == ClassifiedColor:
             type_name = "surfaceColor"
         elif prompt_type == Direction:
             type_name = "direction"
