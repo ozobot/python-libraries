@@ -4,11 +4,11 @@ from ozobot.userio.interface import UserIoInterface
 
 
 async def user_io_print(message: str) -> None:
-    await context.dispatcher.acall(UserIoInterface.user_io_print, message)
+    return await context.dispatcher.acall(UserIoInterface.user_io_print, message)
 
 
 async def user_io_alert(message: str, *, cancellable: bool = False) -> None:
-    await context.dispatcher.acall(UserIoInterface.user_io_alert, message, cancellable=cancellable)
+    return await context.dispatcher.acall(UserIoInterface.user_io_alert, message, cancellable=cancellable)
 
 
 async def user_io_prompt[T: (str, float, int, bool, Color, Direction)](
