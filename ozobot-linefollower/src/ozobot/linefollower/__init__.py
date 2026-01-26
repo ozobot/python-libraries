@@ -5,6 +5,7 @@ from ozobot.linefollower.datatypes import (
     Direction,
     IRMessage,
     LEDMask,
+    RawColor,
     Sample,
     TimeOfFlight,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "Direction",
     "IRMessage",
     "LEDMask",
+    "RawColor",
     "Sample",
     "TimeOfFlight",
 ]
