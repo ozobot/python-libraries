@@ -4,10 +4,10 @@ import pydantic
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     Direction,
-    TDirection,
     TNamedColor,
 )
 from ozobot.linefollower.driver.web import Rpc, rpctypes
+from ozobot.linefollower.driver.web.rpctypes import TWebDirection
 from ozobot.userio import conversions
 from ozobot.userio.datatypes import TWebUserIoPrompt
 
@@ -36,7 +36,7 @@ class UserIoPromptRequest(rpctypes.BaseRequest):
     message: str
     cancellable: bool
     type: TWebUserIoPrompt
-    options: list[str | int | float | bool | TNamedColor | TDirection]
+    options: list[str | int | float | bool | TNamedColor | TWebDirection]
 
     @property
     def args(self) -> tuple:

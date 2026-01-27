@@ -3,6 +3,7 @@ import typing
 from ozobot.ari import conversions as ari_conversions
 from ozobot.linefollower.datatypes import ClassifiedColor, Direction, TDirection, TNamedColor
 from ozobot.linefollower.driver.web import conversions as web_conversions
+from ozobot.linefollower.driver.web.rpctypes import TWebDirection
 from ozobot.userio.datatypes import TUserIoPrompt, TWebUserIoPrompt
 from ozobot.userio.exceptions import (
     UnexpectedUserIoPromptOptionTypeError,
@@ -61,7 +62,7 @@ def get_type_options[T: (str, float, int, bool, ClassifiedColor, Direction)](
 
 def get_web_type_options[T: (str, float, int, bool, ClassifiedColor, Direction)](
     options: list[T], _type: type[T]
-) -> list[str | float | int | bool | TNamedColor | TDirection]:
+) -> list[str | float | int | bool | TNamedColor | TWebDirection]:
     for opt in options:
         if not isinstance(opt, _type):
             raise UnexpectedUserIoPromptOptionTypeError(opt, _type)
