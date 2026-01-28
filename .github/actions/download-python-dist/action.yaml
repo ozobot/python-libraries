@@ -12,16 +12,24 @@ runs:
         name: python-package-distributions
         path: alldist/
 
+    - name: Set file name
+      id: set-file-name
+      shell: bash
+      run: |
+        pkg="${{ inputs.package-name }}"
+        echo "file-name=${pkg//-/_}-" >> $GITHUB_OUTPUT
+
     - name: Copy ${{ inputs.package-name }} dist to upload directory
       shell: bash
       env:
         package_name: ${{ inputs.package-name }}
-        file_name: ozobot_${{ inputs.package-name }}-
+        file_name: ${{ steps.set-file-name.outputs.file-name }}
+
       run: |
         echo "Downloaded artifacts"
         ls -1q alldist/*
 
-        echo "Add fixed package name prefix ${package_name} -> ${file_name}"
+        echo "Copy ${file_name}"
         mkdir dist/
         cp alldist/${file_name}* dist/
         num_whl=$(ls -1q dist/*.whl | wc -l)
