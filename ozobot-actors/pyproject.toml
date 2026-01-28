@@ -8,14 +8,14 @@ authors = [
 requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
-    "ozobot-common>=0.1",
-    "ozobot-linefollower>=0.1",
+    "ozobot-common>=0.2",
+    "ozobot-linefollower>=0.2",
     "loguru",
 ]
 
 [project.optional-dependencies]
-ari = ["ozobot-ari>=0.1"]
-evo = ["ozobot-evo>=0.1"]
+ari = ["ozobot-ari>=0.2"]
+evo = ["ozobot-evo>=0.2"]
 ora = ["ozobot-ora~=1.0.6"]
 
 [project.urls]

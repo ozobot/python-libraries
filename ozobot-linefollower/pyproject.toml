@@ -8,7 +8,7 @@ authors = [
 requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
-    "ozobot-common>=0.1",
+    "ozobot-common>=0.2",
     "loguru",
 ]
 
