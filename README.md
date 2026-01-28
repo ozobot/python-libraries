@@ -31,4 +31,39 @@ But there are also other back end libraries such as:
  - [`ozobot-webrtc`](/ozobot-webrtc)
 
 ## Development
-TBD
+### Project structure
+The project uses `uv` and leverages [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/) to define multiple (namespaced) packages in directories
+prefixed with `ozobot-`. Each package adheres to the same structure:
+```
+$ tree -L1 ozobot-evo
+ozobot-evo
+├── pyproject.toml
+├── README.md
+├── src
+│   └── ozobot
+│       └── evo
+└── tests
+```
+In addition to the package-wise `pyproject.toml` files, there's also a repo level one that defines the uv workspace and
+global configuration for `pytest`, `mypy` and `ruff`. `uv.lock` is used to lock project dependencies.
+
+### Build
+Run `uv build --wheel --all-packages` or `uv build --sdist --all-packages` to build all the packages to the `dist` directory. To build packages individually
+use `--package <package-name>` (e.g., `--package ozobot-evo`) instead.
+
+### Test
+`pytest` is used to run tests, type checking and linting, so executing
+```
+  $ uv run pytest -v
+```
+is sufficient to test the whole repo. `pytest` is run for the repository as a whole and only respects configuration in the repo level `pyproject.toml`. 
+
+### Installation from sources
+To install all the workspace packages and its dependencies to the uv venv, run
+```
+  $ uv venv
+  $ uv sync --all-packages --inexact
+  $ # activate the venv as usual
+```
+
+Omit `--inexact` to remove extra packages. Workspace packages are installed as editable.
