@@ -19,6 +19,7 @@ def get_driver() -> type[AriDriver]:
 
         return AriWebDriver
     else:
+        raise NotImplementedError("Ari native driver is not yet implemented")
         from ozobot.ari.driver.native import AriNativeDriver
 
         return AriNativeDriver

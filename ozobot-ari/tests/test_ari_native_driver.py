@@ -52,7 +52,10 @@ def _create_query(response=None, notifications=None):
 def test_import_native() -> None:
     from ozobot.ari.driver import get_driver
 
-    assert issubclass(get_driver(), AriNativeDriver)
+    with pytest.raises(NotImplementedError):
+        _ = get_driver()
+
+    # assert issubclass(get_driver(), AriNativeDriver)
 
 
 async def test_open_ble() -> None:

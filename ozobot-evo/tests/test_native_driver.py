@@ -35,7 +35,10 @@ def _create_command(
 def test_import_native() -> None:
     from ozobot.evo.driver import get_driver
 
-    assert issubclass(get_driver(), EvoNativeDriver)
+    with pytest.raises(NotImplementedError):
+        _ = get_driver()
+
+    # assert issubclass(get_driver(), EvoNativeDriver)
 
 
 async def test_open() -> None:
