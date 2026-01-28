@@ -10,6 +10,7 @@ dynamic = ["version"]
 dependencies = [
     "ozobot-common>=0.2",
     "loguru",
+    "pydantic>=2; platform_system == 'Emscripten'",
 ]
 
 [project.urls]

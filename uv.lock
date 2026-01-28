@@ -486,7 +486,7 @@ dependencies = [
     { name = "ozobot-userio", marker = "sys_platform == 'emscripten'" },
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'" },
     { name = "ozobot-webrtc", marker = "sys_platform != 'emscripten'" },
-    { name = "pydantic" },
+    { name = "pydantic", marker = "sys_platform != 'emscripten'" },
 ]
 
 [package.metadata]
@@ -499,7 +499,7 @@ requires-dist = [
     { name = "ozobot-userio", marker = "sys_platform == 'emscripten'", editable = "ozobot-userio" },
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" },
     { name = "ozobot-webrtc", marker = "sys_platform != 'emscripten'", editable = "ozobot-webrtc" },
-    { name = "pydantic", specifier = ">=2.10.5" },
+    { name = "pydantic", marker = "sys_platform != 'emscripten'", specifier = ">=2.10.5" },
 ]
 
 [[package]]
@@ -593,12 +593,14 @@ source = { editable = "ozobot-linefollower" }
 dependencies = [
     { name = "loguru" },
     { name = "ozobot-common" },
+    { name = "pydantic", marker = "sys_platform == 'emscripten'" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "loguru" },
     { name = "ozobot-common", editable = "ozobot-common" },
+    { name = "pydantic", marker = "sys_platform == 'emscripten'", specifier = ">=2" },
 ]
 
 [[package]]
@@ -618,6 +620,7 @@ dependencies = [
     { name = "ozobot-common" },
     { name = "ozobot-linefollower" },
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'" },
+    { name = "pydantic", marker = "sys_platform == 'emscripten'" },
 ]
 
 [package.metadata]
@@ -625,6 +628,7 @@ requires-dist = [
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" },
+    { name = "pydantic", marker = "sys_platform == 'emscripten'", specifier = ">=2" },
 ]
 
 [[package]]
