@@ -1,9 +1,16 @@
+.. _async_evo:
+
 Async API - advanced
 ====================
 
 To fully utilize what the robot has to offer, we recommend the async API. It runs on asyncio [#foot-asyncio]_, so some elementary knowledge of that framework is necessary as it provides
-an elegant way for cancelling the current command or watching sensoric data for change. There is a class implemented for each individual robot type having the same interface, so individual robots can be
+an elegant way for cancelling the current command or watching sensoric data for change.
+
+There is a class implemented for each individual robot type having the same interface, so individual robots can be
 interchanged easily. This does hold for functionality the robot supports. For example, Evo does not have a display, there is no display related functionality implemented.
+
+.. note::
+  This library is intended for users that already have some experience with Python. For beginners, we suggest taking a look on the :ref:`synchronnous API <sync_evo>` instead.
 
 .. _connecting:
 
