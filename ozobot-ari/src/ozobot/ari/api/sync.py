@@ -1,10 +1,23 @@
 from ozobot.ari.api.core import Ari
 from ozobot.common.sync import as_sync
-from ozobot.linefollower.api.sync import SyncLineFollower
+from ozobot.linefollower.api.sync import SyncLineFollower, SyncMemoryRegions
 from ozobot.linefollower.datatypes import ClassifiedColor, Direction
 
 
+class SyncAriVirtualMemory(SyncMemoryRegions): ...
+
+
 class SyncAri(SyncLineFollower):
+    @property
+    def data(self) -> SyncAriVirtualMemory:
+        """
+        Robot sensors.
+
+        Contains virtual memory and sensor structures allowing a subset of read, write and watch methods.
+        """
+
+        return SyncAriVirtualMemory(self._ari)
+
     def __init__(self, ari: Ari) -> None:
         self._ari = ari
         super().__init__(ari)

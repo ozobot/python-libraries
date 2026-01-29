@@ -49,16 +49,6 @@ class SyncMemoryRegions:
 
 
 class SyncLineFollower:
-    @property
-    def data(self) -> SyncMemoryRegions:
-        """
-        Robot sensors.
-
-        Contains virtual memory and sensor structures allowing a subset of read, write and watch methods.
-        """
-
-        return SyncMemoryRegions(self._linefollower)
-
     def __init__(self, linefollower: LineFollower) -> None:
         self._linefollower = linefollower
 
