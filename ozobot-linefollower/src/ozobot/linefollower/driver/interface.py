@@ -49,11 +49,11 @@ class WatchableRegion[T](Protocol):
         """
         Watch for data changes.
 
-        Continously watches given data region, emitting a data sample on change. More verbose than :py:attr:`read` but guarantees
+        Continuously watches given data region, emitting a data sample on change. More verbose than :py:attr:`read` but guarantees
         all the changes will be read.
 
         The property is in fact an asynchronnous context manager which starts the monitoring on entering the context and
-        stops it on exitting the context. The context manager yields an asynchronnous iterator which is valid even after the context
+        stops it on exiting the context. The context manager yields an asynchronnous iterator which is valid even after the context
         has been closed.
 
         :return: Asynchronnous context manager yielding asynchronnous iterator on enter

@@ -91,7 +91,7 @@ class Ari(LineFollower):
         """
         Display a selection dialog.
 
-        A text messsage along a list of options of the same type is displayed on the screen allowing user to select a single value. The selected
+        A text message along a list of options of the same type is displayed on the screen allowing user to select a single value. The selected
         value is returned by the function. Blocks until a selection is made.
 
         Optionally, the dialog can be made cancellable. Cancelling the dialog results in `asyncio.CancelledError` being raised.

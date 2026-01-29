@@ -45,8 +45,8 @@ class LineFollower:
 
         Move the robot forward by the given distance at the given speed for or positive distance, or backwards for negative distance.
 
-        :param distance_mm: Distance to move in milimeters. If negative, the robot moves backwards.
-        :param speed_mmps: Movement speed at milimeters per second. The sign is ignored.
+        :param distance_mm: Distance to move in millimeters. If negative, the robot moves backwards.
+        :param speed_mmps: Movement speed at millimeters per second. The sign is ignored.
         :See also: :py:meth:`rotate`, :py:meth:`set_velocity`
 
         .. code-block:: python
@@ -92,7 +92,7 @@ class LineFollower:
 
         Provided linear and angular velocity components, the robot moves at given velocity with a given duration. Robot stops after the duration passes.
 
-        :param linear_mmps: Linear velocity component in milimeters per second
+        :param linear_mmps: Linear velocity component in millimeters per second
         :param angular_degps: Angular velocity component in degrees per second
         :param duration: Movement duration in seconds, -1 for infinity.
         :See also: :py:meth:`move`, :py:meth:`rotate`
