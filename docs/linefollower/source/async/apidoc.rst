@@ -1,3 +1,5 @@
+.. _async_apidoc:
+
 Ari API reference
 ===================
 

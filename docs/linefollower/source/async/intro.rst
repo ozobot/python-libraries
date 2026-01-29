@@ -35,7 +35,7 @@ Controlling the robot
 The robot can be controlled by awaiting blocking coroutines that block until the given action is finished or :ref:`cancelled <cancelling>`. All actions need to be executed within the :ref:`connection context
 manager <connecting>`.
 
-A list of the supported actions with details can be found in the :ref:`API doc <datatypes>`, but to quickly begin programming, lets go through a few examples:
+A list of the supported actions with details can be found in the :ref:`API doc <async_apidoc>`, but to quickly begin programming, lets go through a few examples:
 
 .. code-block:: python
   :caption: Set lights
