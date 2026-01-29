@@ -5,5 +5,7 @@ subtrees:
     entries:
       - file: async/apidoc
   - file: sync/intro
+    entries:
+      - file: sync/apidoc
   - file: datatypes
   - file: exceptions
