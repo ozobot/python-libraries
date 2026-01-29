@@ -234,7 +234,7 @@ Any action can be cancelled, in most cases by `task cancellation <https://docs.p
 
 Sensor readouts
 ---------------
-The robots have sensors, so let's read it.
+The robots have sensors, so let's read them.
 
 Sensoric data are accessible through a mechanism we call Virtual Memory (VM). Robot firmware reads and processes the raw data and stores it to the VM for reading. Its
 representation is available as :py:attr:`ozobot.evo.Evo.data` and :py:attr:`ozobot.ari.Ari.data` for Evo and Ari respectivelly. Structures accessible through this property
