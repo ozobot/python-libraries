@@ -338,6 +338,6 @@ class SyncLineFollower:
         .. code-block:: python
 
             # make the robot rotate right on the current intersection, but do not start line following
-            robot.reorient_to_line(Direction.RIGHT)
+            robot.face_line_direction(Direction.RIGHT)
         """
         await self._linefollower.face_line_direction(direction)

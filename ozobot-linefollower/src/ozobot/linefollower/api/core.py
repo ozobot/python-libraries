@@ -435,7 +435,7 @@ class LineFollower:
         .. code-block:: python
 
             # make the robot rotate right on the current intersection, but do not start line following
-            await robot.reorient_to_line(Direction.RIGHT)
+            await robot.face_line_direction(Direction.RIGHT)
         """
 
         logger.debug("Facing line direction", direTction=direction)
