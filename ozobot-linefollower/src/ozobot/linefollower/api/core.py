@@ -98,8 +98,8 @@ class LineFollower:
         :See also: :py:meth:`move`, :py:meth:`rotate`
 
         .. note::
-            Although bad practice, the `duration_s` parameter is here for ergonomic reasons. If you want to follow asyncio idioms, you can use such as :ref:`timeouts <https://docs.python.org/3/library/asyncio-task.html#timeouts>`_ or
-            :ref:`tasks <https://docs.python.org/3/library/asyncio-task.html#creating-tasks>`_, you can use `duration_s=-1` for an infinite duration.
+            Although bad practice, the `duration_s` parameter is here for ergonomic reasons. If you want to follow asyncio idioms, you can use such as `timeouts <https://docs.python.org/3/library/asyncio-task.html#timeouts>` or
+            `tasks <https://docs.python.org/3/library/asyncio-task.html#creating-tasks>`_, you can use `duration_s=-1` for an infinite duration.
 
 
         .. code-block:: python
