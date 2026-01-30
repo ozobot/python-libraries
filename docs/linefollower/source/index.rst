@@ -6,6 +6,9 @@
 Ari & Evo Python API
 ====================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+Welcome to the Ari & Evo Python API documentation. This library provides interfaces to control Ozobot's Ari and Evo robots.
+
+There are two main ways to use this library:
+
+*   **Synchronous API**: Designed for beginners or simple scripts. It uses blocking calls and hides the complexity of concurrency. See :ref:`sync_evo` for more details.
+*   **Asynchronous API**: Recommended for advanced users and complex applications. It is built on Python's ``asyncio`` and allows for concurrency, cancellation, and advanced sensor monitoring. See :ref:`async_evo` for more details.
