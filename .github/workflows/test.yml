@@ -51,5 +51,6 @@ jobs:
         uv run \
           --all-packages \
           --all-extras \
+          --all-groups \
           --frozen \
           pytest -vv
