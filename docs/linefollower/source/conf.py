@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.append(str(Path("_ext").resolve()))
 
 project = "Ari & Evo"
-copyright = "2026, Ondrej Novak"
+copyright = "2026, Ozo EDU, Inc."
 author = "Ondrej Novak"
 
 # -- General configuration ---------------------------------------------------
