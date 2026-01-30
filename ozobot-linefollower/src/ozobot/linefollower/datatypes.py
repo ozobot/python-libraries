@@ -173,7 +173,7 @@ class LEDMask(enum.Flag):
     LED selector mask.
 
     Can be combined into a broader mask by using union operator:
-    .. codeblock::
+    .. code-block::
 
         # select front center
         mask_c = LEDMask.FRONT_CENTER
@@ -202,7 +202,7 @@ class Direction(enum.Flag):
     Direction.
 
     Can be combined into a broader direction set by using union operator:
-    .. codeblock::
+    .. code-block::
 
         # select front center
         mask_c = LEDMask.FRONT_CENTER
