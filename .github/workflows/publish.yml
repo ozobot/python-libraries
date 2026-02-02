@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "ozobot-*-v*"
+      - "docs-v*"
 
 jobs:
   build:
@@ -31,37 +32,98 @@ jobs:
         name: python-package-distributions
         path: dist/
 
+  build-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: "latest"
+        python-version: "3.13"
+         
+    - name: Build docs
+      run: |
+        uv run \
+            --all-extras \
+            --all-groups \
+            --all-packages \
+          make html \
+            -C docs/linefollower \
+            SPHINXOPTS="--fail-on-warning" \
+            BUILDDIR="${{ runner.temp }}/docs-dist-build/linefollower"
+
+        mkdir -p "${{ runner.temp }}/docs-dist-build"
+        mkdir -p "${{ runner.temp }}/docs-dist"
+
+        mv "${{ runner.temp }}/docs-dist-build/linefollower/html" "${{ runner.temp }}/docs-dist/linefollower"
+
+    - name: Upload github artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: docs-distribution
+        if-no-files-found: error
+        path: ${{ runner.temp }}/docs-dist/**/*
+
+
   check-tag:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     outputs:
-      has-release-tag: ${{ steps.check.outputs.has-release-tag }}
-      has-tag: ${{ steps.check.outputs.has-tag }}
+      publosh-release: ${{ steps.check.outputs.publish-release }}
+      publish-rc: ${{ steps.check.outputs.publish-rc }}
+      publish-docs: ${{ steps.check.outputs.publish-docs }}
       package-name: ${{ steps.check.outputs.package-name }}
     steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: "latest"
+      
     - id: check
       run: |
         ref="${{ github.ref_name }}"
-        if   [[ "$ref" =~ ^([a-zA-Z0-9_-]+)-v([0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+)$ ]]; then
-          echo "has-release-tag=false" >> $GITHUB_OUTPUT
-          echo "has-tag=true" >> $GITHUB_OUTPUT
+        if   [[ "$ref" =~ ^docs-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+          echo "publish-docs=true" >> $GITHUB_OUTPUT
+          echo "publish-release=false" >> $GITHUB_OUTPUT
+          echo "publish-rc=false" >> $GITHUB_OUTPUT
+        elif [[ "$ref" =~ ^([a-zA-Z0-9_-]+)-v([0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+)$ ]]; then
+          echo "publish-docs=true" >> $GITHUB_OUTPUT
+          echo "publish-release=false" >> $GITHUB_OUTPUT
+          echo "publish-rc=true" >> $GITHUB_OUTPUT
           package_name="${BASH_REMATCH[1]}"
         elif [[ "$ref" =~ ^([a-zA-Z0-9_-]+)-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-          echo "has-release-tag=true" >> $GITHUB_OUTPUT
-          echo "has-tag=true" >> $GITHUB_OUTPUT
+          echo "publish-docs=true" >> $GITHUB_OUTPUT
+          echo "publish-release=true" >> $GITHUB_OUTPUT
+          echo "publish-rc=true" >> $GITHUB_OUTPUT
           package_name="${BASH_REMATCH[1]}"
         else
-          echo "has-tag=false" >> $GITHUB_OUTPUT
-          echo "has-release-tag=false" >> $GITHUB_OUTPUT
+          echo "publish-docs=false" >> $GITHUB_OUTPUT
+          echo "publish-release=false" >> $GITHUB_OUTPUT
+          echo "publish-rc=false" >> $GITHUB_OUTPUT
           echo "Unsupported tag format" 1&>2
           exit 1
         fi
 
-        echo "package-name=$package_name" >> $GITHUB_OUTPUT
+        if [[ ! -z "$package_name" ]]; then
+          uv export --package "$package_name" --quiet > /dev/null
+          package_exists=$?
+          if [ "$package_exists" -ne "0" ]; then
+            echo "Package not found: $package_name" 1&>2
+            exit 1
+          fi
+          
+          echo "package-name=$package_name" >> $GITHUB_OUTPUT
+        fi
+
 
   publish-to-testpypi:
     needs: [build, check-tag]
-    if: needs.check-tag.outputs.has-tag == 'true'
+    if: needs.check-tag.outputs.publish-rc == 'true'
     
     name: "${{ needs.check-tag.outputs.package-name }}: publish to TestPyPI"
     runs-on: ubuntu-latest
@@ -84,9 +146,10 @@ jobs:
       with:
         repository-url: https://test.pypi.org/legacy/
         verbose: true
+
   publish-to-pypi:
     needs: [build, check-tag]
-    if: needs.check-tag.outputs.has-release-tag == 'true'
+    if: needs.check-tag.outputs.publish-release == 'true'
     
     name: "${{ needs.check-tag.outputs.package-name }}: publish to PyPI"
     runs-on: ubuntu-latest
@@ -108,3 +171,33 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         verbose: true
+
+  publish-docs:
+    needs: [build-docs, check-tag]
+    if: needs.check-tag.outputs.publish-docs == 'true'
+
+    name: "Publish docs"
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+    - name: Download the docs dist
+      uses: actions/download-artifact@v4
+      with:
+        name: docs-distribution
+        path: docs-dist/
+
+    - id: auth
+      uses: google-github-actions/auth@v3
+      with:
+        workload_identity_provider: projects/489139632542/locations/global/workloadIdentityPools/github-actions-pool/providers/github
+        service_account: docs-editor-869@beta-ozo-com-3891.iam.gserviceaccount.com
+
+    - id: upload-folder
+      uses: google-github-actions/upload-cloud-storage@v3
+      with:
+        path: docs-dist/linefollower
+        destination: docs.ozobot.com
