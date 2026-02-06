@@ -478,13 +478,13 @@ class Types:
         """Enum type ErrorModuleIDs
                 Error signalization module identifier.
         Can attain one of:
-                Bluetooth, BrightnessControl, ControlProtocol, OzoVMLoadFromClassifiedColor, OzoVMProgramStreamLoader, OzoVMSystemCalls, Undefined, UnsupportedOperation, VirtualMachineTask"""
+                Bluetooth, BrightnessControl, ControlProtocol, OzoVMLoadFromColors, OzoVMProgramStreamLoader, OzoVMSystemCalls, Undefined, UnsupportedOperation, VirtualMachineTask"""
         data_width = enum.nonmember(1)
 
         Bluetooth = 4
         BrightnessControl = 8
         ControlProtocol = 9
-        OzoVMLoadFromClassifiedColor = 1
+        OzoVMLoadFromColors = 1
         OzoVMProgramStreamLoader = 0
         OzoVMSystemCalls = 2
         Undefined = 255
@@ -3960,6 +3960,123 @@ class Types:
         def expected_length(cls, source):
             return 5
 
+    class DifferentialGeometry:
+        """Struct type
+        Differential chassis geometry. It allows user to do some transformations like conversion from forward velocity to angular etc.
+
+        DifferentialGeometry(
+            axleTrack: S8_24,
+            ticksPerMeter: i32,
+            ticksPerRad: i32
+        )
+
+        Example JSON representation:
+        {
+            "axleTrack": 0.0,
+            "ticksPerMeter": 0,
+            "ticksPerRad": 0
+        }"""
+        data_width = 12
+
+        @classmethod
+        def get_data_width(cls) -> int:
+            return cls.data_width
+
+        def __init__(self, axleTrack, ticksPerMeter, ticksPerRad):
+            self.axleTrack = Types.S8_24(axleTrack)
+            self.ticksPerMeter = Types.i32(ticksPerMeter)
+            self.ticksPerRad = Types.i32(ticksPerRad)
+
+        def __repr__(self):
+            return f'DifferentialGeometry(axleTrack={self.axleTrack}, ticksPerMeter={self.ticksPerMeter}, ticksPerRad={self.ticksPerRad})'
+
+        def __eq__(self, other):
+            if type(self) is not type(other):
+                return False
+            return (self.axleTrack == other.axleTrack) and (self.ticksPerMeter == other.ticksPerMeter) and (self.ticksPerRad == other.ticksPerRad)
+
+        def __str__(self):
+            return f'<{repr(self)}>'
+
+        def serialize(self) -> bytes:
+            buffer = memoryview(bytearray(12))
+            buffer[0:4] = Types.S8_24.serialize(self.axleTrack)
+            buffer[4:8] = Types.i32.serialize(self.ticksPerMeter)
+            buffer[8:12] = Types.i32.serialize(self.ticksPerRad)
+            return bytes(buffer)
+
+        @classmethod
+        def deserialize(cls, data):
+            axleTrack = Types.S8_24.deserialize(data[0:4])
+            ticksPerMeter = Types.i32.deserialize(data[4:8])
+            ticksPerRad = Types.i32.deserialize(data[8:12])
+            return cls(axleTrack, ticksPerMeter, ticksPerRad)
+
+        @classmethod
+        def expected_length(cls, source):
+            return 12
+
+    class LineSensorGeometry:
+        """Struct type
+        Line sensor geometry.
+
+        LineSensorGeometry(
+            slitSize: S8_24,
+            slitCount: u32,
+            x: S8_24,
+            y: S8_24
+        )
+
+        Example JSON representation:
+        {
+            "slitSize": 0.0,
+            "slitCount": 0,
+            "x": 0.0,
+            "y": 0.0
+        }"""
+        data_width = 16
+
+        @classmethod
+        def get_data_width(cls) -> int:
+            return cls.data_width
+
+        def __init__(self, slitSize, slitCount, x, y):
+            self.slitSize = Types.S8_24(slitSize)
+            self.slitCount = Types.u32(slitCount)
+            self.x = Types.S8_24(x)
+            self.y = Types.S8_24(y)
+
+        def __repr__(self):
+            return f'LineSensorGeometry(slitSize={self.slitSize}, slitCount={self.slitCount}, x={self.x}, y={self.y})'
+
+        def __eq__(self, other):
+            if type(self) is not type(other):
+                return False
+            return (self.slitSize == other.slitSize) and (self.slitCount == other.slitCount) and (self.x == other.x) and (self.y == other.y)
+
+        def __str__(self):
+            return f'<{repr(self)}>'
+
+        def serialize(self) -> bytes:
+            buffer = memoryview(bytearray(16))
+            buffer[0:4] = Types.S8_24.serialize(self.slitSize)
+            buffer[4:8] = Types.u32.serialize(self.slitCount)
+            buffer[8:12] = Types.S8_24.serialize(self.x)
+            buffer[12:16] = Types.S8_24.serialize(self.y)
+            return bytes(buffer)
+
+        @classmethod
+        def deserialize(cls, data):
+            slitSize = Types.S8_24.deserialize(data[0:4])
+            slitCount = Types.u32.deserialize(data[4:8])
+            x = Types.S8_24.deserialize(data[8:12])
+            y = Types.S8_24.deserialize(data[12:16])
+            return cls(slitSize, slitCount, x, y)
+
+        @classmethod
+        def expected_length(cls, source):
+            return 16
+
 
 class PacketTypes:
 
@@ -4086,7 +4203,7 @@ class PacketTypes:
 
         def serialize(self) -> bytes:
             vla_data = serialize_array(self.data, Types.u8)
-            assert len(vla_data) == self.length
+            assert len(vla_data) == getattr(self, 'length')
             buffer = memoryview(bytearray(5+len(vla_data)))
             buffer[0:2] = Types.u16.serialize(self.message_id)
             buffer[2:3] = Types.IOResult.serialize(self.result)
@@ -4134,7 +4251,7 @@ class PacketTypes:
 
         def serialize(self) -> bytes:
             vla_data = serialize_array(self.data, Types.u8)
-            assert len(vla_data) == self.length
+            assert len(vla_data) == getattr(self, 'length')
             buffer = memoryview(bytearray(8+len(vla_data)))
             buffer[0:2] = Types.u16.serialize(self.message_id)
             buffer[2:6] = Types.addr_t.serialize(self.addr)
@@ -6421,6 +6538,12 @@ class VirtualMemory:
         type=Types.Button,
         address=196,
     )
+    watcherUpdateCounters = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.u8,
+        address=1024,
+    )
     deviceName = PropertyMetadata(
         is_readable=True,
         is_writable=True,
@@ -6672,6 +6795,18 @@ class VirtualMemory:
         is_writable=False,
         type=Types.BoardsConfiguration,
         address=65765,
+    )
+    chassisGeometry = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.DifferentialGeometry,
+        address=65770,
+    )
+    lineSensorGeometry = PropertyMetadata(
+        is_readable=True,
+        is_writable=False,
+        type=Types.LineSensorGeometry,
+        address=65782,
     )
     tasksInformation = PropertyMetadata(
         is_readable=True,
