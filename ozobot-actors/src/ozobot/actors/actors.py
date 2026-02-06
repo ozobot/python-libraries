@@ -12,12 +12,12 @@ from ozobot.common.exceptions import (
 
 @dataclass(frozen=True)
 class _Masked:
-    actor: typing.Any
+    name: str
 
 
 @dataclass(frozen=True)
 class _Selected:
-    actor: typing.Any
+    name: str
 
 
 class ActorDispatcher:
@@ -36,7 +36,7 @@ class ActorDispatcher:
             if name not in self._actors:
                 raise ActorNotFoundError(name)
 
-        actor_objects = [_Selected(self._actors[name]) for name in names]
+        actor_objects = [_Selected(name) for name in names]
         new_stack = tuple(reversed(actor_objects)) + self._stack.get()
         context_token = self._stack.set(new_stack)
 
@@ -54,7 +54,7 @@ class ActorDispatcher:
             if name not in self._actors:
                 raise ActorNotFoundError(name)
 
-        mask_objects = [_Masked(self._actors[name]) for name in names]
+        mask_objects = [_Masked(name) for name in names]
         new_stack = tuple(reversed(mask_objects)) + self._stack.get()
         context_token = self._stack.set(new_stack)
 
@@ -87,12 +87,13 @@ class ActorDispatcher:
 
     def _iterate_actors(self) -> typing.Iterator[typing.Any]:
         masked = set()
-        items_with_defaults = [*self._stack.get(), *[_Selected(a) for a in self._actors.values()]]
-        for item in items_with_defaults:
-            if isinstance(item, _Masked):
-                masked.add(item.actor)
-            elif item.actor not in masked:
-                yield item.actor
+        items_with_defaults = [*self._stack.get(), *[_Selected(a) for a in self._actors.keys()]]
+        for actor in items_with_defaults:
+            if actor.name in self._actors:
+                if isinstance(actor, _Masked):
+                    masked.add(actor.name)
+                elif actor.name not in masked:
+                    yield self._actors[actor.name]
 
     def _find_field_in_stack[U](self, _type: type[U], name: str) -> tuple[typing.Any, U]:
         for actor in self._iterate_actors():
