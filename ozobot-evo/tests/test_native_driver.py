@@ -89,14 +89,13 @@ async def test_line_navigation() -> None:
         LineNavigation=cmd_mock,
         get_next_request_id=lambda: sentinel.request_id,
     )
-    memory = AsyncMock()
-    driver = EvoNativeDriver(control, memory)
+    driver = EvoNativeDriver(control, Mock())
 
     await driver.line_navigation(Direction.LEFT, False)
     cmd_mock.assert_called_once_with(
         sentinel.request_id, Types.IntersectionDirection.Left, Types.LineNavigationAction.DoNotFollow
     )
-    memory.intersection_queue.write.assert_called_once_with(SampleWithoutTimestamp(Direction.LEFT | Direction.STRAIGHT))
+    assert driver.memory.intersection_queue.last == SampleWithoutTimestamp(Direction.LEFT | Direction.STRAIGHT)
 
 
 @pytest.mark.parametrize(
@@ -241,8 +240,8 @@ async def test_native_data_watcher() -> None:
         MemRead=cmd_mock,
     )
     property = Mock(type=Types.Battery)
-    watcher = Mock(watch=_watch)
-    da = NativeDataWatcher(control, property, watcher, lambda v: Sample(v.voltage, v.timestamp))
+    da = NativeDataWatcher(control, property, Mock(), lambda v: Sample(v.voltage, v.timestamp))
+    da._watcher = Mock(watch=_watch)
 
     # test watching
     async with da.watch() as container:
