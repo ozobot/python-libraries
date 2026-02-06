@@ -45,6 +45,21 @@ class _DummyClass:
         return self.field[::-1]
 
 
+class _DummyContextManager:
+    open: bool
+
+    def __init__(self, val: typing.Any) -> None:
+        self.open = False
+        self._val = val
+
+    async def __aenter__(self) -> typing.Any:
+        self.open = True
+        return self._val
+
+    async def __aexit__(self, *args) -> None:
+        self.open = False
+
+
 def test_dispatcher_get_property() -> None:
     dispatcher = ActorDispatcher()
     dispatcher.add("one", _ValueStore1("a"))
@@ -291,3 +306,46 @@ def test_global_actor_context() -> None:
     set_actor_dispatcher(ActorDispatcher())
     with pytest.raises(SuitableActorNotFoundError):
         context.dispatcher.call(Interface.something)
+
+
+async def test_dispatcher_connect() -> None:
+    dispatcher = ActorDispatcher()
+    handle = _DummyContextManager(1234)
+
+    assert not handle.open
+    async with dispatcher.connect("actor", handle) as val:
+        assert handle.open
+        assert val == 1234
+
+    assert not handle.open
+
+
+async def test_dispatcher_connect_cleanup() -> None:
+    dispatcher = ActorDispatcher()
+    handle1 = _DummyContextManager(_ValueStore1("A"))
+    handle2 = _DummyContextManager(_ValueStore1("B"))
+
+    async with dispatcher.connect("a1", handle1):
+        assert handle1.open
+
+        async with dispatcher.connect("a2", handle2):
+            assert handle2.open
+
+            with dispatcher.actor("a2"):
+                assert dispatcher.call(_ValueStore.get_val) == "B"
+
+        # call a2 after closing it
+        with pytest.raises(ActorNotFoundError):
+            with dispatcher.actor("a2"):
+                pass
+
+        # call a1 after closing a2
+        assert dispatcher.call(_ValueStore.get_val) == "A"
+
+    # call a1 after closing it
+    with pytest.raises(ActorNotFoundError):
+        with dispatcher.actor("a1"):
+            pass
+
+    assert not handle1.open
+    assert not handle2.open

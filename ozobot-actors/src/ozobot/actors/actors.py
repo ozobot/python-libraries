@@ -30,6 +30,21 @@ class ActorDispatcher:
             raise ActorAlreadyExistsError(name)
         self._actors[name] = actor
 
+    def _remove(self, name: str) -> None:
+        if name not in self._actors:
+            raise ActorNotFoundError(name)
+
+        self._actors.pop(name)
+
+    @contextlib.asynccontextmanager
+    async def connect[T](self, name: str, handle: contextlib.AbstractAsyncContextManager[T]) -> typing.AsyncIterator[T]:
+        async with handle as instance:
+            self.add(name, instance)
+            try:
+                yield instance
+            finally:
+                self._remove(name)
+
     @contextlib.contextmanager
     def actor(self, *names: str) -> typing.Iterator[None]:
         for name in names:
