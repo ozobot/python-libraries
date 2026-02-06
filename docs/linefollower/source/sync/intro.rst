@@ -15,15 +15,14 @@ Opening the connection
 ----------------------
 
 Connection to the robot can be open with :py:class:`ozobot.ari.SyncAriHandle` or :py:class:`ozobot.evo.SyncEvoHandle` for Ari or Evo respectively. These
-two classes accept connection selection filters on initialization and then provide a robot instance through a context manager
-provided by their `connect` methods, for example:
+two classes accept connection selection filters on initialization and then provide a robot instance through a context manager, for example:
 
 .. code-block:: python
   :linenos:
 
   from ozobot.ari import SyncAriHandle
 
-  with SyncAriHandle(id="ABC*").connect() as ari1, SyncAriHandle(name="Ari-CDEF").connect() as ari2:
+  with SyncAriHandle(id="ABC*") as ari1, SyncAriHandle(name="Ari-CDEF") as ari2:
     # you can use ari1 and ari2 here
 
 The specific filters depend on the robot, see the API documentation to learn more: :py:class:`ozobot.ari.SyncAriHandle` or :py:class:`ozobot.evo.SyncEvoHandle`.
@@ -43,7 +42,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
   from ozobot.evo import SyncEvoHandle
   from ozobot.linefollower import Colors, LEDMask, RawColor
 
-  with SyncEvoHandle(name="OzoEvo-ABC*").connect() as r:
+  with SyncEvoHandle(name="OzoEvo-ABC*") as r:
     # set all front LEDs red
     r.set_led(LEDMask.ALL_FRONT, Colors.RED)
     time.sleep(1)
@@ -78,7 +77,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
       r.move(100, 120)
       r.rotate(90, 120)
 
-  with SyncEvoHandle(name="OzoEvo-ABC*").connect() as r:
+  with SyncEvoHandle(name="OzoEvo-ABC*") as r:
     square_walk(r)
 
 
@@ -90,7 +89,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
   from ozobot.ari import SyncAriHandle
   from ozobot.linefollower import Colors, Direction
 
-  with SyncAriHandle(name="Ari-ABCD").connect() as r:
+  with SyncAriHandle(name="Ari-ABCD") as r:
     # the robot can play preloaded sounds ..
     r.play_audio("happy")
 
@@ -123,7 +122,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
       r.move(100, 120)
       r.rotate(90, 120)
 
-  with SyncAriHandle(name="Ari-ABCD").connect() as ari1, SyncAriHandle(name="Ari-EFGH").connect() as ari2, SyncEvoHandle(name="OzoEvo-XYZ*").connect() as evo1:
+  with SyncAriHandle(name="Ari-ABCD") as ari1, SyncAriHandle(name="Ari-EFGH") as ari2, SyncEvoHandle(name="OzoEvo-XYZ*") as evo1:
     # now we have three robots connected
     # let them do a square walk one by one
     square_walk(ari1)
@@ -147,7 +146,7 @@ For the synchronous API, the data can be read by simply calling the `read` metho
 
   from ozobot.evo import SyncEvoHandle
 
-  with SyncEvoHandle(name="OzoEvo-ABC*").connect() as r:
+  with SyncEvoHandle(name="OzoEvo-ABC*") as r:
     sample = r.data.obstacle_front_left.read()
     print(sample.value, sample.timestamp)
 

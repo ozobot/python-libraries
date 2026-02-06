@@ -40,7 +40,7 @@ dispatcher = actors.ActorDispatcher()
 actors.set_actor_dispatcher(dispatcher)
 
 async def main() -> None:
-  async with EvoHandle(name="OzoEvo-1234abcd").connect() as e1, EvoHandle(name="Ari-ABCD").connect() as a1:
+  async with EvoHandle(name="OzoEvo-1234abcd") as e1, EvoHandle(name="Ari-ABCD") as a1:
     dispatcher.add("Evo_1", e1)
     dispatcher.add("Ari_1", a1)
 

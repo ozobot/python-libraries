@@ -21,7 +21,7 @@ async def monitor(it):
 
 
 async def main():
-  async with EvoHandle(id="ABCDE*").connect() as evo:
+  async with EvoHandle(id="ABCDE*") as evo:
     await evo.move(100, 50)
     await evo.rotate(180, 90)
 

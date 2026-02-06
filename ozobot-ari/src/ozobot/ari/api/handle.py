@@ -1,8 +1,8 @@
 import contextlib
 import typing
-from dataclasses import dataclass
+from types import TracebackType
 
-from ozobot.ari.driver import get_driver
+from ozobot.ari.driver import AriDriver, get_driver
 from ozobot.common.sync import as_sync_context_manager
 from ozobot.linefollower.api.handle import BaseHandle
 
@@ -10,43 +10,72 @@ from .core import Ari
 from .sync import SyncAri
 
 
-@dataclass(frozen=True, kw_only=True)
 class BaseAriHandle(BaseHandle):
-    connection_key: str | None = None
-    """
-    Connection key from the Ari's screen.
+    def __init__(self, *, connection_key: str | None = None, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._connection_key = connection_key
 
-    If this field is set, a connection is open to the specified robot through WiFi (WebRTC). No BLE communication is done.
+    @property
+    def connection_key(self) -> str | None:
+        """
+        Connection key from the Ari's screen.
 
-    .. warning::
-        If this field is set, all the other fields are ignored. 
-    """
+        If this field is set, a connection is open to the specified robot through WiFi (WebRTC). No BLE communication is done.
+
+        .. warning::
+            If this field is set, all the other fields are ignored.
+        """
+
+        return self._connection_key
 
 
-@dataclass(frozen=True, kw_only=True)
 class AriHandle(BaseAriHandle):
-    @contextlib.asynccontextmanager
-    async def connect(self) -> typing.AsyncIterator[Ari]:
-        """
-        Return :py:class:`Ari` connection context manager.
-        """
+    def __init__(
+        self,
+        *,
+        address: str | None = None,
+        id: str | None = None,
+        name: str | None = None,
+        connection_key: str | None = None,
+    ) -> None:
+        super().__init__(address=address, id=id, name=name, connection_key=connection_key)
+        self._exit_stack = contextlib.AsyncExitStack()
 
+    async def __aenter__(self) -> Ari:
         Driver = get_driver()
-        async with Driver.open(
-            address=self.address, id=self.id, name=self.name, connection_key=self.connection_key
-        ) as driver:
-            ari = Ari(driver)
-            yield ari
+        # the cast is essential for mypy to correctly infer `enter_async_context` return value
+        driver_context = typing.cast(
+            contextlib.AbstractAsyncContextManager[AriDriver],
+            Driver.open(address=self.address, id=self.id, name=self.name, connection_key=self.connection_key),
+        )
+
+        driver = await self._exit_stack.enter_async_context(driver_context)
+        return Ari(driver)
+
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
+    ) -> None:
+        await self._exit_stack.__aexit__(exc_type, exc_val, exc_tb)
 
 
-@dataclass(frozen=True, kw_only=True)
 class SyncAriHandle(BaseAriHandle):
-    @contextlib.contextmanager
-    def connect(self) -> typing.Iterator[SyncAri]:
-        """
-        Return :py:class:`SyncAri` connection context manager.
-        """
+    def __init__(
+        self,
+        *,
+        address: str | None = None,
+        id: str | None = None,
+        name: str | None = None,
+        connection_key: str | None = None,
+    ) -> None:
+        super().__init__(address=address, id=id, name=name, connection_key=connection_key)
+        self._exit_stack = contextlib.ExitStack()
 
-        cm_ari = AriHandle(**self.__dict__).connect()
-        with as_sync_context_manager(cm_ari) as ari:
-            yield SyncAri(ari)
+    def __enter__(self) -> SyncAri:
+        async_handle = AriHandle(address=self.address, id=self.id, name=self.name, connection_key=self.connection_key)
+        handle_context = self._exit_stack.enter_context(as_sync_context_manager(async_handle))
+        return SyncAri(handle_context)
+
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
+    ) -> None:
+        self._exit_stack.__exit__(exc_type, exc_val, exc_tb)

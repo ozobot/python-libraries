@@ -18,8 +18,7 @@ Opening the connection
 ----------------------
 
 Connection to the robot can be open with :py:class:`ozobot.ari.AriHandle` or :py:class:`ozobot.evo.EvoHandle` for Ari or Evo respectivelly. These
-two classes accept connection selection filters on initialization and then provide a robot instance through an asynchronnous context manager
-provided by their `connect` methods, for example:
+two classes accept connection selection filters on initialization and then provide a robot instance through an asynchronnous context manager, for example:
 
 .. code-block:: python
   :linenos:
@@ -28,7 +27,7 @@ provided by their `connect` methods, for example:
   from ozobot.ari import AriHandle
 
   async def main():
-    async with AriHandle(id="ABC*").connect() as ari1, AriHandle(name="Ari-CDEF").connect() as ari2:
+    async with AriHandle(id="ABC*") as ari1, AriHandle(name="Ari-CDEF") as ari2:
       # you can use ari1 and ari2 here
 
 
@@ -53,7 +52,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
   from ozobot.linefollower import Colors, LEDMask, RawColor
 
   async def main():
-    async with EvoHandle(name="OzoEvo-ABC*").connect() as r:
+    async with EvoHandle(name="OzoEvo-ABC*") as r:
       # set all front LEDs red
       await r.set_led(LEDMask.ALL_FRONT, Colors.RED)
       await asyncio.sleep(1)
@@ -87,7 +86,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
   from ozobot.evo import EvoHandle
 
   async def main():
-    async with EvoHandle(name="OzoEvo-ABC*").connect() as r:
+    async with EvoHandle(name="OzoEvo-ABC*") as r:
       for n in range(4):
         await r.move(100, 120)
         await r.rotate(90, 120)
@@ -106,7 +105,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
 
 
   async def main():
-    async with AriHandle(name="Ari-ABCD").connect() as r:
+    async with AriHandle(name="Ari-ABCD") as r:
       # the robot can play preloaded sounds ..
       await r.play_audio("happy")
 
@@ -139,7 +138,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
 
 
   async def main():
-    async with AriHandle(name="Ari-ABCD").connect() as ari1, AriHandle(name="Ari-EFGH").connect() as ari2, EvoHandle(name="OzoEvo-XYZ*") as evo1:
+    async with AriHandle(name="Ari-ABCD") as ari1, AriHandle(name="Ari-EFGH") as ari2, EvoHandle(name="OzoEvo-XYZ*") as evo1:
       # now we have three robots connected
       # let them do a square walk one by one
       await square_walk(ari1)
@@ -182,7 +181,7 @@ Any action can be cancelled, in most cases by `task cancellation <https://docs.p
   from ozobot.evo import EvoHandle
 
   async def main():
-    async with EvoHandle(name="OzoEvo-ABC*").connect() as r:
+    async with EvoHandle(name="OzoEvo-ABC*") as r:
       try:
         async with asyncio.timeout(10):  # let it walk for 10 seconds
           while True:
@@ -207,7 +206,7 @@ Any action can be cancelled, in most cases by `task cancellation <https://docs.p
   from ozobot.linefollower import Colors, LEDMask
 
   async def main():
-    async with EvoHandle(name="OzoEvo-ABC*").connect() as r:
+    async with EvoHandle(name="OzoEvo-ABC*") as r:
       t = asyncio.create_task(flashing(r))
       await square_walk(r)
       t.cancel()
@@ -251,7 +250,7 @@ relevant object which looks into the VM and returns the current value.
   from ozobot.evo import EvoHandle
 
   async def main():
-    async with EvoHandle(name="OzoEvo-ABC*").connect() as r:
+    async with EvoHandle(name="OzoEvo-ABC*") as r:
       sample = await r.data.obstacle_front_left.read()
       print(sample.value, sample.timestamp)
 
@@ -270,7 +269,7 @@ all the sampled sensoric data. The sampling is stopped when the context manager 
   from ozobot.evo import EvoHandle
 
   async def main():
-    async with EvoHandle(name="OzoEvo-ABC*").connect() as r:
+    async with EvoHandle(name="OzoEvo-ABC*") as r:
       await move_until_obstacle(r)      
 
   async def move_until_obstacle(r):

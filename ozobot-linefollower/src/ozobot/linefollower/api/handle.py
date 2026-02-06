@@ -1,36 +1,42 @@
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True, kw_only=True)
 class BaseHandle:
     """
     Factory class for obtaining robot connection.
 
-    The instance of this class holds connection filters that describe which robot to connect to. If multiple selectors are
-    specified, everyone has to match the same robot. Selector that are not defined (or set to None) are ignored.
+    Instance of this class can be used as a context manager to open a connection to robot given by the connection filters given on initialization. If multiple selectors are
+    specified, every has to match to select the robot. Selectors that are not defined (or set to None) are ignored.
 
-    The native Python library only supports WebRTC transport. BLE is only used for scanning and acquiring the connection key.
-
-    Only :py:attr:`name` selector is supported in Web Python.
+    .. note::
+        The behavior is platform specific and only :py:attr:`name` selector is supported in the web Ozobot Editor.
     """
 
-    address: str | None = None
-    """
-    BLE MAC address of the robot.
+    def __init__(self, *, address: str | None = None, id: str | None = None, name: str | None = None) -> None:
+        self._address = address
+        self._id = id
+        self._name = name
 
-    Accepts wildmark '*' character that matches any string.
-    """
+    @property
+    def address(self) -> str | None:
+        """
+        BLE MAC address of the robot.
 
-    id: str | None = None
-    """
-    Robot ID.
+        Accepts wildmark '*' character that matches any string.
+        """
+        return self._address
 
-    Accepts wildmark '*' character that matches any string.
-    """
+    @property
+    def id(self) -> str | None:
+        """
+        Robot ID.
 
-    name: str | None = None
-    """
-    Robot BLE name.
+        Accepts wildmark '*' character that matches any string.
+        """
+        return self._id
 
-    Accepts wildmark '*' character that matches any string.
-    """
+    @property
+    def name(self) -> str | None:
+        """
+        Robot BLE name.
+
+        Accepts wildmark '*' character that matches any string.
+        """
+        return self._name

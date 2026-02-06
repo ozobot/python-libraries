@@ -29,7 +29,7 @@ actors.set_actor_dispatcher(dispatcher)
 
 
 async def main():
-    async with handle.connect() as r, BrowserTerminal() as term:
+    async with handle as r, BrowserTerminal() as term:
         dispatcher.add(name, r)
         dispatcher.add("BROWSER_TERMINAL", term)
 

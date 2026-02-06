@@ -11,7 +11,7 @@ handle = SyncAriHandle(name=name) if name.startswith("Ari") else SyncEvoHandle(n
 
 
 def main():
-    with handle.connect() as r:
+    with handle as r:
         # motion(r)
         # line(r)
         # led(r)

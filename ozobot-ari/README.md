@@ -21,7 +21,7 @@ async def monitor(it):
 
 
 async def main():
-  async with AriHandle(id="ABCDE*").connect() as ari:
+  async with AriHandle(id="ABCDE*") as ari:
     await ari.move(100, 50)
     await ari.rotate(180, 90)
 

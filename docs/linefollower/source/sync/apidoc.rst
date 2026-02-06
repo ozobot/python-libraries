@@ -8,10 +8,6 @@ Ari synchronnous API reference
 	:inherited-members:
 	:exclude-members: connect
 
-	.. overwrite connect because sphinx does not seem to handle contextlib.contextmanager correctly 
-
-	.. automethod:: connect() -> typing.ContextManager[SyncAri]
-
 .. autoclass:: ozobot.ari.SyncAri
 	:members:
 	:inherited-members:
@@ -28,10 +24,6 @@ Evo synchronnous API reference
 	:members:
 	:inherited-members:
 	:exclude-members: connect
-
-	.. overwrite connect because sphinx does not seem to handle contextlib.contextmanager correctly 
-
-	.. automethod:: connect() -> typing.ContextManager[SyncEvo]
 
 .. autoclass:: ozobot.evo.SyncEvo
 	:members:
