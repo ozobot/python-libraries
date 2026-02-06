@@ -33,7 +33,7 @@ async def main():
     await evo.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER, ClassifiedColor.RED)
 
     await evo.play_sound("happy")
-    await evo.emit_tone("A", 4, 1, 1)
+    await evo.play_tone("A", 4, 1, 1)
 
     await evo.follow_line(Direction.STRAIGHT)
     intersection = await evo.data.intersection.read()

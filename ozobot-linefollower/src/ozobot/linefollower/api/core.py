@@ -119,46 +119,46 @@ class LineFollower:
             int(duration_s * 1000),
         )
 
-    async def emit_tone(self, frequency_hz: int, duration_s: float, volume_percent: int) -> None:
+    async def play_tone(self, frequency_hz: int, duration_s: float, volume_percent: int) -> None:
         """
-        Emit sound defined by frequency.
+        Play sound defined by frequency.
 
-        Given a frequency and a duration, emit sound.
+        Given a frequency and a duration, play sound.
 
         :param frequency_hz: Sound frequency in Hertz
         :param duration_s: Sound duration
         :param volume_percent: Sound volume in percent (0 - 100)
-        :See also: :py:meth:`emit_note`, :py:meth:`emit_midi`
+        :See also: :py:meth:`play_note`, :py:meth:`play_midi`
 
         .. code-block:: python
 
-            # emit 440 Hz (A4) for one second
-            await robot.emit_tone(440, 1, 50)
+            # play 440 Hz (A4) for one second
+            await robot.play_tone(440, 1, 50)
         """
 
-        logger.debug("Emitting tone", frequency=frequency_hz, duration=duration_s, volume=volume_percent)
+        logger.debug("Playing tone", frequency=frequency_hz, duration=duration_s, volume=volume_percent)
         await self._driver.play_tone(
             frequency_hz,
             int(duration_s * 1000),
             int(volume_percent),
         )
 
-    async def emit_note(self, note: TNote, octave: int, duration_s: float, volume_percent: int) -> None:
+    async def play_note(self, note: TNote, octave: int, duration_s: float, volume_percent: int) -> None:
         """
-        Emit sound defined by note and octave.
+        play sound defined by note and octave.
 
-        Given a note, octave and a duration, emit sound.
+        Given a note, octave and a duration, play sound.
 
         :param note: String containing the note in capital letters with sharp, such as A or F#
         :param octave: Sound octave
         :param duration_s: Sound duration
         :param volume_percent: Sound volume in percent (0 - 100)
-        :See also: :py:meth:`emit_tone`, :py:meth:`emit_midi`
+        :See also: :py:meth:`play_tone`, :py:meth:`play_midi`
 
         .. code-block:: python
 
-            # emit A4 (440Hz) for one second
-            await robot.emit_note("A", 4, 1, 50)
+            # play A4 (440Hz) for one second
+            await robot.play_note("A", 4, 1, 50)
         """
 
         notes = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
@@ -168,31 +168,31 @@ class LineFollower:
             raise ValueError(f"Invalid note: {note_idx}")
 
         frequency_hz = self._convert_note_to_frequency(octave, note_idx)
-        await self.emit_tone(
+        await self.play_tone(
             frequency_hz,
             duration_s,
             volume_percent,
         )
 
-    async def emit_midi(self, midi_number: int, duration_s: float, volume_percent: int):
+    async def play_midi(self, midi_number: int, duration_s: float, volume_percent: int):
         """
-        Emit sound defined its midi number.
+        Play sound defined its midi number.
 
-        Given a midi number and a duration, emit sound.
+        Given a midi number and a duration, play sound.
 
         :param midi_number: Tone midi number
         :param duration_s: Sound duration
         :param volume_percent: Sound volume in percent (0 - 100)
-        :See also: :py:meth:`emit_tone`, :py:meth:`emit_note`
+        :See also: :py:meth:`play_tone`, :py:meth:`play_note`
 
         .. code-block:: python
 
-            # emit midi 69 (A4, 440Hz) for one second
-            await robot.emit_note(69, 1, 50)
+            # play midi 69 (A4, 440Hz) for one second
+            await robot.play_note(69, 1, 50)
         """
 
         frequency_hz = LineFollower._convert_key_to_frequency(midi_number, reference=69)
-        await self.emit_tone(
+        await self.play_tone(
             frequency_hz,
             duration_s,
             volume_percent,

@@ -110,62 +110,62 @@ class SyncLineFollower:
         await self._linefollower.set_velocity(linear_mps, angular_degps, duration_s)
 
     @as_sync
-    async def emit_tone(self, frequency_hz: int, duration_s: float, volume_percent: int) -> None:
+    async def play_tone(self, frequency_hz: int, duration_s: float, volume_percent: int) -> None:
         """
-        Emit sound defined by frequency.
+        Play sound defined by frequency.
 
-        Given a frequency and a duration, emit sound.
+        Given a frequency and a duration, play sound.
 
         :param frequency_hz: Sound frequency in Hertz
         :param duration_s: Sound duration
         :param volume_percent: Sound volume in percent (0 - 100)
-        :See also: :py:meth:`emit_note`, :py:meth:`emit_midi`
+        :See also: :py:meth:`play_note`, :py:meth:`play_midi`
 
         .. code-block:: python
 
-            # emit 440 Hz (A4) for one second
-            robot.emit_tone(440, 1, 50)
+            # play 440 Hz (A4) for one second
+            robot.play_tone(440, 1, 50)
         """
-        await self._linefollower.emit_tone(frequency_hz, duration_s, volume_percent)
+        await self._linefollower.play_tone(frequency_hz, duration_s, volume_percent)
 
     @as_sync
-    async def emit_midi(self, midi_number: int, duration_s: float, volume_percent: int) -> None:
+    async def play_midi(self, midi_number: int, duration_s: float, volume_percent: int) -> None:
         """
-        Emit sound defined its midi number.
+        Play sound defined its midi number.
 
-        Given a midi number and a duration, emit sound.
+        Given a midi number and a duration, play sound.
 
         :param midi_number: Tone midi number
         :param duration_s: Sound duration
         :param volume_percent: Sound volume in percent (0 - 100)
-        :See also: :py:meth:`emit_tone`, :py:meth:`emit_note`
+        :See also: :py:meth:`play_tone`, :py:meth:`play_note`
 
         .. code-block:: python
 
-            # emit midi 69 (A4, 440Hz) for one second
-            robot.emit_note(69, 1, 50)
+            # play midi 69 (A4, 440Hz) for one second
+            robot.play_note(69, 1, 50)
         """
-        await self._linefollower.emit_midi(midi_number, duration_s, volume_percent)
+        await self._linefollower.play_midi(midi_number, duration_s, volume_percent)
 
     @as_sync
-    async def emit_note(self, note: TNote, octave: int, duration_s: float, volume_percent: int) -> None:
+    async def play_note(self, note: TNote, octave: int, duration_s: float, volume_percent: int) -> None:
         """
-        Emit sound defined by note and octave.
+        Play sound defined by note and octave.
 
-        Given a note, octave and a duration, emit sound.
+        Given a note, octave and a duration, play sound.
 
         :param note: String containing the note in capital letters with sharp, such as A or F#
         :param octave: Sound octave
         :param duration_s: Sound duration
         :param volume_percent: Sound volume in percent (0 - 100)
-        :See also: :py:meth:`emit_tone`, :py:meth:`emit_midi`
+        :See also: :py:meth:`play_tone`, :py:meth:`play_midi`
 
         .. code-block:: python
 
-            # emit A4 (440Hz) for one second
-            robot.emit_note("A", 4, 1, 50)
+            # play A4 (440Hz) for one second
+            robot.play_note("A", 4, 1, 50)
         """
-        await self._linefollower.emit_note(note, octave, duration_s, volume_percent)
+        await self._linefollower.play_note(note, octave, duration_s, volume_percent)
 
     @as_sync
     async def play_audio(self, name: TAudio) -> None:

@@ -59,16 +59,16 @@ async def set_velocity(linear_mmps: float, angular_degps: float, duration_s: flo
     return await context.dispatcher.acall(LineFollower.set_velocity, linear_mmps, angular_degps, duration_s)
 
 
-async def emit_tone(frequency_hz: int, duration_s: float, volume_percent: int) -> None:
-    return await context.dispatcher.acall(LineFollower.emit_tone, frequency_hz, duration_s, volume_percent)
+async def play_tone(frequency_hz: int, duration_s: float, volume_percent: int) -> None:
+    return await context.dispatcher.acall(LineFollower.play_tone, frequency_hz, duration_s, volume_percent)
 
 
-async def emit_note(note: TNote, octave: int, duration_s: float, volume_percent: int) -> None:
-    return await context.dispatcher.acall(LineFollower.emit_note, note, octave, duration_s, volume_percent)
+async def play_note(note: TNote, octave: int, duration_s: float, volume_percent: int) -> None:
+    return await context.dispatcher.acall(LineFollower.play_note, note, octave, duration_s, volume_percent)
 
 
-async def emit_midi(midi_number: int, duration_s: float, volume_percent: int) -> None:
-    return await context.dispatcher.call(LineFollower.emit_midi, midi_number, duration_s, volume_percent)
+async def play_midi(midi_number: int, duration_s: float, volume_percent: int) -> None:
+    return await context.dispatcher.call(LineFollower.play_midi, midi_number, duration_s, volume_percent)
 
 
 async def play_audio(name: TAudio) -> None:

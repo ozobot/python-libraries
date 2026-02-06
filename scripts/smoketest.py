@@ -3,13 +3,13 @@ import asyncio
 from ozobot import actors
 from ozobot.actors.linefollower import (
     data,
-    emit_midi,
-    emit_note,
-    emit_tone,
     face_line_direction,
     follow_line,
     move,
     play_audio,
+    play_midi,
+    play_note,
+    play_tone,
     rotate,
     set_led,
 )
@@ -51,11 +51,11 @@ async def motion():
 
 async def sound():
     await play_audio("happy")
-    await emit_note("A", 4, 1, 1)
+    await play_note("A", 4, 1, 1)
     await asyncio.sleep(0.5)
-    await emit_tone(440, 1, 1)
+    await play_tone(440, 1, 1)
     await asyncio.sleep(0.5)
-    await emit_midi(69, 1, 1)
+    await play_midi(69, 1, 1)
 
 
 async def led():

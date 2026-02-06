@@ -18,10 +18,10 @@ from ozobot.linefollower.exceptions import InvalidClassifiedColorError
         ["C#", 5, 554],
     ],
 )
-async def test_emit_note(note: typing.Any, octave: int, expected_frequency: int) -> None:
+async def test_play_note(note: typing.Any, octave: int, expected_frequency: int) -> None:
     driver = AsyncMock()
     lf = LineFollower(driver)
-    await lf.emit_note(note, octave, 0, 0)
+    await lf.play_note(note, octave, 0, 0)
 
     driver.play_tone.assert_called_once_with(expected_frequency, 0, 0)
 
@@ -37,10 +37,10 @@ async def test_emit_note(note: typing.Any, octave: int, expected_frequency: int)
         [73, 554],
     ],
 )
-async def test_emit_midi(midi_number: int, expected_frequency: int) -> None:
+async def test_play_midi(midi_number: int, expected_frequency: int) -> None:
     driver = AsyncMock()
     lf = LineFollower(driver)
-    await lf.emit_midi(midi_number, 0, 0)
+    await lf.play_midi(midi_number, 0, 0)
 
     driver.play_tone.assert_called_once_with(expected_frequency, 0, 0)
 
