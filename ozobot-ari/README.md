@@ -12,7 +12,7 @@ Interface for controlling Ozobot Ari.
 import asyncio
 import random
 from ozobot.ari import AriHandle, Ari
-from ozobot.linefollower import Colors, LEDMask, Direction
+from ozobot.linefollower import ClassifiedColor, LEDMask, Direction
 
 
 async def monitor(it):
@@ -29,8 +29,8 @@ async def main():
     await asyncio.sleep(2)
     velo_task.cancel()
 
-    await ari.set_led(LEDMask.FRONT_CENTER | LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, Colors.BLUE)
-    await ari.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER, Colors.RED)
+    await ari.set_led(LEDMask.FRONT_CENTER | LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, ClassifiedColor.BLUE)
+    await ari.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER, ClassifiedColor.RED)
 
     await ari.play_sound("happy")
     await ari.emit_tone("A", 4, 1, 1)

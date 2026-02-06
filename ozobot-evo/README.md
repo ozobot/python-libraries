@@ -12,7 +12,7 @@ Interface for controlling Ozobot Evo.
 import asyncio
 import random
 from ozobot.evo import EvoHandle, Evo
-from ozobot.linefollower import Colors, LEDMask, Direction
+from ozobot.linefollower import ClassifiedColor, LEDMask, Direction
 
 
 async def monitor(it):
@@ -29,8 +29,8 @@ async def main():
     await asyncio.sleep(2)
     velo_task.cancel()
 
-    await evo.set_led(LEDMask.FRONT_CENTER | LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, Colors.BLUE)
-    await evo.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER, Colors.RED)
+    await evo.set_led(LEDMask.FRONT_CENTER | LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, ClassifiedColor.BLUE)
+    await evo.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER, ClassifiedColor.RED)
 
     await evo.play_sound("happy")
     await evo.emit_tone("A", 4, 1, 1)
