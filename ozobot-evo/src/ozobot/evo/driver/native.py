@@ -11,7 +11,13 @@ from ozobot.evo.api.watchers import LineFollowerWatcher, WatcherSubscription
 from ozobot.evo.driver.responses import handle_events, handle_response
 from ozobot.evo.driver.shared import geometry
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
-from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue, buffered_iterator
+from ozobot.linefollower.api.data_access import (
+    DataWatcherProxy,
+    EventWatcher,
+    EventWatcherQueue,
+    WatcherOutputContainer,
+    WatcherOutputContainerRunner,
+)
 from ozobot.linefollower.datatypes import (
     Direction,
     LEDMask,
@@ -190,16 +196,15 @@ class NativeDataWatcher[T: _DeserializableWithTimestamp, U]:
         return await self._reader.read()
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[U]]:
-        async def _convert_iterator(it: typing.AsyncIterator[T]) -> typing.AsyncIterator[U]:
+    async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[U]]:
+        async def _convert_iterator(it: typing.AsyncIterator[T]) -> typing.AsyncGenerator[U, None]:
             async for data in it:
                 yield self._from_protocol(data)
 
-        async with (
-            self._watcher.watch() as unbuffered_reader,
-            buffered_iterator(_convert_iterator(unbuffered_reader)) as reader,
-        ):
-            yield reader
+        async with WatcherOutputContainerRunner[U]() as container_runner:
+            async with self._watcher.watch() as unbuffered_reader:
+                await container_runner.start(_convert_iterator(unbuffered_reader))
+                yield container_runner.output_container
 
 
 @contextlib.asynccontextmanager

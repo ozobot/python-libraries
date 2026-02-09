@@ -131,7 +131,8 @@ async def test_mem_watch_structure() -> None:
     with patch(_RPC_COROUTINE_MODULE_PATH, side_effect=_mock_rpc_coroutine) as mock_coro:
         driver = LineFollowerWebDriver(robot_name)
 
-        async with driver.memory.line_color.watch() as it:
+        async with driver.memory.line_color.watch() as container:
+            it = aiter(container)
             samples = [await anext(it) for _ in range(num_data)]
             data = [sample.value for sample in samples]
         assert len(data) == num_data
@@ -190,7 +191,8 @@ async def test_mem_watch_simple_type() -> None:
     with patch(_RPC_COROUTINE_MODULE_PATH, side_effect=_mock_rpc_coroutine) as mock_coro:
         driver = LineFollowerWebDriver(robot_name)
 
-        async with driver.memory.line_following_speed.watch() as it:
+        async with driver.memory.line_following_speed.watch() as container:
+            it = aiter(container)
             data = [await anext(it) for _ in range(num_data)]
         assert len(data) == num_data
         assert data == [100, 200, 300]

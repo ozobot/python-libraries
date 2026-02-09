@@ -259,7 +259,8 @@ async def test_native_data_watcher() -> None:
     da = NativeDataWatcher(control, property, watcher, lambda v: Sample(v.voltage, v.timestamp))
 
     # test watching
-    async with da.watch() as it:
+    async with da.watch() as container:
+        it = aiter(container)
         samples = [await anext(it) for _ in range(2)]
 
         assert all([isinstance(s, Sample) for s in samples])

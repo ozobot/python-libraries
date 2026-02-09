@@ -5,7 +5,7 @@ import typing
 import pydantic
 from loguru import logger
 from ozobot.ari.exceptions import MemoryReadUnsuccessfulError
-from ozobot.linefollower.api.data_access import buffered_iterator
+from ozobot.linefollower.api.data_access import WatcherOutputContainer, WatcherOutputContainerRunner
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample, SampleWithoutTimestamp
 from ozobot.web.browser import _rpcCoroutine
 
@@ -71,12 +71,13 @@ class WebDataAccessWatch[TProtoFrom: pydantic.BaseModel, TLib]:
         self._from_protocol = from_protocol
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[TLib]]:
-        unbuffered_reader = self._watch_iter()
-        async with buffered_iterator(unbuffered_reader) as reader:
-            yield reader
+    async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[TLib]]:
+        async with WatcherOutputContainerRunner[TLib]() as r:
+            it = self._watch_iter()
+            await r.start(it)
+            yield r.output_container
 
-    async def _watch_iter(self) -> typing.AsyncIterator[TLib]:
+    async def _watch_iter(self) -> typing.AsyncGenerator[TLib, None]:
         last_value: TProtoFrom | None = None
 
         while True:
@@ -129,7 +130,7 @@ class WebDataAccessReadWatch[TProtoFrom: pydantic.BaseModel, TLib]:
         self._read = WebDataAccessRead(rpc, property_name, response_type=response_type, from_protocol=from_protocol)
         self._watch = WebDataAccessWatch(rpc, property_name, response_type=response_type, from_protocol=from_protocol)
 
-    def watch(self) -> typing.AsyncContextManager[typing.AsyncIterator[TLib]]:
+    def watch(self) -> typing.AsyncContextManager[WatcherOutputContainer[TLib]]:
         return self._watch.watch()
 
     async def read(self) -> TLib:

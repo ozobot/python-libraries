@@ -410,7 +410,7 @@ class LineFollower:
         logger.debug("Following line", direction=direction)
         async with self.data.intersection.watch() as intersections:
             await self._driver.line_navigation(direction, follow=True)
-            intersection_sample = await anext(intersections)
+            intersection_sample = await anext(aiter(intersections))
 
         return intersection_sample.value
 

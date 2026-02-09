@@ -90,8 +90,8 @@ async def io():
 
 
 async def _watch(n, src):
-    async with src.watch() as it:
-        async for data in it:
+    async with src.watch() as cont:
+        async for data in aiter(cont):
             print(f"watch {n}: {data.value}")
 
 

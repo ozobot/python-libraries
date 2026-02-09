@@ -190,8 +190,8 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
         async with driver.memory.intersection.watch() as intersection_it, driver.memory.color_code.watch() as cc_it:
             await driver.line_navigation(Direction.LEFT, follow_bool)
 
-            assert await anext(intersection_it) == SampleWithoutTimestamp(Direction.BACKWARD)
-            assert await anext(cc_it) == SampleWithoutTimestamp(
+            assert await anext(aiter(intersection_it)) == SampleWithoutTimestamp(Direction.BACKWARD)
+            assert await anext(aiter(cc_it)) == SampleWithoutTimestamp(
                 ColorCode(colors=(ClassifiedColor.RED, ClassifiedColor.BLACK, ClassifiedColor.BLUE)),
             )
 
@@ -389,7 +389,8 @@ async def test_native_data_access_watch() -> None:
     with patch("ozobot.ari.driver.native.Query", query_cls):
         driver = AriNativeDriver(Mock())
 
-        async with driver.memory.line_color.watch() as it:
+        async with driver.memory.line_color.watch() as container:
+            it = aiter(container)
             notifications = [await anext(it) for _ in range(3)]
 
         assert notifications == [

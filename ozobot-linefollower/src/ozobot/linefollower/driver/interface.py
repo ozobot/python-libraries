@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from contextlib import AbstractAsyncContextManager
 from typing import Protocol, Self
 
+from ozobot.linefollower.api.data_access import WatcherOutputContainer
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     ColorCode,
@@ -45,7 +45,7 @@ class ReadableWritableRegion[T](ReadableRegion, Protocol):
 
 
 class WatchableRegion[T](Protocol):
-    def watch(self) -> AbstractAsyncContextManager[AsyncIterator[T]]:
+    def watch(self) -> AbstractAsyncContextManager[WatcherOutputContainer[T]]:
         """
         Watch for data changes.
 
@@ -53,15 +53,18 @@ class WatchableRegion[T](Protocol):
         all the changes will be read.
 
         The property is in fact an asynchronnous context manager which starts the monitoring on entering the context and
-        stops it on exiting the context. The context manager yields an asynchronnous iterator which is valid even after the context
-        has been closed.
+        stops it on exiting the context. The context manager yields a container that can be used as asynchronous iterator or
+        as object with :py:meth:`WatcherOutputContainer.collect` which returns a list of collected samples. The container is valid even after the context has been closed.
 
-        :return: Asynchronnous context manager yielding asynchronnous iterator on enter
+        :return: Asynchronnous context manager :py:class:`WatcherOutputContainer` on enter
 
         .. codeblock:: python
-            async with robot.data.example_region.watch() as it:
-                async for sample in it:
+            async with robot.data.example_region.watch() as container:
+                async for sample in aiter(container):
                     print(sample)
+
+            samples = container.collect()
+            print(samples)
         """
 
 

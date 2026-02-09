@@ -90,7 +90,7 @@ class WatcherSubscription[T: _Deserializable]:
         events: typing.AsyncIterator[PacketTypes.PacketEvent_WatcherDirty],
         allocations: list[_WatcherAllocation],
         allocation: _WatcherAllocation[T],
-    ) -> typing.AsyncGenerator[T]:
+    ) -> typing.AsyncGenerator[T, None]:
         logger.debug("finding offset", allocation=allocation, allocations=allocations)
         watcher_regions = list(filter(lambda e: e.watcher_id == allocation.watcher_id, allocations))
         preceding_regions = list(filter(lambda e: e.region_id < allocation.region_id, watcher_regions))

@@ -14,7 +14,7 @@ from ozobot.linefollower.datatypes import Sample
 class _Watcher[T](typing.Protocol):
     async def read(self) -> T: ...
 
-    def watch(self) -> contextlib.AbstractAsyncContextManager[typing.AsyncIterator[Sample[T]]]: ...
+    def watch(self) -> contextlib.AbstractAsyncContextManager[WatcherOutputContainer[Sample[T]]]: ...
 
 
 class EventWatcherQueue[T]:
@@ -37,14 +37,16 @@ class EventWatcher[T]:
         self._queue = queue
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[T]]:
+    async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[T]]:
         with self._queue.output() as events:
 
-            async def _reader() -> typing.AsyncIterator[T]:
+            async def _reader() -> typing.AsyncGenerator[T, None]:
                 while True:
                     yield await events.get()
 
-            yield _reader()
+            async with WatcherOutputContainerRunner[T]() as container_runner:
+                await container_runner.start(_reader())
+                yield container_runner.output_container
 
 
 class DataWatcherProxy[T, U]:
@@ -62,14 +64,16 @@ class DataWatcherProxy[T, U]:
         return self._convert(value)
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[U]]:
+    async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[U]]:
         async with self._watcher.watch() as reader:
 
-            async def _reader_converted() -> typing.AsyncIterator[U]:
+            async def _reader_converted() -> typing.AsyncGenerator[U, None]:
                 async for sample in reader:
                     yield self._convert(sample.value)
 
-            yield _reader_converted()
+            async with WatcherOutputContainerRunner[U]() as container_runner:
+                await container_runner.start(_reader_converted())
+                yield container_runner.output_container
 
 
 class DataReadConstant[T]:
@@ -157,27 +161,6 @@ class WatcherOutputContainer[T]:
     def __init__(self) -> None:
         self._buffer: list[T] = []
         self._data_pushed = asyncio.Condition()
-        self._closed = False
-
-    @classmethod
-    @contextlib.asynccontextmanager
-    async def open(self, data_source: typing.AsyncIterator[T]) -> typing.AsyncIterator[WatcherOutputContainer[T]]:
-        container = WatcherOutputContainer[T]()
-
-        async def _run() -> None:
-            try:
-                async for data in data_source:
-                    container._buffer.append(data)
-                    async with container._data_pushed:
-                        container._data_pushed.notify_all()
-            finally:
-                container._closed = True
-
-        task = asyncio.create_task(_run())
-        try:
-            yield container
-        finally:
-            await task
 
     def collect(self) -> list[T]:
         return list(self._buffer)
@@ -191,10 +174,46 @@ class WatcherOutputContainer[T]:
                     yield self._buffer[i]
                     i += 1
 
-                if self._closed:
-                    return
-
                 async with self._data_pushed:
                     await self._data_pushed.wait()
 
         return _data()
+
+    async def _push(self, data: T) -> None:
+        self._buffer.append(data)
+        async with self._data_pushed:
+            self._data_pushed.notify_all()
+
+
+class WatcherOutputContainerRunner[T]:
+    @property
+    def output_container(self) -> WatcherOutputContainer[T]:
+        return self._container
+
+    def __init__(self) -> None:
+        self._container = WatcherOutputContainer[T]()
+        self._task: asyncio.Task[None] | None = None
+        self._task_running = asyncio.Event()
+
+    async def __aenter__(self) -> WatcherOutputContainerRunner[T]:
+        return self
+
+    async def __aexit__(self, *args) -> None:
+        if self._task:
+            self._task.cancel()
+            await self._task
+
+    async def start(self, it: typing.AsyncGenerator[T, None]) -> None:
+        async def _run() -> None:
+            self._task_running.set()
+            while True:
+                try:
+                    data = await anext(it)
+                    await self._container._push(data)
+                except asyncio.CancelledError:
+                    await it.aclose()
+                except StopAsyncIteration:
+                    return
+
+        self._task = asyncio.create_task(_run())
+        await self._task_running.wait()

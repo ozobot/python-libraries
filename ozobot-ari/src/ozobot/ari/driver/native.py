@@ -21,7 +21,12 @@ from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.jsonrpc.executor import Executor, Query
-from ozobot.linefollower.api.data_access import EventWatcher, EventWatcherQueue, buffered_iterator
+from ozobot.linefollower.api.data_access import (
+    EventWatcher,
+    EventWatcherQueue,
+    WatcherOutputContainer,
+    WatcherOutputContainerRunner,
+)
 from ozobot.linefollower.datatypes import (
     ClassifiedColor,
     ColorCode,
@@ -194,19 +199,19 @@ class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAc
         self._request_id_counter = id_counter
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[TLib]]:
+    async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[TLib]]:
+        async def _convert_iterator(it: typing.AsyncIterator[memread.WatchNotification]) -> typing.AsyncGenerator[TLib]:
+            async for val in it:
+                yield self._convert_sample_from_protocol(val.notification)
+
         req = memread.WatchRequest(
             id=self._request_id_counter.get_next(),
             params=memread.MemReadRequestParams(segment=self._name),
         )
-        async with Query(req, methods.WATCH).execute(self._executor) as q:
-            unbuffered_reader = self._watch_iter(q.notifications)
-            async with buffered_iterator(unbuffered_reader) as reader:
-                yield reader
-
-    async def _watch_iter(self, iter: typing.AsyncIterator[memread.WatchNotification]) -> typing.AsyncIterator[TLib]:
-        async for val in iter:
-            yield self._convert_sample_from_protocol(val.notification)
+        async with WatcherOutputContainerRunner[TLib]() as container_runner:
+            async with Query(req, methods.WATCH).execute(self._executor) as q:
+                await container_runner.start(_convert_iterator(q.notifications))
+                yield container_runner.output_container
 
     def _convert_sample_from_protocol(self, val: MemReadResponseBody) -> TLib:
         if isinstance(val, self._type):
@@ -249,18 +254,20 @@ class NativeTimeOfFlightWatcher:
         self._request_id = request_id
 
     @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[typing.AsyncIterator[Sample[TimeOfFlight]]]:
+    async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[Sample[TimeOfFlight]]]:
         req = request.TimeOfFlightRequest(
             id=self._request_id.get_next(),
             params=request.TimeOfFlightRequestParams(),
         )
 
-        async with Query(req, methods.TIME_OF_FLIGHT).execute(self._executor) as q:
-            yield self._watch_iter(q.notifications)
+        async with WatcherOutputContainerRunner[Sample[TimeOfFlight]]() as container_runner:
+            async with Query(req, methods.TIME_OF_FLIGHT).execute(self._executor) as q:
+                await container_runner.start(self._watch_iter(q.notifications))
+                yield container_runner.output_container
 
     async def _watch_iter(
         self, iter: typing.AsyncIterator[notification.TimeOfFlightNotification]
-    ) -> typing.AsyncIterator[Sample[TimeOfFlight]]:
+    ) -> typing.AsyncGenerator[Sample[TimeOfFlight]]:
         async for val in iter:
             yield Sample(
                 conversions.time_of_flight_from_protocol(val.result),
