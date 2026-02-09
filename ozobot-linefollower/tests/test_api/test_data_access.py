@@ -3,13 +3,27 @@ import typing
 from dataclasses import dataclass
 
 import pytest
-from ozobot.linefollower.api.data_access import DataWatcherProxy, EventWatcher, EventWatcherQueue, buffered_iterator
+from ozobot.linefollower.api.data_access import (
+    DataWatcherProxy,
+    EventWatcher,
+    EventWatcherQueue,
+    WatcherOutputContainer,
+    buffered_iterator,
+)
 from ozobot.linefollower.datatypes import Sample
 
 
 class _ReadableEventWatcher[T](EventWatcher[Sample[T]]):
     async def read(self) -> T:
         return self._queue.last.value
+
+
+async def _aqueue_to_aiter[T](q: asyncio.Queue[T]) -> typing.AsyncIterator[T]:
+    while True:
+        try:
+            yield await q.get()
+        except asyncio.QueueShutDown:
+            return
 
 
 async def test_event_watcher() -> None:
@@ -91,3 +105,62 @@ async def test_buffered_iterator_infinite() -> None:
     async with buffered_iterator(_it()) as buffered_it:
         await asyncio.sleep(0.1)  # let the background task process the messages
     assert [v async for v in buffered_it] == list(range(2))
+
+
+async def test_watcher_container_aiter(subtests: pytest.Subtests) -> None:
+    q = asyncio.Queue[int]()
+    for d in range(3):
+        await q.put(d)
+
+    async with WatcherOutputContainer.open(_aqueue_to_aiter(q)) as c:
+        with subtests.test("Iterate on present data"):
+            it = aiter(c)
+            assert [await anext(it) for _ in range(3)] == list(range(3))
+
+        with subtests.test("Reiterate on present data"):
+            it2 = aiter(c)
+            assert [await anext(it2) for _ in range(3)] == list(range(3))
+
+        with subtests.test("Continue iteration and wait for new data"):
+            coro = typing.cast(
+                typing.Coroutine[None, None, int],  # we need to cast anext -> Awaitable to be accepted by create_task
+                anext(it),
+            )
+            task = asyncio.create_task(coro)
+            await asyncio.sleep(0.1)
+            await q.put(3)
+            assert await task == 3
+
+        q.shutdown()  # simulate watcher closes
+
+    with subtests.test("Continue iteration after closing"):
+        assert await anext(it2) == 3
+
+
+async def test_watcher_container_collect(subtests: pytest.Subtests) -> None:
+    q = asyncio.Queue[int]()
+    for d in range(3):
+        await q.put(d)
+
+    async with WatcherOutputContainer.open(_aqueue_to_aiter(q)) as c:
+        with subtests.test("Collect present data"):
+            await asyncio.sleep(0.1)
+            assert c.collect() == list(range(3))
+
+        with subtests.test("Collect after update"):
+            await q.put(3)
+            await asyncio.sleep(0.1)
+            assert c.collect() == list(range(4))
+
+        q.shutdown()  # simulate watcher closing
+
+
+async def test_watcher_container_collect_flush_on_close(subtests: pytest.Subtests) -> None:
+    q = asyncio.Queue[int]()
+    for d in range(3):
+        await q.put(d)
+
+    async with WatcherOutputContainer.open(_aqueue_to_aiter(q)) as c:
+        q.shutdown()  # simulate watcher closing
+
+    assert c.collect() == list(range(3))

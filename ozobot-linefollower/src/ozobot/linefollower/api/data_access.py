@@ -151,3 +151,50 @@ async def buffered_iterator[T](
             if len(exceptions) > 1:
                 logger.warning("Dropping exceptions", dropped_exception=exceptions[1:])
             raise exceptions[0] from e
+
+
+class WatcherOutputContainer[T]:
+    def __init__(self) -> None:
+        self._buffer: list[T] = []
+        self._data_pushed = asyncio.Condition()
+        self._closed = False
+
+    @classmethod
+    @contextlib.asynccontextmanager
+    async def open(self, data_source: typing.AsyncIterator[T]) -> typing.AsyncIterator[WatcherOutputContainer[T]]:
+        container = WatcherOutputContainer[T]()
+
+        async def _run() -> None:
+            try:
+                async for data in data_source:
+                    container._buffer.append(data)
+                    async with container._data_pushed:
+                        container._data_pushed.notify_all()
+            finally:
+                container._closed = True
+
+        task = asyncio.create_task(_run())
+        try:
+            yield container
+        finally:
+            await task
+
+    def collect(self) -> list[T]:
+        return list(self._buffer)
+
+    def __aiter__(self) -> typing.AsyncIterator[T]:
+        async def _data() -> typing.AsyncIterator[T]:
+            i = 0
+
+            while True:
+                while i < len(self._buffer):
+                    yield self._buffer[i]
+                    i += 1
+
+                if self._closed:
+                    return
+
+                async with self._data_pushed:
+                    await self._data_pushed.wait()
+
+        return _data()
