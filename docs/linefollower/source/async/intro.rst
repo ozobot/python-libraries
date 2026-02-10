@@ -258,8 +258,8 @@ relevant object which looks into the VM and returns the current value.
 
 
 This way is simple and less verbose, but does not guarantee you'll get all the data - what if the data changes several times between two consecutive reads? This is where
-watching comes in. Most of the sensors have a `watch` method providing an asynchronnous context manager attached. The context manager provides an asynchronnous iterator over
-all the sampled sensoric data. The sampling is stopped when the context manager closes, but the sampled data are available until the iterator goes out of scope.
+watching comes in. Most of the sensors have a `watch` method providing an asynchronnous context manager attached. The context manager returns a container that
+can be used as an asynchronnous iterator over all the sampled sensoric data. The sampling is stopped when the context manager closes, but the sampled data are available until the iterator goes out of scope.
 
 .. code-block:: python
   :caption: Watching sensors
@@ -275,8 +275,8 @@ all the sampled sensoric data. The sampling is stopped when the context manager 
   async def move_until_obstacle(r):
     move_task = asyncio.create_task(r.set_velocity(50, 0))
     
-    async with r.data.obstacle_front_left.watch() as it:
-      async for data in it:
+    async with r.data.obstacle_front_left.watch() as container:
+      async for data in aiter(container):
         if data.value > 100:
           move_task.cancel()
           return
