@@ -15,7 +15,8 @@ from ozobot.actors.linefollower import (
 )
 from ozobot.actors.userio import user_io_alert, user_io_print, user_io_prompt
 from ozobot.ari import AriHandle
-from ozobot.blocklyutils import BrowserTerminal, set_wheel_speed  # type: ignore[import]
+from ozobot.libblockly.actors import BrowserTerminal  # type: ignore[import]
+from ozobot.libblockly.motion import set_wheel_speed  # type: ignore[import]
 from ozobot.evo import EvoHandle
 from ozobot.linefollower import Color, Direction, LEDMask, NamedColor
 
