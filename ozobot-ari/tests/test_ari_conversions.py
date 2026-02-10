@@ -5,16 +5,16 @@ from ozobot.ari import conversions
 from ozobot.ari.conversions import color_code_from_protocol, color_from_protocol, color_to_protocol
 from ozobot.ari.protocol import types
 from ozobot.linefollower.datatypes import (
-    ClassifiedColor,
     Color,
     ColorCode,
     Direction,
     LEDMask,
+    NamedColor,
     RawColor,
     TDirection,
     TNamedColor,
 )
-from ozobot.linefollower.exceptions import InvalidClassifiedColorError
+from ozobot.linefollower.exceptions import InvalidNamedColorError
 
 
 @pytest.mark.parametrize(
@@ -80,11 +80,11 @@ def test_intersection_bitmap_from_protocol(intersection: types.Intersection, exp
 @pytest.mark.parametrize(
     ["color", "protocol_color"],
     argvalues=[
-        (ClassifiedColor.BLACK, "Black"),
-        (ClassifiedColor.RED, "Red"),
-        (ClassifiedColor.GREEN, "Green"),
-        (ClassifiedColor.BLUE, "Blue"),
-        (ClassifiedColor.WHITE, "White"),
+        (NamedColor.BLACK, "Black"),
+        (NamedColor.RED, "Red"),
+        (NamedColor.GREEN, "Green"),
+        (NamedColor.BLUE, "Blue"),
+        (NamedColor.WHITE, "White"),
     ],
     ids=lambda x: repr(x),
 )
@@ -95,31 +95,31 @@ def test_color_from_protocol(color: Color, protocol_color: TNamedColor) -> None:
 @pytest.mark.parametrize(
     ["color", "protocol_color"],
     argvalues=[
-        (ClassifiedColor.BLACK, "Black"),
-        (ClassifiedColor.RED, "Red"),
-        (ClassifiedColor.GREEN, "Green"),
-        (ClassifiedColor.BLUE, "Blue"),
-        (ClassifiedColor.WHITE, "White"),
+        (NamedColor.BLACK, "Black"),
+        (NamedColor.RED, "Red"),
+        (NamedColor.GREEN, "Green"),
+        (NamedColor.BLUE, "Blue"),
+        (NamedColor.WHITE, "White"),
     ],
     ids=lambda x: repr(x),
 )
-def test_color_to_protocol(color: ClassifiedColor, protocol_color: TNamedColor) -> None:
+def test_color_to_protocol(color: NamedColor, protocol_color: TNamedColor) -> None:
     assert color_to_protocol(color) == protocol_color
 
 
 def test_none_color_to_protocol() -> None:
-    with pytest.raises(InvalidClassifiedColorError):
-        c = typing.cast(ClassifiedColor, None)
+    with pytest.raises(InvalidNamedColorError):
+        c = typing.cast(NamedColor, None)
         _ = color_to_protocol(c)
 
 
 def test_unknown_color_to_protocol() -> None:
-    with pytest.raises(InvalidClassifiedColorError):
-        c = typing.cast(ClassifiedColor, RawColor(0.5, 0.5, 0.5))
+    with pytest.raises(InvalidNamedColorError):
+        c = typing.cast(NamedColor, RawColor(0.5, 0.5, 0.5))
         _ = color_to_protocol(c)
 
 
 def test_color_code_from_protocol() -> None:
     assert color_code_from_protocol(["Red", "Black", "Blue"]) == ColorCode(
-        colors=(ClassifiedColor.RED, ClassifiedColor.BLACK, ClassifiedColor.BLUE)
+        colors=(NamedColor.RED, NamedColor.BLACK, NamedColor.BLUE)
     )

@@ -1,7 +1,7 @@
 import typing
 
 from ozobot.ari import conversions as ari_conversions
-from ozobot.linefollower.datatypes import ClassifiedColor, Direction, TDirection, TNamedColor
+from ozobot.linefollower.datatypes import Direction, NamedColor, TDirection, TNamedColor
 from ozobot.linefollower.driver.web import conversions as web_conversions
 from ozobot.linefollower.driver.web.rpctypes import TWebDirection
 from ozobot.userio.datatypes import TUserIoPrompt, TWebUserIoPrompt
@@ -12,14 +12,14 @@ from ozobot.userio.exceptions import (
 )
 
 
-def get_type_name(_type: type[str | int | float | bool | ClassifiedColor | Direction]) -> TUserIoPrompt:
+def get_type_name(_type: type[str | int | float | bool | NamedColor | Direction]) -> TUserIoPrompt:
     if _type == str:
         return "string"
     elif any(issubclass(c, _type) for c in [float, int]):
         return "number"
     elif _type == bool:
         return "boolean"
-    elif _type == ClassifiedColor:
+    elif _type == NamedColor:
         return "surfaceColor"
     elif _type == Direction:
         return "direction"
@@ -27,14 +27,14 @@ def get_type_name(_type: type[str | int | float | bool | ClassifiedColor | Direc
         raise UnexpectedUserIoPromptTypeError(_type)
 
 
-def get_web_type_name(_type: type[str | int | float | bool | ClassifiedColor | Direction]) -> TWebUserIoPrompt:
+def get_web_type_name(_type: type[str | int | float | bool | NamedColor | Direction]) -> TWebUserIoPrompt:
     if _type == str:
         return "string"
     elif any(issubclass(c, _type) for c in [float, int]):
         return "number"
     elif _type == bool:
         return "boolean"
-    elif _type == ClassifiedColor:
+    elif _type == NamedColor:
         return "color"
     elif _type == Direction:
         return "direction"
@@ -42,7 +42,7 @@ def get_web_type_name(_type: type[str | int | float | bool | ClassifiedColor | D
         raise UnexpectedUserIoPromptTypeError(_type)
 
 
-def get_type_options[T: (str, float, int, bool, ClassifiedColor, Direction)](
+def get_type_options[T: (str, float, int, bool, NamedColor, Direction)](
     options: list[T], _type: type[T]
 ) -> list[str | float | int | bool | TNamedColor | TDirection]:
     protocol_options: list[str | float | int | bool | TNamedColor | TDirection] = []
@@ -50,7 +50,7 @@ def get_type_options[T: (str, float, int, bool, ClassifiedColor, Direction)](
         if not isinstance(opt, _type):
             raise UnexpectedUserIoPromptOptionTypeError(opt, _type)
 
-        if isinstance(opt, ClassifiedColor):
+        if isinstance(opt, NamedColor):
             protocol_options.append(ari_conversions.color_to_protocol(opt))
         elif isinstance(opt, Direction):
             protocol_options.append(ari_conversions.intersection_direction_to_protocol(opt))
@@ -60,7 +60,7 @@ def get_type_options[T: (str, float, int, bool, ClassifiedColor, Direction)](
     return protocol_options
 
 
-def get_web_type_options[T: (str, float, int, bool, ClassifiedColor, Direction)](
+def get_web_type_options[T: (str, float, int, bool, NamedColor, Direction)](
     options: list[T], _type: type[T]
 ) -> list[str | float | int | bool | TNamedColor | TWebDirection]:
     for opt in options:
@@ -69,7 +69,7 @@ def get_web_type_options[T: (str, float, int, bool, ClassifiedColor, Direction)]
 
     protocol_options: list[str | float | int | bool | TNamedColor | TDirection] = []
     for opt in options:
-        if isinstance(opt, ClassifiedColor):
+        if isinstance(opt, NamedColor):
             protocol_options.append(web_conversions.color_to_web(opt))
         elif isinstance(opt, Direction):
             protocol_options.append(web_conversions.direction_to_web(opt))
@@ -90,7 +90,7 @@ def cast_web_prompt_response[T](_type: type[T], value: typing.Any) -> T:
         return typing.cast(T, float(value))
     elif _type is bool:
         return typing.cast(T, bool(value))
-    elif _type is ClassifiedColor and web_conversions.is_web_color(value):
+    elif _type is NamedColor and web_conversions.is_web_color(value):
         return typing.cast(T, web_conversions.color_from_web(value))
     elif _type is Direction and web_conversions.is_web_direction(value):
         return typing.cast(T, web_conversions.direction_from_web(value))

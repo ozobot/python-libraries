@@ -40,15 +40,15 @@ A list of the supported actions with details can be found in the :ref:`API doc <
 
   import time
   from ozobot.evo import SyncEvoHandle
-  from ozobot.linefollower import Colors, LEDMask, RawColor
+  from ozobot.linefollower import NamedColor, LEDMask, RawColor
 
   with SyncEvoHandle(name="OzoEvo-ABC*") as r:
     # set all front LEDs red
-    r.set_led(LEDMask.ALL_FRONT, Colors.RED)
+    r.set_led(LEDMask.ALL_FRONT, NamedColor.RED)
     time.sleep(1)
 
     # set three front center LEDs blue
-    r.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER | LEDMask.FRONT_CENTER, Colors.WHITE)
+    r.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER | LEDMask.FRONT_CENTER, NamedColor.WHITE)
     time.sleep(1)
 
     # set the center LED to light blue
@@ -56,14 +56,14 @@ A list of the supported actions with details can be found in the :ref:`API doc <
     time.sleep(1)
 
     # turn off leftmost and rightmost front LEDs
-    r.set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, Colors.BLACK)
+    r.set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, NamedColor.BLACK)
     time.sleep(1)
 
     # turn off left center and right center LEDs - do not use the predefined BLACK color this time
     r.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER, RawColor(0, 0, 0))
     
     # turn off the front center led
-    r.set_led(LEDMask.FRONT_CENTER, Colors.BLACK)
+    r.set_led(LEDMask.FRONT_CENTER, NamedColor.BLACK)
 
 
 .. code-block:: python
@@ -87,14 +87,14 @@ A list of the supported actions with details can be found in the :ref:`API doc <
 
   import time
   from ozobot.ari import SyncAriHandle
-  from ozobot.linefollower import Colors, Direction
+  from ozobot.linefollower import NamedColor, Direction
 
   with SyncAriHandle(name="Ari-ABCD") as r:
     # the robot can play preloaded sounds ..
     r.play_audio("happy")
 
     # .. colors ..
-    r.say_color(Colors.RED)
+    r.say_color(NamedColor.RED)
 
     # .. directions ..
     r.say_direction(Direction.LEFT)

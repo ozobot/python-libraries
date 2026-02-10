@@ -5,11 +5,11 @@ from typing import Protocol, Self
 
 from ozobot.linefollower.api.data_access import WatcherOutputContainer
 from ozobot.linefollower.datatypes import (
-    ClassifiedColor,
     ColorCode,
     Direction,
     IRMessage,
     LEDMask,
+    NamedColor,
     RobotGeometry,
     Sample,
     SampleWithoutTimestamp,
@@ -95,7 +95,7 @@ class VirtualMemoryRegions(Protocol):
         """
 
     @property
-    def line_color(self) -> ReadableWatchableRegion[Sample[ClassifiedColor | None]]:
+    def line_color(self) -> ReadableWatchableRegion[Sample[NamedColor | None]]:
         """
         Line color detected.
 
@@ -103,7 +103,7 @@ class VirtualMemoryRegions(Protocol):
         """
 
     @property
-    def surface_color(self) -> ReadableWatchableRegion[Sample[ClassifiedColor | None]]:
+    def surface_color(self) -> ReadableWatchableRegion[Sample[NamedColor | None]]:
         """
         Surface color detected.
 

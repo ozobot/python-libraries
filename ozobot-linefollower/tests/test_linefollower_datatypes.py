@@ -1,7 +1,7 @@
 import contextlib
 
 import pytest
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, RawColor
+from ozobot.linefollower.datatypes import Color, NamedColor, RawColor
 
 
 @pytest.fixture
@@ -20,13 +20,13 @@ def blue() -> Color:
 
 
 @pytest.fixture
-def classified_red() -> ClassifiedColor:
-    return ClassifiedColor.RED
+def classified_red() -> NamedColor:
+    return NamedColor.RED
 
 
 @pytest.fixture
-def classified_blue() -> ClassifiedColor:
-    return ClassifiedColor.BLUE
+def classified_blue() -> NamedColor:
+    return NamedColor.BLUE
 
 
 @pytest.mark.parametrize(
@@ -53,16 +53,16 @@ def test_color_str_repr(red: Color) -> None:
     assert repr(red) == "RawColor(red=1, green=0, blue=0)"
 
 
-def test_classified_color_str_repr(classified_red: ClassifiedColor) -> None:
+def test_classified_color_str_repr(classified_red: NamedColor) -> None:
     assert str(classified_red) == "Red"
-    assert repr(classified_red) == "ClassifiedColor('Red', RawColor(red=1.0, green=0, blue=0))"
+    assert repr(classified_red) == "NamedColor('Red', RawColor(red=1.0, green=0, blue=0))"
 
 
 def test_color_hash(red: Color, blue: Color) -> None:
     assert hash(red) != hash(blue)
 
 
-def test_classified_color_hash(classified_red: ClassifiedColor, classified_blue: ClassifiedColor) -> None:
+def test_classified_color_hash(classified_red: NamedColor, classified_blue: NamedColor) -> None:
     assert hash(classified_red) != hash(classified_blue)
     assert hash(classified_red) != None
 
@@ -73,23 +73,19 @@ def test_color_eq_color(red: Color, blue: Color) -> None:
     assert red != blue
 
 
-def test_color_eq_classified_color(
-    red: Color, classified_red: ClassifiedColor, classified_blue: ClassifiedColor
-) -> None:
+def test_color_eq_classified_color(red: Color, classified_red: NamedColor, classified_blue: NamedColor) -> None:
     assert red == classified_red
     assert red != classified_blue
     assert red != None
 
 
-def test_classified_color_eq_color(classified_red: ClassifiedColor, red: Color, blue: Color) -> None:
+def test_classified_color_eq_color(classified_red: NamedColor, red: Color, blue: Color) -> None:
     assert classified_red == red
     assert classified_red != blue
 
 
-def test_classified_color_eq_classified_color(
-    classified_blue: ClassifiedColor, classified_red: ClassifiedColor
-) -> None:
-    assert classified_red == ClassifiedColor("Red", RawColor(red=1.0, green=0, blue=0))
+def test_classified_color_eq_classified_color(classified_blue: NamedColor, classified_red: NamedColor) -> None:
+    assert classified_red == NamedColor("Red", RawColor(red=1.0, green=0, blue=0))
     assert classified_red != classified_blue
     assert classified_red != None
 
@@ -101,23 +97,19 @@ def test_color_is_color(red: Color, blue: Color, almost_red: Color) -> None:
     assert not red.is_color(blue)
 
 
-def test_color_is_classified_color(
-    red: Color, classified_red: ClassifiedColor, classified_blue: ClassifiedColor
-) -> None:
+def test_color_is_classified_color(red: Color, classified_red: NamedColor, classified_blue: NamedColor) -> None:
     assert red.is_color(classified_red)
     assert not red.is_color(classified_blue)
     assert not red.is_color(None)
 
 
-def test_classified_color_is_color(classified_red: ClassifiedColor, red: Color, almost_red: Color, blue: Color) -> None:
+def test_classified_color_is_color(classified_red: NamedColor, red: Color, almost_red: Color, blue: Color) -> None:
     assert classified_red.is_color(red)
     assert classified_red.is_color(almost_red)
     assert not classified_red.is_color(blue)
 
 
-def test_classified_color_is_classified_color(
-    classified_blue: ClassifiedColor, classified_red: ClassifiedColor
-) -> None:
-    assert classified_red.is_color(ClassifiedColor("Red", RawColor(red=1.0, green=0, blue=0)))
+def test_classified_color_is_classified_color(classified_blue: NamedColor, classified_red: NamedColor) -> None:
+    assert classified_red.is_color(NamedColor("Red", RawColor(red=1.0, green=0, blue=0)))
     assert not classified_red.is_color(classified_blue)
     assert not classified_red.is_color(None)

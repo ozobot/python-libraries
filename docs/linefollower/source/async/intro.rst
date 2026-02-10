@@ -49,16 +49,16 @@ A list of the supported actions with details can be found in the :ref:`API doc <
 
   import asyncio
   from ozobot.evo import EvoHandle
-  from ozobot.linefollower import Colors, LEDMask, RawColor
+  from ozobot.linefollower import NamedColor, LEDMask, RawColor
 
   async def main():
     async with EvoHandle(name="OzoEvo-ABC*") as r:
       # set all front LEDs red
-      await r.set_led(LEDMask.ALL_FRONT, Colors.RED)
+      await r.set_led(LEDMask.ALL_FRONT, NamedColor.RED)
       await asyncio.sleep(1)
 
       # set three front center LEDs blue
-      await r.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER | LEDMask.FRONT_CENTER, Colors.WHITE)
+      await r.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER | LEDMask.FRONT_CENTER, NamedColor.WHITE)
       await asyncio.sleep(1)
 
       # set the center LED to light blue
@@ -66,14 +66,14 @@ A list of the supported actions with details can be found in the :ref:`API doc <
       await asyncio.sleep(1)
 
       # turn off leftmost and rightmost front LEDs
-      await r.set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, Colors.BLACK)
+      await r.set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, NamedColor.BLACK)
       await asyncio.sleep(1)
 
       # turn off left center and right center LEDs - do not use the predefined BLACK color this time
       await r.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER, RawColor(0, 0, 0))
       
       #turn off the front center led
-      await r.set(LEDMask.FRONT_CENTER, Colors.BLACK)
+      await r.set(LEDMask.FRONT_CENTER, NamedColor.BLACK)
 
   asyncio.run(main())
 
@@ -101,7 +101,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
 
   import asyncio
   from ozobot.ari import AriHandle
-  from ozobot.linefollower import Colors, Direction
+  from ozobot.linefollower import NamedColor, Direction
 
 
   async def main():
@@ -110,7 +110,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
       await r.play_audio("happy")
 
       # .. colors ..
-      await r.say_color(Colors.RED)
+      await r.say_color(NamedColor.RED)
 
       # .. directions ..
       await r.say_direection(Direction.LEFT)
@@ -134,7 +134,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
   import asyncio
   from ozobot.ari import AriHandle
   from ozobot.evo import EvoHandle
-  from ozobot.linefollower import Colors, Direction
+  from ozobot.linefollower import NamedColor, Direction
 
 
   async def main():
@@ -203,7 +203,7 @@ Any action can be cancelled, in most cases by `task cancellation <https://docs.p
 
   import asyncio
   from ozobot.evo import EvoHandle
-  from ozobot.linefollower import Colors, LEDMask
+  from ozobot.linefollower import NamedColor, LEDMask
 
   async def main():
     async with EvoHandle(name="OzoEvo-ABC*") as r:
@@ -214,9 +214,9 @@ Any action can be cancelled, in most cases by `task cancellation <https://docs.p
   async def flashing(r):
     try:
       while True:
-          await r.set_led(LEDMask.ALL_FRONT, Colors.BLUE)
+          await r.set_led(LEDMask.ALL_FRONT, NamedColor.BLUE)
           await asyncio.sleep(1)
-          await r.set_led(LEDMask.ALL_FRONT, Colors.BLACK)
+          await r.set_led(LEDMask.ALL_FRONT, NamedColor.BLACK)
           await asyncio.sleep(1)
     except asyncio.CancelledError:
       print("flashing cancelled")

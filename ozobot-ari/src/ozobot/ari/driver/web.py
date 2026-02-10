@@ -1,7 +1,7 @@
 from ozobot.ari.driver.shared import geometry
 from ozobot.ari.driver.web_conversions import time_of_flight_from_web
 from ozobot.ari.webprotocol import types as webtypes
-from ozobot.linefollower.datatypes import ClassifiedColor, Direction, Sample
+from ozobot.linefollower.datatypes import Direction, NamedColor, Sample
 from ozobot.linefollower.driver.web import (
     LineFollowerWebDriver,
     Rpc,
@@ -41,7 +41,7 @@ class AriWebDriver(LineFollowerWebDriver):
     async def user_io_alert(self, message: str, *, cancellable: bool = False) -> None:
         return await self._userio_component.alert(message, cancellable=cancellable)
 
-    async def user_io_prompt[T: (str, float, int, bool, ClassifiedColor, Direction)](
+    async def user_io_prompt[T: (str, float, int, bool, NamedColor, Direction)](
         self,
         message: str,
         _type: type[T],

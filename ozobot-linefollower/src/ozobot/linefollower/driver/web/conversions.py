@@ -1,15 +1,15 @@
 import typing
 
 from ozobot.linefollower.datatypes import (
-    ClassifiedColor,
     ColorCode,
     Direction,
     IRMessage,
     LEDMask,
+    NamedColor,
     TNamedColor,
 )
 from ozobot.linefollower.driver.web.exceptions import InvalidColorCodeError
-from ozobot.linefollower.exceptions import InvalidClassifiedColorError, SingleDirectionRequiredError
+from ozobot.linefollower.exceptions import InvalidNamedColorError, SingleDirectionRequiredError
 
 from .rpctypes import (
     ALLOWED_WEB_COLORS,
@@ -80,42 +80,42 @@ def intersection_from_web(intersection_json: dict[TWebDirection, bool]) -> Direc
     return direction
 
 
-def color_from_web(color: TWebColor) -> ClassifiedColor:
+def color_from_web(color: TWebColor) -> NamedColor:
     match color:
         case "Green":
-            return ClassifiedColor.GREEN
+            return NamedColor.GREEN
         case "Black":
-            return ClassifiedColor.BLACK
+            return NamedColor.BLACK
         case "Red":
-            return ClassifiedColor.RED
+            return NamedColor.RED
         case "Blue":
-            return ClassifiedColor.BLUE
+            return NamedColor.BLUE
         case "White":
-            return ClassifiedColor.WHITE
+            return NamedColor.WHITE
         case _:
             typing.assert_never(color.name)
 
 
-def color_to_web(color: ClassifiedColor) -> TNamedColor:
-    if color == ClassifiedColor.GREEN:
+def color_to_web(color: NamedColor) -> TNamedColor:
+    if color == NamedColor.GREEN:
         return "Green"
-    elif color == ClassifiedColor.BLACK:
+    elif color == NamedColor.BLACK:
         return "Black"
-    elif color == ClassifiedColor.RED:
+    elif color == NamedColor.RED:
         return "Red"
-    elif color == ClassifiedColor.BLUE:
+    elif color == NamedColor.BLUE:
         return "Blue"
-    elif color == ClassifiedColor.WHITE:
+    elif color == NamedColor.WHITE:
         return "White"
 
-    raise InvalidClassifiedColorError(color)
+    raise InvalidNamedColorError(color)
 
 
 def color_code_from_web(web_colors: list[TWebColor]) -> ColorCode:
-    colors: list[ClassifiedColor] = []
+    colors: list[NamedColor] = []
     for web_color in web_colors:
         color = color_from_web(web_color)
-        if not isinstance(color, ClassifiedColor):
+        if not isinstance(color, NamedColor):
             raise InvalidColorCodeError(color)
         colors.append(color)
 

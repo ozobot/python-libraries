@@ -17,7 +17,7 @@ from ozobot.actors.userio import user_io_alert, user_io_print, user_io_prompt
 from ozobot.ari import AriHandle
 from ozobot.blocklyutils import BrowserTerminal, set_wheel_speed  # type: ignore[import]
 from ozobot.evo import EvoHandle
-from ozobot.linefollower import ClassifiedColor, Color, Direction, LEDMask
+from ozobot.linefollower import Color, Direction, LEDMask, NamedColor
 
 name = "Ari_1"
 # name = "Evo_1"
@@ -59,8 +59,8 @@ async def sound():
 
 
 async def led():
-    await set_led(LEDMask.TOP | LEDMask.FRONT_CENTER, ClassifiedColor.RED)
-    await set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, ClassifiedColor.BLUE)
+    await set_led(LEDMask.TOP | LEDMask.FRONT_CENTER, NamedColor.RED)
+    await set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, NamedColor.BLUE)
 
 
 async def io():
@@ -80,7 +80,7 @@ async def io():
         (int, [1, 2, 3]),
         (float, [1.0, 2.0, 3.0]),
         (str, ("one", "two", "three")),
-        (Color, (ClassifiedColor.RED, ClassifiedColor.BLUE, ClassifiedColor.GREEN)),
+        (Color, (NamedColor.RED, NamedColor.BLUE, NamedColor.GREEN)),
         (Direction, (Direction.LEFT, Direction.RIGHT)),
     ]
 

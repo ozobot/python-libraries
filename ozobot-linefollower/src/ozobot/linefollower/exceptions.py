@@ -31,7 +31,7 @@ class DriverCommandFailedError(LineFollowerError):
         super().__init__(f"Command failed with an error: {command_name} - {reason}")
 
 
-class InvalidClassifiedColorError(LineFollowerError):
+class InvalidNamedColorError(LineFollowerError):
     """Object is not a valid classified color."""
 
     def __init__(self, obj: object) -> None:

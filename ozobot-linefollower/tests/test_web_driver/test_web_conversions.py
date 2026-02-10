@@ -2,12 +2,12 @@ import typing
 
 import pytest
 from ozobot.linefollower.datatypes import (
-    ClassifiedColor,
     Color,
     ColorCode,
     Direction,
     IRMessage,
     LEDMask,
+    NamedColor,
     RawColor,
 )
 from ozobot.linefollower.driver.web.conversions import (
@@ -26,7 +26,7 @@ from ozobot.linefollower.driver.web.rpctypes import (
     TWebColor,
     TWebDirection,
 )
-from ozobot.linefollower.exceptions import InvalidClassifiedColorError, SingleDirectionRequiredError
+from ozobot.linefollower.exceptions import InvalidNamedColorError, SingleDirectionRequiredError
 
 
 @pytest.mark.parametrize(
@@ -88,19 +88,17 @@ def test_intersection_from_web(json_input, expected):
 
 def test_color_code_from_web() -> None:
     colors: list[TWebColor] = ["Red", "Black", "Blue"]
-    assert color_code_from_web(colors) == ColorCode(
-        colors=(ClassifiedColor.RED, ClassifiedColor.BLACK, ClassifiedColor.BLUE)
-    )
+    assert color_code_from_web(colors) == ColorCode(colors=(NamedColor.RED, NamedColor.BLACK, NamedColor.BLUE))
 
 
 @pytest.mark.parametrize(
     ["web", "lib"],
     [
-        ("Red", ClassifiedColor.RED),
-        ("Blue", ClassifiedColor.BLUE),
-        ("Green", ClassifiedColor.GREEN),
-        ("Black", ClassifiedColor.BLACK),
-        ("White", ClassifiedColor.WHITE),
+        ("Red", NamedColor.RED),
+        ("Blue", NamedColor.BLUE),
+        ("Green", NamedColor.GREEN),
+        ("Black", NamedColor.BLACK),
+        ("White", NamedColor.WHITE),
     ],
 )
 def test_color_from_web(web: TWebColor, lib: Color) -> None:
@@ -110,26 +108,26 @@ def test_color_from_web(web: TWebColor, lib: Color) -> None:
 @pytest.mark.parametrize(
     ["web", "lib"],
     [
-        ("Red", ClassifiedColor.RED),
-        ("Blue", ClassifiedColor.BLUE),
-        ("Green", ClassifiedColor.GREEN),
-        ("Black", ClassifiedColor.BLACK),
-        ("White", ClassifiedColor.WHITE),
+        ("Red", NamedColor.RED),
+        ("Blue", NamedColor.BLUE),
+        ("Green", NamedColor.GREEN),
+        ("Black", NamedColor.BLACK),
+        ("White", NamedColor.WHITE),
     ],
 )
-def test_color_to_web(web: TWebColor | None, lib: ClassifiedColor) -> None:
+def test_color_to_web(web: TWebColor | None, lib: NamedColor) -> None:
     assert color_to_web(lib) == web
 
 
 def test_none_color_to_web() -> None:
-    with pytest.raises(InvalidClassifiedColorError):
-        c = typing.cast(ClassifiedColor, None)
+    with pytest.raises(InvalidNamedColorError):
+        c = typing.cast(NamedColor, None)
         assert color_to_web(c)
 
 
 def test_unknown_color_to_web() -> None:
-    with pytest.raises(InvalidClassifiedColorError):
-        c = typing.cast(ClassifiedColor, RawColor(0.5, 0.5, 0.5))
+    with pytest.raises(InvalidNamedColorError):
+        c = typing.cast(NamedColor, RawColor(0.5, 0.5, 0.5))
         assert color_to_web(c)
 
 

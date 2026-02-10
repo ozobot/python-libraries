@@ -28,10 +28,10 @@ from ozobot.linefollower.api.data_access import (
     WatcherOutputContainerRunner,
 )
 from ozobot.linefollower.datatypes import (
-    ClassifiedColor,
     ColorCode,
     Direction,
     LEDMask,
+    NamedColor,
     Sample,
     SampleWithoutTimestamp,
     TimeOfFlight,
@@ -454,7 +454,7 @@ class AriNativeDriver:
         async with Query(req, methods.USER_IO_ALERT).execute(self._executor) as q:
             _ = await q.response
 
-    async def user_io_prompt[T: (str, float, int, bool, ClassifiedColor, Direction)](
+    async def user_io_prompt[T: (str, float, int, bool, NamedColor, Direction)](
         self,
         message: str,
         _type: type[T],

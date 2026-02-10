@@ -1,10 +1,10 @@
 from ozobot.linefollower.datatypes import (
-    ClassifiedColor,
     Color,
     ColorCode,
     Direction,
     IRMessage,
     LEDMask,
+    NamedColor,
     RawColor,
     Sample,
     TimeOfFlight,
@@ -13,7 +13,7 @@ from ozobot.linefollower.datatypes import (
 __all__ = [
     "Color",
     "ColorCode",
-    "ClassifiedColor",
+    "NamedColor",
     "Direction",
     "IRMessage",
     "LEDMask",

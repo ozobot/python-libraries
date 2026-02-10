@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ozobot.common.sync import as_sync
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, ColorCode, Direction, LEDMask, TAudio, TNote
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, LEDMask, NamedColor, TAudio, TNote
 from ozobot.linefollower.driver.interface import ReadableRegion, ReadableWritableRegion
 
 from .core import LineFollower
@@ -207,23 +207,23 @@ class SyncLineFollower:
         await self._linefollower.say_number(number)
 
     @as_sync
-    async def say_color(self, color: ClassifiedColor) -> None:
+    async def say_color(self, color: NamedColor) -> None:
         """
         Say (classified) color.
 
-        Play audio file given by :py:class:`~ozobot.linefollower.datatypes.ClassifiedColor` such as `ClassifiedColor.BLACK`. Raw colors defined by RGB value are not supported.
+        Play audio file given by :py:class:`~ozobot.linefollower.datatypes.NamedColor` such as `NamedColor.BLACK`. Raw colors defined by RGB value are not supported.
 
         :param color: Classified color to say
 
-        :raises InvalidClassifiedColorError: If the parameter is not a known classified color.
+        :raises InvalidNamedColorError: If the parameter is not a known classified color.
         :See also: :py:meth:`say_direction`, :py:meth:`say_number`, :py:meth:`play_audio`
 
         .. code-block:: python
 
-            from ozobot.linefollower import ClassifiedColor
+            from ozobot.linefollower import NamedColor
 
             # say "red"
-            robot.say_color(ClassifiedColor.RED)
+            robot.say_color(NamedColor.RED)
         """
         await self._linefollower.say_color(color)
 
@@ -257,26 +257,26 @@ class SyncLineFollower:
         Set LED color.
 
         Change color of LEDs selected by :py:class:`~ozobot.linefollower.datatypes.LEDMask`. The function accepts both
-        :py:class:`~ozobot.linefollower.datatypes.RawColor` and :py:class:`~ozobot.linefollower.datatypes.ClassifiedColor`.
+        :py:class:`~ozobot.linefollower.datatypes.RawColor` and :py:class:`~ozobot.linefollower.datatypes.NamedColor`.
 
         :param mask: Mask defining which LEDs will be affected
-        :param color: Either :py:class:`~ozobot.linefollower.datatypes.RawColor` or :py:class:`~ozobot.linefollower.datatypes.ClassifiedColor` defining the new LED color.
+        :param color: Either :py:class:`~ozobot.linefollower.datatypes.RawColor` or :py:class:`~ozobot.linefollower.datatypes.NamedColor` defining the new LED color.
 
         .. note::
-            Set the color to :py:data:`~ozobot.linefollower.datatypes.ClassifiedColor.BLACK` to turn the selected LED off.
+            Set the color to :py:data:`~ozobot.linefollower.datatypes.NamedColor.BLACK` to turn the selected LED off.
 
         .. code-block:: python
 
-            from ozobot.linefollower import LEDMask, RawColor, ClassifiedColor
+            from ozobot.linefollower import LEDMask, RawColor, NamedColor
 
             # set the TOP to red
-            robot.set_led(LEDMask.TOP, ClassifiedColor.RED)
+            robot.set_led(LEDMask.TOP, NamedColor.RED)
 
             # set the LEFT and RIGHT by RGB value
             robot.set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, RawColor(0, 0.4, 0))
 
             # turn off ALL
-            robot.set_led(LEDMask.ALL_ROBOT, ClassifiedColor.BLACK)
+            robot.set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
         """
         await self._linefollower.set_led(mask, color)
 

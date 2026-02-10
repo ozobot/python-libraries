@@ -10,23 +10,23 @@ from ozobot.evo.conversions import (
     surface_color_from_protocol,
 )
 from ozobot.evo.protocol import Types
-from ozobot.linefollower.datatypes import ClassifiedColor, Color, ColorCode, Direction, IRMessage, LEDMask
+from ozobot.linefollower.datatypes import Color, ColorCode, Direction, IRMessage, LEDMask, NamedColor
 
 
 def test_color_code_from_protocol() -> None:
     assert color_code_from_protocol(Types.ColorCode(0b100_000 | 0b001, 0)) == ColorCode(
-        colors=(ClassifiedColor.RED, ClassifiedColor.BLUE)
+        colors=(NamedColor.RED, NamedColor.BLUE)
     )
 
 
 @pytest.mark.parametrize(
     ["protocol_color", "library_color"],
     argvalues=[
-        (Types.SurfaceColorEnum.Black, ClassifiedColor.BLACK),
-        (Types.SurfaceColorEnum.Blue, ClassifiedColor.BLUE),
-        (Types.SurfaceColorEnum.Green, ClassifiedColor.GREEN),
-        (Types.SurfaceColorEnum.Red, ClassifiedColor.RED),
-        (Types.SurfaceColorEnum.White, ClassifiedColor.WHITE),
+        (Types.SurfaceColorEnum.Black, NamedColor.BLACK),
+        (Types.SurfaceColorEnum.Blue, NamedColor.BLUE),
+        (Types.SurfaceColorEnum.Green, NamedColor.GREEN),
+        (Types.SurfaceColorEnum.Red, NamedColor.RED),
+        (Types.SurfaceColorEnum.White, NamedColor.WHITE),
         (Types.SurfaceColorEnum.Unknown, None),
     ],
     ids=lambda x: repr(x),
@@ -38,10 +38,10 @@ def test_surface_color_from_protocol(protocol_color: Types.SurfaceColorEnum, lib
 @pytest.mark.parametrize(
     ["protocol_color", "library_color"],
     argvalues=[
-        (Types.LineColorEnum.Black, ClassifiedColor.BLACK),
-        (Types.LineColorEnum.Blue, ClassifiedColor.BLUE),
-        (Types.LineColorEnum.Green, ClassifiedColor.GREEN),
-        (Types.LineColorEnum.Red, ClassifiedColor.RED),
+        (Types.LineColorEnum.Black, NamedColor.BLACK),
+        (Types.LineColorEnum.Blue, NamedColor.BLUE),
+        (Types.LineColorEnum.Green, NamedColor.GREEN),
+        (Types.LineColorEnum.Red, NamedColor.RED),
         (Types.LineColorEnum.Unknown, None),
     ],
     ids=lambda x: repr(x),

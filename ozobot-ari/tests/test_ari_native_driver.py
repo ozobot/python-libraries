@@ -8,10 +8,10 @@ import pytest
 from ozobot.ari.driver.native import AriNativeDriver
 from ozobot.ari.protocol import memread, memwrite, methods, notification, request, response, types
 from ozobot.linefollower.datatypes import (
-    ClassifiedColor,
     ColorCode,
     Direction,
     LEDMask,
+    NamedColor,
     Sample,
     SampleWithoutTimestamp,
 )
@@ -192,7 +192,7 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
 
             assert await anext(aiter(intersection_it)) == SampleWithoutTimestamp(Direction.BACKWARD)
             assert await anext(aiter(cc_it)) == SampleWithoutTimestamp(
-                ColorCode(colors=(ClassifiedColor.RED, ClassifiedColor.BLACK, ClassifiedColor.BLUE)),
+                ColorCode(colors=(NamedColor.RED, NamedColor.BLACK, NamedColor.BLUE)),
             )
 
         query_cls_mock.assert_called_once_with(
@@ -320,11 +320,11 @@ async def test_native_data_access_write() -> None:
             True,
         ),
         (
-            ClassifiedColor,
-            [ClassifiedColor.RED, ClassifiedColor.GREEN],
+            NamedColor,
+            [NamedColor.RED, NamedColor.GREEN],
             ["Red", "Green"],
             response.UserIoPromptSurfaceColorResponseBody(value="Red"),
-            ClassifiedColor.RED,
+            NamedColor.RED,
         ),
         (
             Direction,
@@ -356,7 +356,7 @@ async def test_user_io_prompt(
             type_name = "number"
         elif prompt_type == bool:
             type_name = "boolean"
-        elif prompt_type == ClassifiedColor:
+        elif prompt_type == NamedColor:
             type_name = "surfaceColor"
         elif prompt_type == Direction:
             type_name = "direction"
@@ -394,9 +394,9 @@ async def test_native_data_access_watch() -> None:
             notifications = [await anext(it) for _ in range(3)]
 
         assert notifications == [
-            Sample(ClassifiedColor.RED, 0),
-            Sample(ClassifiedColor.BLUE, 1),
-            Sample(ClassifiedColor.GREEN, 2),
+            Sample(NamedColor.RED, 0),
+            Sample(NamedColor.BLUE, 1),
+            Sample(NamedColor.GREEN, 2),
         ]
 
         query_cls_mock.assert_called_with(

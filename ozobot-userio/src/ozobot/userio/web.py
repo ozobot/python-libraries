@@ -2,8 +2,8 @@ import typing
 
 import pydantic
 from ozobot.linefollower.datatypes import (
-    ClassifiedColor,
     Direction,
+    NamedColor,
     TNamedColor,
 )
 from ozobot.linefollower.driver.web import Rpc, rpctypes
@@ -55,7 +55,7 @@ class UserIoWebDriverComponent:
         req = UserIoAlertRequest(message=message, cancellable=cancellable)
         _ = await self._rpc.execute(req, rpctypes.ValidatedAny)
 
-    async def prompt[T: (str, float, int, bool, ClassifiedColor, Direction)](
+    async def prompt[T: (str, float, int, bool, NamedColor, Direction)](
         self,
         message: str,
         _type: type[T],

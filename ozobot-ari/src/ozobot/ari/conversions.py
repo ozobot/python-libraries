@@ -2,16 +2,16 @@ import typing
 
 from ozobot.ari.protocol import memread, notification, types
 from ozobot.linefollower.datatypes import (
-    ClassifiedColor,
     ColorCode,
     Direction,
     IRMessage,
     LEDMask,
+    NamedColor,
     TDirection,
     TimeOfFlight,
     TNamedColor,
 )
-from ozobot.linefollower.exceptions import InvalidClassifiedColorError
+from ozobot.linefollower.exceptions import InvalidNamedColorError
 
 
 def led_to_protocol(mask: LEDMask) -> types.Lights:
@@ -73,35 +73,35 @@ def intersection_bitmap_from_protocol(intersection_mask: types.Intersection) -> 
     return intersection
 
 
-def color_from_protocol(color: TNamedColor) -> ClassifiedColor:
+def color_from_protocol(color: TNamedColor) -> NamedColor:
     match color:
         case "Green":
-            return ClassifiedColor.GREEN
+            return NamedColor.GREEN
         case "Black":
-            return ClassifiedColor.BLACK
+            return NamedColor.BLACK
         case "Red":
-            return ClassifiedColor.RED
+            return NamedColor.RED
         case "Blue":
-            return ClassifiedColor.BLUE
+            return NamedColor.BLUE
         case "White":
-            return ClassifiedColor.WHITE
+            return NamedColor.WHITE
         case _:
             typing.assert_never(color)
 
 
-def color_to_protocol(color: ClassifiedColor) -> TNamedColor:
-    if color == ClassifiedColor.GREEN:
+def color_to_protocol(color: NamedColor) -> TNamedColor:
+    if color == NamedColor.GREEN:
         return "Green"
-    elif color == ClassifiedColor.BLACK:
+    elif color == NamedColor.BLACK:
         return "Black"
-    elif color == ClassifiedColor.RED:
+    elif color == NamedColor.RED:
         return "Red"
-    elif color == ClassifiedColor.BLUE:
+    elif color == NamedColor.BLUE:
         return "Blue"
-    elif color == ClassifiedColor.WHITE:
+    elif color == NamedColor.WHITE:
         return "White"
 
-    raise InvalidClassifiedColorError(color)
+    raise InvalidNamedColorError(color)
 
 
 def color_code_from_protocol(color_code: list[TNamedColor]) -> ColorCode:

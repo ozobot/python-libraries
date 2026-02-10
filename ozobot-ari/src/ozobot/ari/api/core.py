@@ -2,7 +2,7 @@ import typing
 
 from ozobot.ari.driver import AriDriver
 from ozobot.linefollower.api.core import LineFollower
-from ozobot.linefollower.datatypes import ClassifiedColor, Direction, Sample, TimeOfFlight
+from ozobot.linefollower.datatypes import Direction, NamedColor, Sample, TimeOfFlight
 from ozobot.linefollower.driver.interface import VirtualMemoryRegions, WatchableRegion
 
 
@@ -85,7 +85,7 @@ class Ari(LineFollower):
 
         await self._ari_driver.user_io_alert(message, cancellable=cancellable)
 
-    async def user_io_prompt[T: (str, float, int, bool, ClassifiedColor, Direction)](
+    async def user_io_prompt[T: (str, float, int, bool, NamedColor, Direction)](
         self, message: str, _type: type[T], options: list[T], *, cancellable: bool = False
     ) -> T:
         """
@@ -109,14 +109,14 @@ class Ari(LineFollower):
 
         .. code-block:: python
 
-            from ozobot.linefollower import Direction, ClassifiedColor
+            from ozobot.linefollower import Direction, NamedColor
 
             # select direction
             dir = await robot.user_io_prompt("Select direction", Direction, [Direction.LEFT, Direction.RIGHT])
             print(dir)  # prints either Direction.LEFT or Direction.RIGHT depending on what the user selected
 
             # select color
-            color = await robot.user_io_prompt("Select color", ClassifiedColor, [ClassifiedColor.BLACK, ClassifiedColor.WHITE, ClassifiedColor.BLUE])
+            color = await robot.user_io_prompt("Select color", NamedColor, [NamedColor.BLACK, NamedColor.WHITE, NamedColor.BLUE])
             print(color)  # prints one of the colors depending on what the user selected
 
 
