@@ -52,6 +52,13 @@ def _tuple_to_cartesian(value: tuple[float, ...]) -> Cartesian:
 
 
 class OraWebDriver:
+    """
+    Ora web adapter representation.
+
+    .. note::
+      `OraWebDriver` Python API is experimental and may change
+    """
+
     device_name: str
 
     def __init__(self, device_name: str | None = None):
