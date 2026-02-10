@@ -47,3 +47,4 @@ source = "vcs"
 [tool.hatch.version.raw-options]
 version_scheme = "no-guess-dev"
 root = "../"
+git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--abbrev=40', '--match', 'ozobot-actors-*']
