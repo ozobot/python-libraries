@@ -2,6 +2,7 @@
 
 A Python library for implementing JSON-RPC 2.0 clients with Ozobot extensions and asyncio support. 
 
+See the [monorepo](https://github.com/ozobot/python-libraries) for more details. 
 
 ## Ozobot extensions
 - RPC notifications

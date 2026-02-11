@@ -3,6 +3,8 @@
 A Python library for establishing WebRTC connections with Ozobot devices, enabling real-time communication through data channels.
 This is a backend library implementing bare WebRTC functionality. Consult your robot documentation to learn which user library can control your robot.
 
+See the [monorepo](https://github.com/ozobot/python-libraries) for more details. 
+
 ## Features
 
 - WebRTC peer-to-peer connections with Ozobot devices

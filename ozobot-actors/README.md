@@ -5,6 +5,8 @@ of libraries implementing object oriented control of the individual robots. The 
 generated from Blockly programs, as its semantics follows the actor based use by the [Ozobot Editor](https://editor.ozobot.com),
 but can be used even in projects written from scratch.
 
+See the [monorepo](https://github.com/ozobot/python-libraries) for more details. 
+
 ## Installation
 The library requires you to list all the robots to be supported, so for example to install Evo support, run
 `pip install ozobot-actors[evo]`, to install both Ari and Evo support, run `pip install ozobot-actors[ari,evo]`.

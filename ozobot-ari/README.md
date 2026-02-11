@@ -1,11 +1,8 @@
 # ozobot-ari
 
-Interface for controlling Ozobot Ari.
+Interface for controlling Ozobot Ari. See the [monorepo](https://github.com/ozobot/python-libraries) for more details. 
 
-## Installation
-```
-  pip install ozobot-ari
-```
+**Work in progress, only a web runtime driver for Ozobot Editor available**
 
 ## Usage
 ```python

@@ -1,6 +1,6 @@
 # ozobot-common
 
-Common utilities and helpers for Ozobot projects.
+Common utilities and helpers for Ozobot projects. See the [monorepo](https://github.com/ozobot/python-libraries) for more details. 
 
 ## Features
 

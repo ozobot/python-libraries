@@ -3,6 +3,7 @@
 A Python library for communicating with Ozobot robots via Bluetooth Low Energy (BLE).
 This is a backend library implementing bare control over BLE functionality. Consult your robot documentation to learn which user library can control your robot.
 
+See the [monorepo](https://github.com/ozobot/python-libraries) for more details. 
 
 ## Features
 

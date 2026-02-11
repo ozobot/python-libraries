@@ -1,11 +1,8 @@
 # ozobot-evo
 
-Interface for controlling Ozobot Evo.
+Interface for controlling Ozobot Evo. See the [monorepo](https://github.com/ozobot/python-libraries) for more details. 
 
-## Installation
-```
-  pip install ozobot-evo
-```
+**Work in progress, only a web runtime driver for Ozobot Editor available**
 
 ## Usage
 ```python
