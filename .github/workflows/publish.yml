@@ -72,7 +72,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     outputs:
-      publosh-release: ${{ steps.check.outputs.publish-release }}
+      publish-release: ${{ steps.check.outputs.publish-release }}
       publish-rc: ${{ steps.check.outputs.publish-rc }}
       publish-docs: ${{ steps.check.outputs.publish-docs }}
       package-name: ${{ steps.check.outputs.package-name }}
