@@ -1,20 +1,21 @@
 # Ozobot Python libraries
 
-A monorepo repository with Python libraries for Ozobot Evo and Ari control. The libraries can be used both in the [Ozobot Editor](https://editor.ozobot.com) and
-locally on your computer.
+A monorepo repository with Python libraries for Ozobot Evo and Ari control. The libraries can be used in the [Ozobot Editor](https://editor.ozobot.com).
 
-## Installation
-All the libraries are hosted on [PyPI](https://pypi.org/user/ozobot/).
+The local execution on a computer is currently work in progress.
 
-```sh
-  pip install ozobot-ari
-```
+<!-- ## Installation -->
+<!-- All the libraries are hosted on [PyPI](https://pypi.org/user/ozobot/). -->
 
-or
+<!-- ```sh -->
+  <!-- pip install ozobot-ari -->
+<!-- ``` -->
 
-```sh
-  pip install ozobot-evo
-```
+<!-- or -->
+
+<!-- ```sh -->
+  <!-- pip install ozobot-evo -->
+<!-- ``` -->
 
 ## Repository contents
 The repository contains several directories with packages implementing either robot control functionality or a backend functionality used by the user facing control libraries.
