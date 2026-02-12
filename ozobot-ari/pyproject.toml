@@ -10,7 +10,7 @@ dynamic = ["version"]
 dependencies = [
     "ozobot-ble>=0.1; platform_system != 'Emscripten'",
     "ozobot-common>=0.2",
-    "ozobot-jsonrpc>=0.2",
+    "ozobot-jsonrpc>=0.2; platform_system != 'Emscripten'",
     "ozobot-linefollower>=0.2",
     "ozobot-userio>=0.2; platform_system == 'Emscripten'",
     "ozobot-web>=0.2; platform_system == 'Emscripten'",
