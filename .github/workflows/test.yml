@@ -21,6 +21,11 @@ jobs:
         version: "latest"
         python-version: ${{ matrix.python-version }}
 
+    - name: Check lockfile consistency
+      shell: bash
+      run: |
+        uv lock --check
+        
     # We cannot pass arguments via the `services` section,
     # so we'll need to start websockify the container manually.
     - name: Create rabbitmq docker network
