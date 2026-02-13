@@ -28,7 +28,7 @@ class OzobotError(Exception):
         return f"{name}({', '.join(args)})"
 
 
-class ActorError(Exception):
+class ActorError(OzobotError):
     """Base exception for actor errors."""
 
 
