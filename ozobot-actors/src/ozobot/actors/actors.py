@@ -26,6 +26,21 @@ class ActorDispatcher:
         self._actors: dict[str, typing.Any] = {}
 
     def add(self, name: str, actor: typing.Any) -> None:
+        """
+        Add an existing actor to the dispatcher.
+
+        Example:
+
+        .. code-block:: python
+
+            from ozobot import actors
+
+            dispatcher = actors.new_actor_dispatcher()
+
+            async with EvoHandle(name="Evo-ABCDE") as e:
+                dispatcher.add("MyEvo", e)
+        """
+
         if name in self._actors:
             raise ActorAlreadyExistsError(name)
         self._actors[name] = actor
@@ -38,6 +53,33 @@ class ActorDispatcher:
 
     @contextlib.asynccontextmanager
     async def connect[T](self, name: str, handle: contextlib.AbstractAsyncContextManager[T]) -> typing.AsyncIterator[T]:
+        """
+        Open the given handle, add it as an actor and close on exit.
+
+        Example:
+
+        .. code-block:: python
+
+            from ozobot import actors
+
+            dispatcher = actors.new_actor_dispatcher()
+
+            async with dispatcher.connect("MyEvo", EvoHandle(name="Evo-ABCDE"):
+                ...
+
+        Calling this is roughly equivalent to:
+
+        .. code-block:: python
+
+            from ozobot import actors
+
+            dispatcher = actors.new_actor_dispatcher()
+
+            async with EvoHandle(name="Evo-ABCDE") as e:
+                dispatcher.add("MyEvo", e)
+
+
+        """
         async with handle as instance:
             self.add(name, instance)
             try:
@@ -47,6 +89,22 @@ class ActorDispatcher:
 
     @contextlib.contextmanager
     def actor(self, *names: str) -> typing.Iterator[None]:
+        """
+        Pushe the agent on top of the stack.
+
+        Example:
+
+        .. code-block:: python
+
+            from ozobot import actors
+
+            dispatcher = actors.new_actor_dispatcher()
+
+            async with dispatcher.connect("MyEvo", EvoHandle(name="Evo-ABCDE"):
+                with dispatcher.actor("MyEvo"):
+                    # evo is selected here
+
+        """
         for name in names:
             if name not in self._actors:
                 raise ActorNotFoundError(name)
@@ -62,6 +120,24 @@ class ActorDispatcher:
 
     @contextlib.contextmanager
     def mask(self, *names: str, all: bool = False) -> typing.Iterator[None]:
+        """
+        Mask the agent on top of the stack.
+
+        Example:
+
+        .. code-block:: python
+
+            from ozobot import actors
+
+            dispatcher = actors.new_actor_dispatcher()
+
+            async with dispatcher.connect("MyEvo", EvoHandle(name="Evo-ABCDE"):
+                with dispatcher.mask("MyEvo"):
+                    # evo won't be accessible here
+
+                    with dispatcher.agent("MyEvo"):
+                        # the masking gets overwritten again
+        """
         if all:
             names = tuple(self._actors.keys())
 

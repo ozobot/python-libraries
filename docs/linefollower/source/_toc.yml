@@ -4,6 +4,7 @@ subtrees:
   - file: async/intro
     entries:
       - file: async/apidoc
+      - file: async/actor
   - file: sync/intro
     entries:
       - file: sync/apidoc

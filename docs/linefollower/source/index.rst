@@ -12,3 +12,5 @@ There are two main ways to use this library:
 
 *   **Synchronous API**: Designed for beginners or simple scripts. It uses blocking calls and hides the complexity of concurrency. See :ref:`sync_evo` for more details.
 *   **Asynchronous API**: Recommended for advanced users and complex applications. It is built on Python's ``asyncio`` and allows for concurrency, cancellation, and advanced sensor monitoring. See :ref:`async_evo` for more details.
+
+Additionally, there is a third API we use to run Blockly programs. To support the actor paradigm we use in the Ozobot Editor, we created an :ref:`Actor API <async_actor>` which can be seen in the generated Python code.
