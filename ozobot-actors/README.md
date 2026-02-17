@@ -38,8 +38,7 @@ from ozobot.actors.userio import user_io_alert
 from ozobot.ari import AriHandle
 from ozobot.evo import EvoHandle
 
-dispatcher = actors.ActorDispatcher()
-actors.set_actor_dispatcher(dispatcher)
+dispatcher = actors.new_actor_dispatcher()
 
 async def main() -> None:
   async with EvoHandle(name="OzoEvo-1234abcd") as e1, EvoHandle(name="Ari-ABCD") as a1:

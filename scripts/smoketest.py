@@ -24,9 +24,7 @@ name = "Ari_1"
 # name = "Evo_1"
 handle = AriHandle(name=name) if name.startswith("Ari") else EvoHandle(name=name)
 
-dispatcher = actors.ActorDispatcher()
-
-actors.set_actor_dispatcher(dispatcher)
+dispatcher = actors.new_actor_dispatcher()
 
 
 async def main():

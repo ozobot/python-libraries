@@ -142,3 +142,13 @@ context = _Context(ActorDispatcher())
 
 def set_actor_dispatcher(dispatcher: ActorDispatcher) -> None:
     context.dispatcher = dispatcher
+
+
+def new_actor_dispatcher() -> ActorDispatcher:
+    """
+    Create new actor dispatcher and overwrite the old one.
+    """
+    dispatcher = ActorDispatcher()
+    context.dispatcher = dispatcher
+
+    return dispatcher

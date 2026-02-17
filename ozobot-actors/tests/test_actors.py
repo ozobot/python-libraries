@@ -2,7 +2,7 @@ import asyncio
 import typing
 
 import pytest
-from ozobot.actors.actors import ActorDispatcher, context, set_actor_dispatcher
+from ozobot.actors.actors import ActorDispatcher, context, new_actor_dispatcher
 from ozobot.common.exceptions import ActorAlreadyExistsError, ActorNotFoundError, SuitableActorNotFoundError
 
 
@@ -297,13 +297,12 @@ def test_global_actor_context() -> None:
         def something(self) -> str:
             return "foobar"
 
-    d = ActorDispatcher()
+    d = new_actor_dispatcher()
     d.add("actor", Impl())
-    set_actor_dispatcher(d)
 
     assert d.call(Interface.something) == "foobar"
 
-    set_actor_dispatcher(ActorDispatcher())
+    _ = new_actor_dispatcher()
     with pytest.raises(SuitableActorNotFoundError):
         context.dispatcher.call(Interface.something)
 
