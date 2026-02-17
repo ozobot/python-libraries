@@ -10,3 +10,4 @@ subtrees:
       - file: sync/apidoc
   - file: datatypes
   - file: exceptions
+  - file: migration-guide

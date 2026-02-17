@@ -22,6 +22,7 @@ extensions = [
     "sphinx_external_toc",
     "sphinx.ext.autodoc",
     "autodoc_enumflag",
+    "sphinx_tabs.tabs",
 ]
 
 templates_path = ["_templates"]
