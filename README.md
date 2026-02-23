@@ -68,3 +68,11 @@ To install all the workspace packages and its dependencies to the uv venv, run
 ```
 
 Omit `--inexact` to remove extra packages. Workspace packages are installed as editable.
+
+### Documentation
+The documentation sources can be found in `/docs` directory. It can be built by
+```
+  $ uv run \
+    --all-packages --all-extras --group docs \
+    make html -C docs
+```
