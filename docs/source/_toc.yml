@@ -1,0 +1,15 @@
+root: index
+subtrees:
+- entries:
+  - file: linefollower/index
+    entries:
+    - file: linefollower/async/intro
+      entries:
+        - file: linefollower/async/apidoc
+        - file: linefollower/async/actor
+    - file: linefollower/sync/intro
+      entries:
+        - file: linefollower/sync/apidoc
+    - file: linefollower/datatypes
+    - file: linefollower/exceptions
+    - file: linefollower/migration-guide

@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.append(str(Path("_ext").resolve()))
 
-project = "Ari & Evo"
+project = "Ozobot Python SDK"
 copyright = "2026, Ozo EDU, Inc."
 author = "Ondrej Novak"
 

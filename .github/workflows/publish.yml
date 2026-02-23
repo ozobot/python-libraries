@@ -51,14 +51,14 @@ jobs:
             --all-groups \
             --all-packages \
           make html \
-            -C docs/linefollower \
+            -C docs \
             SPHINXOPTS="--fail-on-warning" \
-            BUILDDIR="${{ runner.temp }}/docs-dist-build/linefollower"
+            BUILDDIR="${{ runner.temp }}/docs-dist-build"
 
         mkdir -p "${{ runner.temp }}/docs-dist-build"
         mkdir -p "${{ runner.temp }}/docs-dist"
 
-        mv "${{ runner.temp }}/docs-dist-build/linefollower/html" "${{ runner.temp }}/docs-dist/linefollower"
+        mv "${{ runner.temp }}/docs-dist-build/html" "${{ runner.temp }}/docs-dist"
 
     - name: Upload github artifacts
       uses: actions/upload-artifact@v4
