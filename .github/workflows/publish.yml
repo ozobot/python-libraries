@@ -199,5 +199,5 @@ jobs:
     - id: upload-folder
       uses: google-github-actions/upload-cloud-storage@v3
       with:
-        path: docs-dist/linefollower
+        path: docs-dist/
         destination: docs.ozobot.com
