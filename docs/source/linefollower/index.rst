@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Ari & Evo Python API
-====================
+Ari & Evo
+=========
 
 Welcome to the Ari & Evo Python API documentation. This library provides interfaces to control Ozobot's Ari and Evo robots.
 

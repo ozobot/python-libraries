@@ -5,7 +5,7 @@ With standard movements, the robot stops after reaching individual points. To cr
 This is done by specifying a radius around each point. The robot will then move in an arc specified radius until it reaches the next point. To do so,
 the robot mostly not reach the intermediate point exactly, but will be close enough to the point to be considered as reached. 
 
-.. image:: ./img/interpolation.svg
+.. figure:: img/interpolation.svg
   :alt: comparison - motion through two points with and without interpolation enabled
 
   Comparing motion with and without interpolation

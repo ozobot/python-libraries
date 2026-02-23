@@ -13,3 +13,11 @@ subtrees:
     - file: linefollower/datatypes
     - file: linefollower/exceptions
     - file: linefollower/migration-guide
+  - file: ora/index
+    entries:
+      - file: ora/simple
+      - file: ora/coreconcepts
+        entries:
+          - file: ora/singularity
+          - file: ora/units
+          - file: ora/continuous

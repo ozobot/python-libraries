@@ -39,3 +39,19 @@ html_css_files = [
 html_theme_options = {
     "style_external_links": True,
 }
+
+# -- Options for autodoc -----------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
+autodoc_type_aliases = {
+    # ora type aliases
+    "domains.SpeedDomain": "SpeedDomain",
+    "domains.AccelerationDomain": "AccelerationDomain",
+    "domains.JerkDomain": "JerkDomain",
+    "domains.AngularSpeedDomain": "AngularSpeedDomain",
+    "domains.AngularAccelerationDomain": "AngularAccelerationDomain",
+    "domains.AngularJerkDomain": "AngularJerkDomain",
+}
+
+autodoc_mock_imports = [
+    "ozobot.ora.driver",  # ora.simple loads unimplemented native driver on import
+]

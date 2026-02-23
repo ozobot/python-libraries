@@ -87,11 +87,6 @@ distance over time yields speed.
   :members: units
 
 
-.. toctree::
-  :maxdepth: 2
-  :caption: Contents:
-
-
 
 Indices and tables
 ------------------
