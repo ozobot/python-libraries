@@ -50,3 +50,10 @@ class LinefollowerFileNotFoundError(LineFollowerError):
 
     def __init__(self):
         super().__init__("File not found")
+
+
+class MemoryReadUnsuccessfulError(LineFollowerError):
+    """Virtual memory read operation fails."""
+
+    def __init__(self, name: str, reason: str) -> None:
+        super().__init__(f"Could not read virtual memory: '{reason}' on '{name}'")

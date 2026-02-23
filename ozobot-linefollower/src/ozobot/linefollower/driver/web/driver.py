@@ -4,9 +4,9 @@ import typing
 
 import pydantic
 from loguru import logger
-from ozobot.ari.exceptions import MemoryReadUnsuccessfulError
 from ozobot.linefollower.api.data_access import WatcherOutputContainer, WatcherOutputContainerRunner
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample, SampleWithoutTimestamp
+from ozobot.linefollower.exceptions import MemoryReadUnsuccessfulError
 from ozobot.web.browser import _rpcCoroutine
 
 from . import rpctypes
