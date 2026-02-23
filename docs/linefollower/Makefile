@@ -11,7 +11,6 @@ PROJDIR		  = ../../
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	@echo "  serve		serve the docs and watch for changes in ../.. (requires sphinx-autobuild package)"
 
 .PHONY: help Makefile
 
