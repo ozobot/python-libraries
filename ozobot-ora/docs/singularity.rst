@@ -1,4 +1,6 @@
-# Singularity
+Singularity
+-----------
+
 If you observe some of the robot's joints to move very fast or the robot stopping with an over speed error in certain points, you may be experiencing a singularity.
 It's out of scope of this documentation to explain the mathematical details of singularity, but we can provide an intuitive explanation.
 
