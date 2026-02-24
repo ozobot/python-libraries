@@ -46,10 +46,21 @@ mypy_path = [
   "src",
 ]
 # plugins = ["pydantic.mypy"]
+# as we cannot merge package specific config with the global one,
+# we will keep this evo related exclusion here
+exclude = [
+  "ozobot/evo/protocol.py"
+]
 
 [tool.ruff]
 target-version = "py312"
 line-length=120
+# as we cannot merge package specific config with the global one,
+# we will keep this evo related exclusion here
+extend-exclude = [
+  "ozobot-evo/src/ozobot/evo/protocol.py"
+]
+
 
 [tool.ruff.lint]
 select = [
@@ -67,7 +78,4 @@ select = [
 
 [tool.pytest.ini_options]
 required_plugins = ["pytest-asyncio"]
-addopts = """
-  --deselect=ozobot-evo/src/ozobot/evo/protocol.py  
-"""
 asyncio_mode = "auto"

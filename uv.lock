@@ -890,6 +890,11 @@ dependencies = [
     { name = "pydantic" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ozobot-web" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "loguru" },
@@ -899,6 +904,9 @@ requires-dist = [
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" },
     { name = "pydantic", specifier = ">=2.11.7" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ozobot-web", editable = "ozobot-web" }]
 
 [[package]]
 name = "ozobot-jsonrpc"

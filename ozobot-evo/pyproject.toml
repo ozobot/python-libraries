@@ -16,6 +16,11 @@ dependencies = [
     "pydantic>=2.11.7",
 ]
 
+[dependency-groups]
+dev = [
+    "ozobot-web",
+]
+
 [project.urls]
 Homepage = "https://ozobot.com"
 Github = "https://github.com/ozobot/python-libraries"
@@ -45,3 +50,7 @@ source = "vcs"
 version_scheme = "no-guess-dev"
 root = "../"
 git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--abbrev=40', '--match', 'ozobot-evo-*']
+
+# [tool.ruff]
+# [tool.mypy]
+# deselecting/ignoring the evo protocol file is done in the workspace root configuration
