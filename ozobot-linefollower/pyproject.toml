@@ -9,8 +9,15 @@ requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
     "ozobot-common>=0.2",
+    "ozobot-web>=0.2",
     "loguru",
     "pydantic>=2; platform_system == 'Emscripten'",
+]
+
+[dependency-groups]
+dev = [
+    "ozobot-web",
+    "pydantic",
 ]
 
 [project.urls]
@@ -26,6 +33,7 @@ sources = ["src"]
 only-include = ["src/ozobot"]
 
 [tool.uv.sources]
+ozobot-web = { workspace = true }
 ozobot-common = { workspace = true }
 
 [build-system]

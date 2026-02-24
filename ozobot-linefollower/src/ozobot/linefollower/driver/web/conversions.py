@@ -15,14 +15,15 @@ from .rpctypes import (
     ALLOWED_WEB_COLORS,
     ALLOWED_WEB_DIRECTIONS,
     ReadIrResponse,
+    TSetLedMaskItem,
     TWebColor,
     TWebDirection,
 )
 
 
-def led_to_web_json(mask: LEDMask) -> dict[str, bool]:
+def led_to_web_json(mask: LEDMask) -> dict[TSetLedMaskItem, bool]:
     """Converts `LEDMask` to the json representation expected by web-python"""
-    mask_json = {}
+    mask_json: dict[TSetLedMaskItem, bool] = {}
     if mask & LEDMask.TOP:
         mask_json["top"] = True
     if mask & LEDMask.BACK:

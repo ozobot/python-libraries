@@ -966,14 +966,28 @@ source = { editable = "ozobot-linefollower" }
 dependencies = [
     { name = "loguru" },
     { name = "ozobot-common" },
+    { name = "ozobot-web" },
     { name = "pydantic", marker = "sys_platform == 'emscripten'" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "ozobot-web" },
+    { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "loguru" },
     { name = "ozobot-common", editable = "ozobot-common" },
+    { name = "ozobot-web", editable = "ozobot-web" },
     { name = "pydantic", marker = "sys_platform == 'emscripten'", specifier = ">=2" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ozobot-web", editable = "ozobot-web" },
+    { name = "pydantic" },
 ]
 
 [[package]]
