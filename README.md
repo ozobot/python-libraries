@@ -53,11 +53,18 @@ Run `uv build --wheel --all-packages` or `uv build --sdist --all-packages` to bu
 use `--package <package-name>` (e.g., `--package ozobot-evo`) instead.
 
 ### Test
-`pytest` is used to run tests, type checking and linting, so executing
+`nox` is used to run tests, type checking and linting, so executing
 ```
-  $ uv run pytest -v
+  $ uv run nox
 ```
-is sufficient to test the whole repo. `pytest` is run for the repository as a whole and only respects configuration in the repo level `pyproject.toml`. 
+is sufficient to test the whole repo. A session that executes `pytest`, `ruff` and `mypy` is run for each workspace member package.
+
+Package name can be passed as an argument to only run tests in that package, for example
+```
+  $ uv run nox -- ozobot-ari
+```
+
+Test dependencies are declared in the workspace root project.
 
 ### Installation from sources
 To install all the workspace packages and its dependencies to the uv venv, run

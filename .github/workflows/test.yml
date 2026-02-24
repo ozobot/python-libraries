@@ -54,8 +54,5 @@ jobs:
     - name: Run tests
       run: |
         uv run \
-          --all-packages \
-          --all-extras \
-          --all-groups \
           --frozen \
-          pytest -vv
+          nox

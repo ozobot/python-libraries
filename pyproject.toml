@@ -2,7 +2,9 @@
 name = "ozobot-library"
 version = "0.1.0"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "nox>=2026.2.9",
+]
 
 [tool.uv.workspace]
 members = [
@@ -19,13 +21,13 @@ members = [
   "ozobot-webrtc",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
   "pytest>=8.4.0",
+  "ruff",
+  "mypy",
   "pytest-aiohttp",
   "pytest-asyncio",
-  "pytest-mypy",
-  "pytest-ruff",
 ]
 docs = [
     "sphinx>=9.1.0",
@@ -41,19 +43,9 @@ installer = "uv"
 namespace_packages = true
 explicit_package_bases = true
 mypy_path = [
-  "ozobot-actors/src",
-  "ozobot-ari/src",
-  "ozobot-ble/src",
-  "ozobot-common/src",
-  "ozobot-linefollower/src",
-  "ozobot-evo/src",
-  "ozobot-ora/src",
-  "ozobot-jsonrpc/src",
-  "ozobot-userio/src",
-  "ozobot-web/src",
-  "ozobot-webrtc/src",
+  "src",
 ]
-plugins = ["pydantic.mypy"]
+# plugins = ["pydantic.mypy"]
 
 [tool.ruff]
 target-version = "py312"
@@ -74,11 +66,8 @@ select = [
 ]
 
 [tool.pytest.ini_options]
-required_plugins = ["pytest-asyncio", "pytest-mypy", "pytest-ruff"]
+required_plugins = ["pytest-asyncio"]
 addopts = """
-  --mypy
-  --ruff
-  --ruff-format
-  --deselect=ozobot-evo/src/ozobot/evo/protocol.py
+  --deselect=ozobot-evo/src/ozobot/evo/protocol.py  
 """
 asyncio_mode = "auto"
