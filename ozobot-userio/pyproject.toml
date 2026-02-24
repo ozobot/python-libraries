@@ -14,6 +14,12 @@ dependencies = [
     "pydantic>=2; platform_system == 'Emscripten'",
 ]
 
+[dependency-groups]
+dev = [
+    "ozobot-web",
+    "pydantic",
+]
+
 [tool.hatch.build.targets.sdist]
 sources = ["src"]
 only-include = ["src/ozobot"]

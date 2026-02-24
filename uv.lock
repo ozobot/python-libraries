@@ -1018,12 +1018,24 @@ dependencies = [
     { name = "pydantic", marker = "sys_platform == 'emscripten'" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ozobot-web" },
+    { name = "pydantic" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" },
     { name = "pydantic", marker = "sys_platform == 'emscripten'", specifier = ">=2" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ozobot-web", editable = "ozobot-web" },
+    { name = "pydantic" },
 ]
 
 [[package]]
