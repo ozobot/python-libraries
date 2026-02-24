@@ -18,6 +18,13 @@ ari = ["ozobot-ari>=0.2"]
 evo = ["ozobot-evo>=0.2"]
 ora = ["ozobot-ora~=1.0.6"]
 
+[dependency-groups]
+dev = [
+    "ozobot-ora",
+    "ozobot-userio",
+    "ozobot-linefollower",
+]
+
 [project.urls]
 Homepage = "https://ozobot.com"
 Github = "https://github.com/ozobot/python-libraries"
@@ -34,6 +41,7 @@ only-include = ["src/ozobot"]
 ozobot-ari = { workspace = true }
 ozobot-evo = { workspace = true }
 ozobot-common = { workspace = true }
+ozobot-userio = { workspace = true }
 ozobot-linefollower = { workspace = true }
 ozobot-ora = { workspace = true }
 

@@ -787,6 +787,13 @@ ora = [
     { name = "ozobot-ora" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ozobot-linefollower" },
+    { name = "ozobot-ora" },
+    { name = "ozobot-userio" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "loguru" },
@@ -797,6 +804,13 @@ requires-dist = [
     { name = "ozobot-ora", marker = "extra == 'ora'", editable = "ozobot-ora" },
 ]
 provides-extras = ["ari", "evo", "ora"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
+    { name = "ozobot-ora", editable = "ozobot-ora" },
+    { name = "ozobot-userio", editable = "ozobot-userio" },
+]
 
 [[package]]
 name = "ozobot-ari"
