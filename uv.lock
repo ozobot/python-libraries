@@ -997,8 +997,16 @@ dependencies = [
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ozobot-web" },
+]
+
 [package.metadata]
 requires-dist = [{ name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ozobot-web", editable = "ozobot-web" }]
 
 [[package]]
 name = "ozobot-userio"

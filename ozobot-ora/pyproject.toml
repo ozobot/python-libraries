@@ -10,6 +10,11 @@ dependencies = [
     "ozobot-web>=0.2; platform_system == 'Emscripten'",
 ]
 
+[dependency-groups]
+dev = [
+    "ozobot-web",
+]
+
 [project.urls]
 Homepage = "https://ozobot.com"
 Github = "https://github.com/ozobot/python-libraries"
