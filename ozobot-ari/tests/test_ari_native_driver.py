@@ -130,9 +130,7 @@ async def test_open_connection_key() -> None:
             "ExecuteFile",
             ["happy"],
             (
-                request.PlaySoundRequest(
-                    id=0, params=request.PlaySoundRequestParams(name="happy", loop=False, volume=1)
-                ),
+                request.PlaySoundRequest(id=0, params=request.PlaySoundRequestParams(name="happy", loop=False)),
                 methods.PLAY_SOUND,
             ),
         ),
@@ -175,12 +173,12 @@ async def test_command_with_response(
     [(True, "Follow"), (False, "DoNotFollow")],
     ids=lambda x: repr(x),
 )
-async def test_line_navigation(follow_bool: bool, follow_protocol: str) -> None:
+async def test_line_navigation(follow_bool: bool, follow_protocol: typing.Literal["Follow", "DoNotFollow"]) -> None:
     query_cls, query_cls_mock = _create_query(
         notifications=[
             notification.LineNavigationNotification(id=0, result=types.Intersection(back=True)),
             notification.LineNavigationNotification(
-                id=0, result=notification.LineNavigationColorNotificationBody(colors=["red", "black", "blue"])
+                id=0, result=notification.LineNavigationColorNotificationBody(colors=["Red", "Black", "Blue"])
             ),
         ]
     )
@@ -350,6 +348,7 @@ async def test_user_io_prompt(
         assert result == expected_result
 
         # Determine expected type name
+        type_name: typing.Any
         if prompt_type == str:
             type_name = "string"
         elif prompt_type in (int, float):

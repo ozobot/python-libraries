@@ -38,7 +38,7 @@ async def test_serializing_transport_context() -> None:
         await from_transport.get(),
     ]
     assert requests_sent == [
-        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":1,"duration":3,"volume":2.0}}',
+        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":1,"duration":3.0,"volume":2.0}}',
         '{"id":2,"jsonrpc":"2.0","method":"PlaySound","params":{"name":"name","loop":false}}',
     ]
 
@@ -93,7 +93,9 @@ async def test_serializing_transport_deregister_after_response() -> None:
     await transport.write(req)
 
     req_sent = await from_transport.get()
-    assert req_sent == '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":1,"duration":3,"volume":2.0}}'
+    assert (
+        req_sent == '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":1,"duration":3.0,"volume":2.0}}'
+    )
 
     r = response.PlayToneResponse(id=1, result=response.PlayToneResponseBody(type="success"))
     await to_transport.put(serialize(r))

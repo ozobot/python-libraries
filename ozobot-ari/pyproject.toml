@@ -19,6 +19,12 @@ dependencies = [
     "pydantic>=2.10.5; platform_system != 'Emscripten'",
 ]
 
+[dependency-groups]
+dev = [
+    "ozobot-userio",
+    "ozobot-web",
+]
+
 [project.urls]
 Homepage = "https://ozobot.com"
 Github = "https://github.com/ozobot/python-libraries"

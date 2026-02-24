@@ -87,7 +87,7 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
             id=1,
             params=request.SetLEDRequestParams(
                 lights=types.Lights(back=True),
-                color=types.Color(red=255, green=255, blue=255, name="custom"),
+                color=types.Color(red=255, green=255, blue=255),
             ),
         ),
         '{"id":1,"jsonrpc":"2.0","method":"SetLED","params":{"lights":{"back":true},"color":{"red":255,"green":255,"blue":255}}}',
@@ -99,10 +99,8 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         request.SetLEDRequest,
     ),
     (
-        request.PlayToneRequest(
-            id=1, params=request.PlayToneRequestParams(frequency=440, duration=1000, volume=50, sampling_rate=44100)
-        ),
-        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":440,"duration":1000,"volume":50,"samplingRate":44100}}',
+        request.PlayToneRequest(id=1, params=request.PlayToneRequestParams(frequency=440, duration=1000, volume=50)),
+        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":440,"duration":1000,"volume":50}}',
         None,
     ),
     (
@@ -111,8 +109,8 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         request.PlayToneRequest,
     ),
     (
-        request.PlaySoundRequest(id=1, params=request.PlaySoundRequestParams(name="sound-name", loop=True, volume=1)),
-        '{"id":1,"jsonrpc":"2.0","method":"PlaySound","params":{"name":"sound-name","loop":true,"volume":1}}',
+        request.PlaySoundRequest(id=1, params=request.PlaySoundRequestParams(name="sound-name", loop=True)),
+        '{"id":1,"jsonrpc":"2.0","method":"PlaySound","params":{"name":"sound-name","loop":true}}',
         None,
     ),
     (

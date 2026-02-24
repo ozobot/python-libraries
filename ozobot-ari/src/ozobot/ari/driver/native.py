@@ -408,7 +408,7 @@ class AriNativeDriver:
 
     async def line_navigation(self, direction: Direction, follow: bool) -> None:
         direction_protocol = conversions.intersection_direction_to_protocol(direction)
-        follow_arg = "Follow" if follow else "DoNotFollow"
+        follow_arg: typing.Literal["Follow", "DoNotFollow"] = "Follow" if follow else "DoNotFollow"
         req = request.LineNavigationRequest(
             id=self._request_id.get_next(),
             params=request.LineNavigationRequestParams(

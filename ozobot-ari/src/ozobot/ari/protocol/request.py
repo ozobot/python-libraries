@@ -30,7 +30,7 @@ class RotateRequest(Request):
 
 
 class VelocityRequestParams(Model):
-    expiration: int
+    expiration: float
     linear_speed: float
     rotation_speed: float
 
@@ -63,7 +63,7 @@ class SetLEDRequest(Request):
 
 class PlayToneRequestParams(Model):
     frequency: int
-    duration: int
+    duration: float
     volume: float
 
 

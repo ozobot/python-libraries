@@ -827,6 +827,12 @@ dependencies = [
     { name = "pydantic", marker = "sys_platform != 'emscripten'" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ozobot-userio" },
+    { name = "ozobot-web" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "loguru" },
@@ -838,6 +844,12 @@ requires-dist = [
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" },
     { name = "ozobot-webrtc", marker = "sys_platform != 'emscripten'", editable = "ozobot-webrtc" },
     { name = "pydantic", marker = "sys_platform != 'emscripten'", specifier = ">=2.10.5" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ozobot-userio", editable = "ozobot-userio" },
+    { name = "ozobot-web", editable = "ozobot-web" },
 ]
 
 [[package]]
