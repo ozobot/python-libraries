@@ -5,6 +5,7 @@ import nox_uv
 
 nox.options.default_venv_backend = "uv"
 
+
 def workspace_members(session):
     with open("/dev/null") as f:
         raw_metadata = session.run("uv", "workspace", "metadata", silent=True, stderr=f)
@@ -14,23 +15,35 @@ def workspace_members(session):
     yield from (m["path"] for m in members if m["path"] != root)
 
 
+def get_target_packages(session):
+    return [session.posargs[0]] if session.posargs else workspace_members(session)
+
+
+class UvRunner:
+    def __init__(self, *, session, path):
+        self._session = session
+        self._path = path
+
+    def run_cmd(self, *cmd):
+        with self._session.chdir(self._path):
+            run_cmd = "uv", "run", "--exact", "--with", "../[dev]"
+            self._session.run(*run_cmd, *cmd)
+
+
 @nox_uv.session()
 def test(session):
-    if session.posargs:
-        _run_all(session=session, path=session.posargs[0])
-    else:
-        for path in workspace_members(session):
-            _run_all(session=session, path=path)
-            
-
-def _run_all(*, session, path):
-    _run_cmd("pytest", "-vv", session=session, path=path)
-    _run_cmd("mypy", ".", session=session, path=path)
-    _run_cmd("ruff", "check", session=session, path=path)
-    _run_cmd("ruff", "format", "--check", session=session, path=path)
+    for path in get_target_packages(session):
+        UvRunner(session=session, path=path).run_cmd("pytest", "-vv")
 
 
-def _run_cmd(*cmd, session, path):
-    with session.chdir(path):
-        run_cmd = "uv", "run", "--exact", "--with", "../[dev]"
-        session.run(*run_cmd, *cmd)
+@nox_uv.session()
+def lint(session):
+    for path in get_target_packages(session):
+        UvRunner(session=session, path=path).run_cmd("ruff", "check")
+        UvRunner(session=session, path=path).run_cmd("ruff", "format", "--check")
+
+
+@nox_uv.session(name="type-check")
+def type_check(session):
+    for path in get_target_packages(session):
+        UvRunner(session=session, path=path).run_cmd("mypy", ".")
