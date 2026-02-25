@@ -1,7 +1,9 @@
 import json
 
 import nox
+import nox_uv
 
+nox.options.default_venv_backend = "uv"
 
 def workspace_members(session):
     with open("/dev/null") as f:
@@ -12,7 +14,7 @@ def workspace_members(session):
     yield from (m["path"] for m in members if m["path"] != root)
 
 
-@nox.session(venv_backend="none")
+@nox_uv.session()
 def test(session):
     if session.posargs:
         _run_all(session=session, path=session.posargs[0])

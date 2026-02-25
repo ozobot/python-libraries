@@ -768,6 +768,18 @@ wheels = [
 ]
 
 [[package]]
+name = "nox-uv"
+version = "0.7.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nox" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/04/e8/670919c513c22f4bf1656d84dd99a9ad1a5eaaeadf2457bab3efeeac14e0/nox_uv-0.7.1.tar.gz", hash = "sha256:f075d610b4648732fd17cbc9fa48be7d2c23df7b188fed3e4e6dde7bd1f14f20", size = 5124, upload-time = "2026-02-05T03:55:34.807Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4f/0a/a6798a215366c9b034e92a9992d9013da5f544a488216fc54204ccf3c134/nox_uv-0.7.1-py3-none-any.whl", hash = "sha256:91361cc282a0a764de1b94ad002b67d5b43de4adc3f56e16d1b79928c8ec0433", size = 5457, upload-time = "2026-02-05T03:55:35.994Z" },
+]
+
+[[package]]
 name = "ozobot-actors"
 source = { editable = "ozobot-actors" }
 dependencies = [
@@ -928,6 +940,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "nox" },
+    { name = "nox-uv" },
 ]
 
 [package.optional-dependencies]
@@ -949,6 +962,7 @@ docs = [
 requires-dist = [
     { name = "mypy", marker = "extra == 'dev'" },
     { name = "nox", specifier = ">=2026.2.9" },
+    { name = "nox-uv", specifier = ">=0.7.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.0" },
     { name = "pytest-aiohttp", marker = "extra == 'dev'" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
