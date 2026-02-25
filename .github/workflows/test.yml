@@ -6,32 +6,60 @@ on:
     types: [opened]
 
 jobs:
-  test:
+  generate-jobs:
+    # taken from https://nox.thea.codes/en/stable/cookbook.html
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.13"]
+    outputs:
+      sessions: ${{ steps.set-matrix.outputs.sessions }}
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
     
+    - id: set-matrix
+      shell: bash
+      run: |
+        echo sessions=$(uv run nox --json -l | jq -c '[.[] | {"name", "session"}]') | tee --append $GITHUB_OUTPUT
+
+  check-lockfile:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install uv ${{ matrix.python-version }}
+    - name: Install uv
       uses: astral-sh/setup-uv@v6
-      with:
-        version: "latest"
-        python-version: ${{ matrix.python-version }}
 
     - name: Check lockfile consistency
       shell: bash
       run: |
         uv lock --check
-        
+
+  test:
+    name: check - ${{ matrix.session.session }}
+    needs: [generate-jobs]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        session: ${{ fromJson(needs.generate-jobs.outputs.sessions) }}
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+
+    # We cannot pass arguments via the `services` section,
+    # so we'll need to start websockify the container manually.
+    # https://github.com/orgs/community/discussions/160506
     # We cannot pass arguments via the `services` section,
     # so we'll need to start websockify the container manually.
     - name: Create rabbitmq docker network
       run: |
         docker network create rmq-network
     - name: Run rabbitmq
+      if: ${{ matrix.session.name == 'test' }}
       run: |
         docker run --detach \
           --network rmq-network \
@@ -40,6 +68,7 @@ jobs:
           rabbitmq:4
         
     - name: Run websockify
+      if: ${{ matrix.session.name == 'test' }}
       run: |
         docker run --detach \
           --network rmq-network \
@@ -55,4 +84,5 @@ jobs:
       run: |
         uv run \
           --frozen \
-          nox
+          nox \
+          -s ${{ matrix.session.session }}
