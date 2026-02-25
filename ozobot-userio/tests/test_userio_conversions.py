@@ -1,6 +1,15 @@
+import typing
+
 import pytest
-from ozobot.linefollower.datatypes import Direction, NamedColor
-from ozobot.userio.conversions import get_type_name, get_web_type_name
+from ozobot.linefollower import RawColor
+from ozobot.linefollower.datatypes import Direction, NamedColor, TDirection, TNamedColor
+from ozobot.linefollower.exceptions import InvalidNamedColorError
+from ozobot.userio.conversions import (
+    color_to_protocol,
+    get_type_name,
+    get_web_type_name,
+    intersection_direction_to_protocol,
+)
 
 
 @pytest.mark.parametrize(
@@ -39,3 +48,44 @@ def test_get_type_name(what, expected) -> None:
 )
 def test_get_web_type_name(what, expected) -> None:
     assert get_web_type_name(what) == expected
+
+
+@pytest.mark.parametrize(
+    ["color", "protocol_color"],
+    argvalues=[
+        (NamedColor.BLACK, "Black"),
+        (NamedColor.RED, "Red"),
+        (NamedColor.GREEN, "Green"),
+        (NamedColor.BLUE, "Blue"),
+        (NamedColor.WHITE, "White"),
+    ],
+    ids=lambda x: repr(x),
+)
+def test_color_to_protocol(color: NamedColor, protocol_color: TNamedColor) -> None:
+    assert color_to_protocol(color) == protocol_color
+
+
+def test_none_color_to_protocol() -> None:
+    with pytest.raises(InvalidNamedColorError):
+        c = typing.cast(NamedColor, None)
+        _ = color_to_protocol(c)
+
+
+def test_unknown_color_to_protocol() -> None:
+    with pytest.raises(InvalidNamedColorError):
+        c = typing.cast(NamedColor, RawColor(0.5, 0.5, 0.5))
+        _ = color_to_protocol(c)
+
+
+@pytest.mark.parametrize(
+    ["direction", "protocol_direction"],
+    argvalues=[
+        (Direction.STRAIGHT, "Forward"),
+        (Direction.BACKWARD, "Back"),
+        (Direction.LEFT, "Left"),
+        (Direction.RIGHT, "Right"),
+    ],
+    ids=lambda x: repr(x),
+)
+def test_intersection_direction_to_protocol(direction: Direction, protocol_direction: TDirection) -> None:
+    assert intersection_direction_to_protocol(direction) == protocol_direction

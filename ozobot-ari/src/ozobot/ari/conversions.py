@@ -11,7 +11,6 @@ from ozobot.linefollower.datatypes import (
     TimeOfFlight,
     TNamedColor,
 )
-from ozobot.linefollower.exceptions import InvalidNamedColorError
 
 
 def led_to_protocol(mask: LEDMask) -> types.Lights:
@@ -87,21 +86,6 @@ def color_from_protocol(color: TNamedColor) -> NamedColor:
             return NamedColor.WHITE
         case _:
             typing.assert_never(color)
-
-
-def color_to_protocol(color: NamedColor) -> TNamedColor:
-    if color == NamedColor.GREEN:
-        return "Green"
-    elif color == NamedColor.BLACK:
-        return "Black"
-    elif color == NamedColor.RED:
-        return "Red"
-    elif color == NamedColor.BLUE:
-        return "Blue"
-    elif color == NamedColor.WHITE:
-        return "White"
-
-    raise InvalidNamedColorError(color)
 
 
 def color_code_from_protocol(color_code: list[TNamedColor]) -> ColorCode:

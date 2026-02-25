@@ -1,15 +1,30 @@
 import typing
 
-from ozobot.ari import conversions as ari_conversions
 from ozobot.linefollower.datatypes import Direction, NamedColor, TDirection, TNamedColor
 from ozobot.linefollower.driver.web import conversions as web_conversions
 from ozobot.linefollower.driver.web.rpctypes import TWebDirection
+from ozobot.linefollower.exceptions import InvalidNamedColorError
 from ozobot.userio.datatypes import TUserIoPrompt, TWebUserIoPrompt
 from ozobot.userio.exceptions import (
     UnexpectedUserIoPromptOptionTypeError,
     UnexpectedUserIoPromptResponseReceivedError,
     UnexpectedUserIoPromptTypeError,
 )
+
+
+def color_to_protocol(color: NamedColor) -> TNamedColor:
+    if color == NamedColor.GREEN:
+        return "Green"
+    elif color == NamedColor.BLACK:
+        return "Black"
+    elif color == NamedColor.RED:
+        return "Red"
+    elif color == NamedColor.BLUE:
+        return "Blue"
+    elif color == NamedColor.WHITE:
+        return "White"
+
+    raise InvalidNamedColorError(color)
 
 
 def get_type_name(_type: type[str | int | float | bool | NamedColor | Direction]) -> TUserIoPrompt:
@@ -25,6 +40,23 @@ def get_type_name(_type: type[str | int | float | bool | NamedColor | Direction]
         return "direction"
     else:
         raise UnexpectedUserIoPromptTypeError(_type)
+
+
+def intersection_direction_to_protocol(direction: Direction) -> TDirection:
+    if not len(direction) == 1:
+        raise ValueError("Direction attribute needs to define exactly one direction")
+
+    match direction:
+        case Direction.LEFT:
+            return "Left"
+        case Direction.RIGHT:
+            return "Right"
+        case Direction.STRAIGHT:
+            return "Forward"
+        case Direction.BACKWARD:
+            return "Back"
+        case _:
+            typing.assert_never(direction)
 
 
 def get_web_type_name(_type: type[str | int | float | bool | NamedColor | Direction]) -> TWebUserIoPrompt:
@@ -51,9 +83,9 @@ def get_type_options[T: (str, float, int, bool, NamedColor, Direction)](
             raise UnexpectedUserIoPromptOptionTypeError(opt, _type)
 
         if isinstance(opt, NamedColor):
-            protocol_options.append(ari_conversions.color_to_protocol(opt))
+            protocol_options.append(color_to_protocol(opt))
         elif isinstance(opt, Direction):
-            protocol_options.append(ari_conversions.intersection_direction_to_protocol(opt))
+            protocol_options.append(intersection_direction_to_protocol(opt))
         else:
             protocol_options.append(opt)
 
