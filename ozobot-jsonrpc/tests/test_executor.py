@@ -76,8 +76,12 @@ async def test_executor_types() -> None:
 
     async with Executor[_Message, _Cancel].create(transport, _Cancel) as executor:
         async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
-            typing.assert_type(execution.response, typing.Awaitable[_ResponseA])
+            resp = execution.response
+            typing.assert_type(resp, typing.Awaitable[_ResponseA])
             typing.assert_type(execution.notifications, typing.AsyncIterator[_NotificationA])
+
+            # silence "not awaited warning"
+            resp.close()  # type: ignore
 
 
 async def test_executor_types_no_response() -> None:
@@ -87,8 +91,12 @@ async def test_executor_types_no_response() -> None:
 
     async with Executor.create(transport, _Cancel) as executor:
         async with Query(_RequestB(id=1, data="hello world"), _method_b).execute(executor) as execution:
-            typing.assert_type(execution.response, typing.Awaitable[_ResponseB])
+            resp = execution.response
+            typing.assert_type(resp, typing.Awaitable[_ResponseB])
             typing.assert_type(execution.notifications, typing.AsyncIterator[typing.Never])
+
+            # silence "not awaited warning"
+            resp.close()  # type: ignore
 
 
 async def test_executor_types_no_notification() -> None:
@@ -98,8 +106,12 @@ async def test_executor_types_no_notification() -> None:
 
     async with Executor.create(transport, _Cancel) as executor:
         async with Query(_RequestC(id=1, data="hello world"), _method_c).execute(executor) as execution:
-            typing.assert_type(execution.response, typing.Awaitable[typing.Never])
+            resp = execution.response
+            typing.assert_type(resp, typing.Awaitable[typing.Never])
             typing.assert_type(execution.notifications, typing.AsyncIterator[_NotificationC])
+
+            # silence "not awaited warning"
+            resp.close()  # type: ignore
 
 
 async def test_executor_rpc() -> None:

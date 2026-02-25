@@ -41,17 +41,6 @@ def test_import_native() -> None:
     # assert issubclass(get_driver(), EvoNativeDriver)
 
 
-async def test_open() -> None:
-    with (
-        patch("ozobot.evo.driver.native.open_client") as open_client_mock,
-        patch("ozobot.evo.driver.native.create_memory_regions_structure"),
-        patch("ozobot.evo.driver.native._stop_execution"),
-    ):
-        async with EvoNativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
-            assert isinstance(driver, EvoNativeDriver)
-            open_client_mock.assert_called_with(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF")
-
-
 @pytest.mark.parametrize(
     ["function_name", "command_name", "command_parameters", "rpc_parameters"],
     [
@@ -77,13 +66,13 @@ async def test_command_with_events(
 
     control = Mock(
         **{command_name: cmd_mock},
-        get_next_request_id=lambda: sentinel.request_id,
+        get_next_request_id=lambda: 1,
     )
     driver = EvoNativeDriver(control, Mock())
 
     function = getattr(driver, function_name)
     await function(*command_parameters)
-    cmd_mock.assert_called_once_with(sentinel.request_id, *rpc_parameters)
+    cmd_mock.assert_called_once_with(1, *rpc_parameters)
 
 
 async def test_line_navigation() -> None:

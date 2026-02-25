@@ -190,11 +190,13 @@ async def test_queue_full():
         test_event = asyncio.Event()
         with pytest.raises(asyncio.TimeoutError):
             async with asyncio.timeout(0.1):
-                await q.run_blocking(_task_set_evt(test_event))
+                t = _task_set_evt(test_event)
+                await q.run_blocking(t)
 
         for event in events:
             event.set()
 
+    t.close()
     assert not test_event.is_set()
 
 
@@ -244,7 +246,7 @@ async def test_queue_detect_error_by_nonblocking():
     await event.wait()  # synchronize to make sure the failing task is finished
 
     with pytest.raises(ExceptionGroup) as excinfo:
-        await task_queue.run_nonblocking(asyncio.sleep(0))
+        await task_queue.run_nonblocking(asyncio.Future())
 
         assert list(excinfo.value.exceptions) == [Exception("Houston, we have a problem")]
 
@@ -261,7 +263,7 @@ async def test_queue_detect_error_by_blocking():
     await event.wait()  # synchronize to make sure the failing task is finished
 
     with pytest.raises(ExceptionGroup) as excinfo:
-        await task_queue.run_blocking(asyncio.sleep(0))
+        await task_queue.run_blocking(asyncio.Future())
 
         assert list(excinfo.value.exceptions) == [Exception("Houston, we have a problem")]
 

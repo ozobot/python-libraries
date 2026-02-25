@@ -2,7 +2,7 @@ import asyncio
 import contextlib
 import math
 import typing
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, Mock, PropertyMock, patch
 
 import pytest
 from ozobot.ari.driver.native import AriNativeDriver
@@ -43,7 +43,10 @@ def _create_query(response=None, notifications=None):
 
                 evt.set()
 
-            yield Mock(response=_resp(), notifications=_notifications() if notifications else None)
+            ret = Mock()
+            type(ret).response = PropertyMock(side_effect=lambda: _resp())
+            ret.notifications = _notifications() if notifications else None
+            yield ret
 
     return _MockQuery, query_mock
 

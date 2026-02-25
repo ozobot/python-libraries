@@ -68,9 +68,13 @@ class Method[
 
 @dataclass(frozen=True, kw_only=True)
 class _ExecutorQuery[TResponse, TNotification]:
-    response: typing.Awaitable[TResponse]
+    _response: typing.AsyncIterator[TResponse]
     notifications: typing.AsyncIterator[TNotification]
     cancel: typing.Callable[[], None]
+
+    @property
+    def response(self) -> typing.Awaitable[TResponse]:
+        return anext(self._response)
 
 
 class Query[TReq: _AbstractJsonRpcMessage, TRes: _AbstractJsonRpcMessage, TNotif: _AbstractJsonRpcMessage]:
@@ -184,8 +188,12 @@ class Executor[TMsg: _AbstractJsonRpcMessage, TCancellationMsg: _AbstractJsonRpc
                 )
                 tg.cancel()
 
+            # class _ResponseAwaitable:
+            #     def __await__(self) -> TRes:
+            #         return anext(response_iter).__await__()
+
             query = _ExecutorQuery(
-                response=anext(response_iter),
+                _response=response_iter,
                 notifications=notification_iter,
                 cancel=lambda: _cancel_by_client("Cancelled by user"),
             )
