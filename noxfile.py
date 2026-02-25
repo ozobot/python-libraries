@@ -5,6 +5,8 @@ import nox_uv
 
 nox.options.default_venv_backend = "uv"
 
+test_python_versions = ["3.13"]
+
 
 def workspace_members(session):
     with open("/dev/null") as f:
@@ -30,7 +32,7 @@ class UvRunner:
             self._session.run(*run_cmd, *cmd)
 
 
-@nox_uv.session()
+@nox_uv.session(python=test_python_versions)
 def test(session):
     for path in get_target_packages(session):
         UvRunner(session=session, path=path).run_cmd("pytest", "-vv")
@@ -43,7 +45,7 @@ def lint(session):
         UvRunner(session=session, path=path).run_cmd("ruff", "format", "--check")
 
 
-@nox_uv.session(name="type-check")
+@nox_uv.session(name="type-check", python=test_python_versions)
 def type_check(session):
     for path in get_target_packages(session):
-        UvRunner(session=session, path=path).run_cmd("mypy", ".")
+        UvRunner(session=session, path=path).run_cmd("mypy", "--python-version", session.python, ".")
