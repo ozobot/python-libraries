@@ -1008,6 +1008,7 @@ dev = [
 name = "ozobot-ora"
 source = { editable = "ozobot-ora" }
 dependencies = [
+    { name = "ozobot-common" },
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'" },
 ]
 
@@ -1017,7 +1018,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" }]
+requires-dist = [
+    { name = "ozobot-common", editable = "ozobot-common" },
+    { name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" },
+]
 
 [package.metadata.requires-dev]
 dev = [{ name = "ozobot-web", editable = "ozobot-web" }]

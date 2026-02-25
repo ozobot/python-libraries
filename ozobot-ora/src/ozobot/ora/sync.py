@@ -5,6 +5,7 @@ import typing
 from collections.abc import Callable
 from typing import Literal
 
+from ozobot.common.sync import as_sync
 from ozobot.ora.driver import OraDriver
 
 from .datatypes import (
@@ -22,7 +23,6 @@ from .datatypes import (
 )
 from .queue import TaskQueue
 from .units import Value, domains
-from .utils import as_sync
 
 _logger = logging.getLogger(__name__)
 
