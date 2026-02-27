@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 import bleak
+from bleak import BleakBackend
 from loguru import logger
 from ozobot.ble.datatypes import TProductName
 from ozobot.ble.exceptions import DeviceDescriptionError, DeviceNotFoundError, NoFilterSpecifiedError
@@ -80,6 +81,10 @@ async def open_client(
     handle = await _get_device(name=name, address=address, id=id, product=product)
     logger.info("Opening connection")
     async with bleak.BleakClient(handle) as client:
+        # BlueZ doesn't have a proper way to get the MTU, so we have this hack.
+        #     see: https://github.com/hbldh/bleak/blob/master/examples/mtu_size.py
+        if client.backend_id == BleakBackend.BLUEZ_DBUS:
+            await client._backend._acquire_mtu()  # type: ignore
         yield Client(client)
         logger.info("Closing connection")
 
@@ -95,7 +100,9 @@ class Client:
         self._client = client
         self._characteristics: dict[CharacteristicHandle, Characteristic] = {}
 
-    def get_characteristic(self, service: UUID, characteristic: UUID) -> Characteristic:
+    def get_characteristic(
+        self, service: UUID, characteristic: UUID, mtu_size_override: int | None = None
+    ) -> Characteristic:
         with logger.contextualize(service=service, characteristic=characteristic):
             handle = CharacteristicHandle(service=service, characteristic=characteristic)
             if handle in self._characteristics:
@@ -103,7 +110,12 @@ class Client:
                 char = self._characteristics[handle]
             else:
                 logger.debug("Instantiating characteristic")
-                char = Characteristic(client=self._client, service=service, characteristic=characteristic)
+                char = Characteristic(
+                    client=self._client,
+                    service=service,
+                    characteristic=characteristic,
+                    mtu_size_override=mtu_size_override,
+                )
                 self._characteristics[handle] = char
 
         return char
@@ -112,13 +124,17 @@ class Client:
 class Characteristic:
     @property
     def packet_size_max(self) -> int:
-        return self._client.mtu_size - 3
+        mtu = self._client.mtu_size if self._mtu_size_override is None else self._mtu_size_override
+        return mtu - 3
 
-    def __init__(self, *, service: UUID, characteristic: UUID, client: bleak.BleakClient) -> None:
+    def __init__(
+        self, *, service: UUID, characteristic: UUID, client: bleak.BleakClient, mtu_size_override: int | None = None
+    ) -> None:
         self._notify_lock = asyncio.Lock()
         self._refcount = 0
         self._broadcast = BroadcastManager[bytes]()
         self._client = client
+        self._mtu_size_override = mtu_size_override
         self._characteristic_handle = self._get_gatt_characteristic(
             client, service=service, characteristic=characteristic
         )

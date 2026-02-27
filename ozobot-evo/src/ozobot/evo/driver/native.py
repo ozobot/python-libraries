@@ -245,7 +245,7 @@ class EvoNativeDriver:
         name: str | None = None,
     ) -> typing.AsyncIterator[EvoNativeDriver]:
         async with open_client(address=address, id=id, name=name) as client:
-            char = client.get_characteristic(_SERVICE_UUID, _CHARACTERISTIC_UUID)
+            char = client.get_characteristic(_SERVICE_UUID, _CHARACTERISTIC_UUID, mtu_size_override=23)
             control = AsyncControl(char)
             await _stop_execution(control, request_id=0)
 

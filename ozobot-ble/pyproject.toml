@@ -9,7 +9,7 @@ requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
     "ozobot-common>=0.2",
-    "bleak>=0.22.3",
+    "bleak~=2.0.0",
     "loguru",
 ]
 
