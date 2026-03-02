@@ -2,7 +2,7 @@ import asyncio
 import contextlib
 import typing
 
-from loguru import logger
+from ozobot.common.logging import logger
 
 
 class BroadcastManager[T]:

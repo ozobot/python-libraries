@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing
 
-from loguru import logger
+from ozobot.common.logging import logger
 from ozobot.linefollower.datatypes import (
     Color,
     Direction,

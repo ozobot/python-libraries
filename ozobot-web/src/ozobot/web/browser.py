@@ -1,6 +1,6 @@
 import typing
 
-from loguru import logger
+from ozobot.common.logging import logger
 
 try:
     # this library is only present in web-python web application distribution

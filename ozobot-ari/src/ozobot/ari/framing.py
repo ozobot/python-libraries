@@ -3,7 +3,7 @@
 import typing
 from enum import Enum
 
-from loguru import logger
+from ozobot.common.logging import logger
 from ozobot.jsonrpc.exceptions import UnknownFrameDecoderStateError
 
 

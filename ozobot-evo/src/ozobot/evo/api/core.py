@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import typing
 
-from loguru import logger
+from ozobot.common.logging import logger
 from ozobot.evo.driver import EvoDriver
 from ozobot.linefollower.api.core import LineFollower
 from ozobot.linefollower.datatypes import IRMessage, Sample

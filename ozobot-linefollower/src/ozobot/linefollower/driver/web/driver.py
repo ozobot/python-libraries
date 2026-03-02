@@ -3,7 +3,7 @@ import math
 import typing
 
 import pydantic
-from loguru import logger
+from ozobot.common.logging import logger
 from ozobot.linefollower.api.data_access import WatcherOutputContainer, WatcherOutputContainerRunner
 from ozobot.linefollower.datatypes import Direction, LEDMask, Sample, SampleWithoutTimestamp
 from ozobot.linefollower.exceptions import MemoryReadUnsuccessfulError

@@ -13,10 +13,11 @@ else:
 def format_extra(record: Record):
     extra = record.get("extra", {})
     kwargs = {k: v for k, v in extra.items() if not k.startswith("_")}
+
     if kwargs:
-        record["extra"]["formatted_kwargs"] = " ".join(f"{k}={v!r}" for k, v in kwargs.items())
-    else:
-        record["extra"]["formatted_kwargs"] = ""
+        formatted_kwargs = " ".join(f"{k}={v!r}" for k, v in kwargs.items())
+        new_message = "\t".join([record["message"], formatted_kwargs])
+        record["message"] = new_message
 
 
 logger = _logger.patch(format_extra)

@@ -6,8 +6,8 @@ import typing
 import uuid
 from dataclasses import dataclass
 
-from loguru import logger
 from ozobot.common.broadcast import BroadcastManager
+from ozobot.common.logging import logger
 from ozobot.evo.driver.responses import handle_response
 from ozobot.evo.protocol import AsyncControl, PacketTypes, Types, VirtualMemory
 

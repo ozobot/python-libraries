@@ -8,10 +8,10 @@ from uuid import UUID, uuid4
 
 import bleak
 from bleak import BleakBackend
-from loguru import logger
 from ozobot.ble.datatypes import TProductName
 from ozobot.ble.exceptions import DeviceDescriptionError, DeviceNotFoundError, NoFilterSpecifiedError
 from ozobot.common.broadcast import BroadcastManager
+from ozobot.common.logging import logger
 from ozobot.common.match import match_with_wildcard
 
 from .datatypes import DeviceDescription

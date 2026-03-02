@@ -5,9 +5,9 @@ import contextlib
 import typing
 from dataclasses import dataclass
 
-from loguru import logger
 from ozobot.common.asyncutils import CancellableTaskGroup, async_iterator_never
 from ozobot.common.broadcast import BroadcastManager
+from ozobot.common.logging import logger
 from ozobot.jsonrpc.exceptions import CancelledByClientError, CancelledByServerError
 
 type _TMessageId = int

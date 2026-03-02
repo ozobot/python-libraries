@@ -5,7 +5,7 @@ import contextlib
 import typing
 import uuid
 
-from loguru import logger
+from ozobot.common.logging import logger
 from ozobot.webrtc.aiortc_wrapper import ReadyState
 from ozobot.webrtc.connection import Channel, Connection, ConnectionFactory
 from ozobot.webrtc.datatypes import (

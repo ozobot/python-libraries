@@ -7,7 +7,6 @@ import typing
 from builtins import issubclass
 from uuid import UUID
 
-from loguru import logger
 from ozobot.ari import conversions
 from ozobot.ari.driver.shared import geometry
 from ozobot.ari.exceptions import (
@@ -20,6 +19,7 @@ from ozobot.ari.protocol.memread import MemReadResponseBody, MemWatchResponseBod
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
+from ozobot.common.logging import logger
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import (
     EventWatcher,
