@@ -2,21 +2,28 @@ import logging
 import sys
 import typing
 
-from loguru import logger
+from loguru import logger as _logger
 
-_debug_logger_format = (
-    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-    "<level>{level: <8}</level> | "
-    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
-    "- <level>{message} {extra}</level>"
-)
+if typing.TYPE_CHECKING:
+    from loguru import Record
+else:
+    Record = dict
 
 
-def setup_logging(level: typing.Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"]):
+def format_extra(record: Record):
+    extra = record.get("extra", {})
+    kwargs = {k: v for k, v in extra.items() if not k.startswith("_")}
+    if kwargs:
+        record["extra"]["formatted_kwargs"] = " ".join(f"{k}={v!r}" for k, v in kwargs.items())
+    else:
+        record["extra"]["formatted_kwargs"] = ""
+
+
+logger = _logger.patch(format_extra)
+
+
+def hook_native_logger_interceptor():
     logging.basicConfig(handlers=[_InterceptHandler()], level=0)
-
-    logger.remove(0)
-    logger.add(sys.stderr, level=level, format=_debug_logger_format, backtrace=True, diagnose=True)
 
 
 class _InterceptHandler(logging.Handler):
