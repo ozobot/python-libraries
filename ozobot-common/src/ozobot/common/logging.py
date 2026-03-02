@@ -21,6 +21,7 @@ def format_extra(record: Record):
 
 
 logger = _logger.patch(format_extra)
+logger.disable("ozobot")
 
 
 def hook_native_logger_interceptor():
