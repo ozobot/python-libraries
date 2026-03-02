@@ -793,7 +793,6 @@ wheels = [
 name = "ozobot-actors"
 source = { editable = "ozobot-actors" }
 dependencies = [
-    { name = "loguru" },
     { name = "ozobot-common" },
     { name = "ozobot-linefollower" },
 ]
@@ -818,7 +817,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "loguru" },
     { name = "ozobot-ari", marker = "extra == 'ari'", editable = "ozobot-ari" },
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-evo", marker = "extra == 'evo'", editable = "ozobot-evo" },
@@ -838,7 +836,6 @@ dev = [
 name = "ozobot-ari"
 source = { editable = "ozobot-ari" }
 dependencies = [
-    { name = "loguru" },
     { name = "ozobot-ble", marker = "sys_platform != 'emscripten'" },
     { name = "ozobot-common" },
     { name = "ozobot-jsonrpc", marker = "sys_platform != 'emscripten'" },
@@ -857,7 +854,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "loguru" },
     { name = "ozobot-ble", marker = "sys_platform != 'emscripten'", editable = "ozobot-ble" },
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-jsonrpc", marker = "sys_platform != 'emscripten'", editable = "ozobot-jsonrpc" },
@@ -879,14 +875,12 @@ name = "ozobot-ble"
 source = { editable = "ozobot-ble" }
 dependencies = [
     { name = "bleak" },
-    { name = "loguru" },
     { name = "ozobot-common" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "bleak", specifier = "~=2.0.0" },
-    { name = "loguru" },
     { name = "ozobot-common", editable = "ozobot-common" },
 ]
 
@@ -904,7 +898,6 @@ requires-dist = [{ name = "loguru" }]
 name = "ozobot-evo"
 source = { editable = "ozobot-evo" }
 dependencies = [
-    { name = "loguru" },
     { name = "ozobot-ble", marker = "sys_platform != 'emscripten'" },
     { name = "ozobot-common" },
     { name = "ozobot-linefollower" },
@@ -919,7 +912,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "loguru" },
     { name = "ozobot-ble", marker = "sys_platform != 'emscripten'", editable = "ozobot-ble" },
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
@@ -934,15 +926,11 @@ dev = [{ name = "ozobot-web", editable = "ozobot-web" }]
 name = "ozobot-jsonrpc"
 source = { editable = "ozobot-jsonrpc" }
 dependencies = [
-    { name = "loguru" },
     { name = "ozobot-common" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "loguru" },
-    { name = "ozobot-common", editable = "ozobot-common" },
-]
+requires-dist = [{ name = "ozobot-common", editable = "ozobot-common" }]
 
 [[package]]
 name = "ozobot-library"
@@ -988,7 +976,6 @@ provides-extras = ["dev", "docs"]
 name = "ozobot-linefollower"
 source = { editable = "ozobot-linefollower" }
 dependencies = [
-    { name = "loguru" },
     { name = "ozobot-common" },
     { name = "ozobot-web" },
     { name = "pydantic", marker = "sys_platform == 'emscripten'" },
@@ -1002,7 +989,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "loguru" },
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-web", editable = "ozobot-web" },
     { name = "pydantic", marker = "sys_platform == 'emscripten'", specifier = ">=2" },
@@ -1083,7 +1069,6 @@ dependencies = [
     { name = "aiohttp" },
     { name = "aiormq" },
     { name = "aiortc" },
-    { name = "loguru" },
     { name = "ozobot-common" },
     { name = "pydantic" },
     { name = "websockets" },
@@ -1094,7 +1079,6 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.12.13" },
     { name = "aiormq", specifier = ">=6.9.0" },
     { name = "aiortc", specifier = ">=1.13.0" },
-    { name = "loguru" },
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "pydantic", specifier = ">=2" },
     { name = "websockets", specifier = ">=15.0.0" },

@@ -10,7 +10,6 @@ dynamic = ["version"]
 dependencies = [
     "ozobot-common>=0.2",
     "bleak~=2.0.0",
-    "loguru",
 ]
 
 [project.urls]

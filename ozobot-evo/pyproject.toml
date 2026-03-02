@@ -12,7 +12,6 @@ dependencies = [
     "ozobot-common>=0.2",
     "ozobot-linefollower>=0.2",
     "ozobot-web>=0.2; platform_system == 'Emscripten'",
-    "loguru",
     "pydantic>=2.11.7",
 ]
 

@@ -9,7 +9,6 @@ requires-python = ">=3.12"
 dynamic = ["version"]
 dependencies = [
     "ozobot-common>=0.2",
-    "loguru",
 ]
 
 [project.urls]

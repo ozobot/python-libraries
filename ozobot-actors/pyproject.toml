@@ -10,7 +10,6 @@ dynamic = ["version"]
 dependencies = [
     "ozobot-common>=0.2",
     "ozobot-linefollower>=0.2",
-    "loguru",
 ]
 
 [project.optional-dependencies]
