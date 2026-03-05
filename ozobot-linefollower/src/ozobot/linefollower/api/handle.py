@@ -19,7 +19,7 @@ class BaseHandle:
         """
         BLE MAC address of the robot.
 
-        Accepts wildmark '*' character that matches any string.
+        Accepts wildcard '*' character that matches any string.
         """
         return self._address
 
@@ -28,7 +28,7 @@ class BaseHandle:
         """
         Robot ID.
 
-        Accepts wildmark '*' character that matches any string.
+        Accepts wildcard '*' character that matches any string.
         """
         return self._id
 
@@ -37,6 +37,6 @@ class BaseHandle:
         """
         Robot BLE name.
 
-        Accepts wildmark '*' character that matches any string.
+        Accepts wildcard '*' character that matches any string.
         """
         return self._name
