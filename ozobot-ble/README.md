@@ -19,14 +19,14 @@ from ozobot.ble import open_client
 from ozobot.ble.datatypes import TProductName
 
 async def main() -> None:
-  async with open_client(product="evo", name="optional-device-name", id="optional-device-id", address="optional-device-mac") as client:
-    char = client.get_characteristic(service_uuid, characteristic_uuid)
-    value = await char.read()  # current value
-    async with char.open_session() as session:
-      await session.write(b"data")
-      async for data in session.read():
-        print(data)
+    async with open_client(product="evo", name="optional-device-name", id="optional-device-id", address="optional-device-mac") as client:
+        char = client.get_characteristic(service_uuid, characteristic_uuid)
+        value = await char.read()  # current value
+        async with char.open_session() as session:
+            await session.write(b"data")
+            async for data in session.read():
+                print(data)
 
 if __name__ == "__main__":
-  asyncio.run(main())
+    asyncio.run(main())
 ```

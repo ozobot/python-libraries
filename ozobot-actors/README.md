@@ -41,22 +41,22 @@ from ozobot.evo import EvoHandle
 dispatcher = actors.new_actor_dispatcher()
 
 async def main() -> None:
-  async with EvoHandle(name="OzoEvo-1234abcd") as e1, EvoHandle(name="Ari-ABCD") as a1:
-    dispatcher.add("Evo_1", e1)
-    dispatcher.add("Ari_1", a1)
+    async with EvoHandle(name="OzoEvo-1234abcd") as e1, EvoHandle(name="Ari-ABCD") as a1:
+        dispatcher.add("Evo_1", e1)
+        dispatcher.add("Ari_1", a1)
 
-    with dispatcher.actor("Ari_1"):  # this puts Ari onto the default stack
-      await move(100, 50)  # moves Ari
-      await user_io_alert("Hello from Ari!")  # displays message on Ari
+        with dispatcher.actor("Ari_1"):  # this puts Ari onto the default stack
+            await move(100, 50)  # moves Ari
+            await user_io_alert("Hello from Ari!")  # displays message on Ari
 
-      with dispatcher.actor("Evo_1"):  # this puts Evo on top of Ari
-        await move(100, 50)  # moves Evo
-        await user_io_alert("Hello again from Ari!")  # Ari shows the message, because Evo does not support `user_io_alert`
-      # stepping out of the context manager block removes Evo from the top of the stack
-      
-      await move(-100, 50)  # moves Ari again
+            with dispatcher.actor("Evo_1"):  # this puts Evo on top of Ari
+                await move(100, 50)  # moves Evo
+                await user_io_alert("Hello again from Ari!")  # Ari shows the message, because Evo does not support `user_io_alert`
+            # stepping out of the context manager block removes Evo from the top of the stack
+            
+            await move(-100, 50)  # moves Ari again
 
 
 if __name__ == "__main__":
-  asyncio.run(main())
+    asyncio.run(main())
 ```
