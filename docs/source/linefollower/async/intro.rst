@@ -58,7 +58,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
           await r.set_led(LEDMask.ALL_FRONT, NamedColor.RED)
           await asyncio.sleep(1)
 
-          # set three front center LEDs blue
+          # set three front center LEDs white
           await r.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER | LEDMask.FRONT_CENTER, NamedColor.WHITE)
           await asyncio.sleep(1)
 
