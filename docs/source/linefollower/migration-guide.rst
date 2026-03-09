@@ -5,7 +5,7 @@ Beta Editor API got deprecated and it's up to the users to migrate their code to
 document introduces several examples showing the same program written using the legacy and the current API both :ref:`sync <sync_evo>` or :ref:`async <async_evo>`. The programs in the legacy API are presented using both the documented `object oriented` and legacy Blockly runtime `Device Manager` paradigms. 
 
 While the `Device Manager` based API is slightly different, both the legacy and current API follow similar principles. Therefore the migration should be pretty straightforward in most cases and should mostly consist of replacing individual function calls by their newer equivalents.
-The API for opening connections and managing sensors differs significantly. We suggest the users to take a look on the following examples and observe the differences between the pair of APIs they use.
+The API for opening connections and managing sensors differs significantly. We suggest that users look at the following examples and compare the differences between the API pairs.
 
 .. _example_simple_motion:
 
@@ -205,7 +205,7 @@ Example - Sensors
             print(intersection)
             print(evo1.data.line_color.read())
             print(evo1.data.surface_color.read())
-            # sync api does not currently support reading obstacle sensors
+            # sync api currently does not support reading obstacle sensors
 
 
     .. code-tab:: Python Async [new]
