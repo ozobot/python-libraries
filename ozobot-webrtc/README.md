@@ -20,24 +20,24 @@ from ozobot.webrtc.signaling import SignalingCaller
 from ozobot.webrtc.messaging import create_channel_factory, MessagingChannelConfig
 
 async def main() -> None:
-  # Configure messaging
-  config = MessagingChannelConfig(
-    device_id="your-connection-key",
-    username="your-username", 
-    password="your-password"
-  )
+    # Configure messaging
+    config = MessagingChannelConfig(
+        device_id="your-connection-key",
+        username="your-username", 
+        password="your-password"
+    )
 
-  # Establish connection
-  async with create_channel_factory(config) as factory:
-    caller = SignalingCaller(factory, "your-queue-name")
-    connection, channels = await caller.signal(channels=("control",))
+    # Establish connection
+    async with create_channel_factory(config) as factory:
+        caller = SignalingCaller(factory, "your-queue-name")
+        connection, channels = await caller.signal(channels=("control",))
 
-    # Use the data channels
-    data_channel = channels[0]
-    await data_channel.send(b"Hello Ozobot!")
+        # Use the data channels
+        data_channel = channels[0]
+        await data_channel.send(b"Hello Ozobot!")
 
-    async for data in channel.receive_str():
-      print(data)
+        async for data in channel.receive_str():
+            print(data)
 
 
 if __name__ == "__main__":

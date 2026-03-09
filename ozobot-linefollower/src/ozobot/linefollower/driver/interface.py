@@ -52,11 +52,11 @@ class WatchableRegion[T](Protocol):
         Continuously watches given data region, emitting a data sample on change. More verbose than :py:attr:`read` but guarantees
         all the changes will be read.
 
-        The property is in fact an asynchronnous context manager which starts the monitoring on entering the context and
+        The property is in fact an asynchronous context manager which starts the monitoring on entering the context and
         stops it on exiting the context. The context manager yields a container that can be used as asynchronous iterator or
         as object with :py:meth:`WatcherOutputContainer.collect` which returns a list of collected samples. The container is valid even after the context has been closed.
 
-        :return: Asynchronnous context manager :py:class:`WatcherOutputContainer` on enter
+        :return: Asynchronous context manager :py:class:`WatcherOutputContainer` on enter
 
         .. codeblock:: python
             async with robot.data.example_region.watch() as container:
@@ -99,7 +99,7 @@ class VirtualMemoryRegions(Protocol):
         """
         Line color detected.
 
-        Classified color detected by the line sensor. Gives `None` if the color cannot be classified.
+        Classified color detected by the line sensor. Returns `None` if the color cannot be classified.
         """
 
     @property
@@ -107,7 +107,7 @@ class VirtualMemoryRegions(Protocol):
         """
         Surface color detected.
 
-        Classified color detected by the surface sensor. Gives `None` if the color cannot be classified.
+        Classified color detected by the surface sensor. Returns `None` if the color cannot be classified.
         """
 
     @property

@@ -10,7 +10,7 @@ class AriVirtualMemory(VirtualMemoryRegions, typing.Protocol):
     @property
     def time_of_flight(self) -> WatchableRegion[Sample[TimeOfFlight]]:
         """
-        Time of flight based distance measurement.
+        Distance measurement based on Time-of-Flight sensor.
         """
 
 
@@ -38,7 +38,7 @@ class Ari(LineFollower):
         """
         Display a temporary text message.
 
-        A popup is shown on the Ari screen for a few moments. Does only block until the popup is shown.
+        A popup is shown on the Ari screen for a few seconds. Only blocks while the popup is shown.
 
         :param message: Message text
 
@@ -53,14 +53,14 @@ class Ari(LineFollower):
         """
         Display a text message requiring confirmation.
 
-        A text message with a button to confirm is shown. The function blocks until the message is confirmed.
+        A text message with a button to confirm is shown on the Ari screen. The function blocks until the message is confirmed.
 
-        Optionally, the message can be made cancellable. Cancelling the message results in `asyncio.CancelledError` being raised.
+        Optionally, the message can be made cancellable, so that the user can dismiss it on the Ari screen. Cancelling the message results in `asyncio.CancelledError` being raised.
 
         :param message: Message text
-        :param cancellable: If true, the message can also be cancelled
+        :param cancellable: If true, the message can also be cancelled by the user
 
-        :raises asyncio.CancelledError: Raised when a cancellable message gets cancelled.
+        :raises asyncio.CancelledError: Raised when a cancellable message gets cancelled by the user.
 
         .. code-block:: python
 
@@ -91,17 +91,17 @@ class Ari(LineFollower):
         """
         Display a selection dialog.
 
-        A text message along a list of options of the same type is displayed on the screen allowing user to select a single value. The selected
+        A text message along a list of options of the same type is displayed on the Ari screen, allowing the user to select a single value. The selected
         value is returned by the function. Blocks until a selection is made.
 
-        Optionally, the dialog can be made cancellable. Cancelling the dialog results in `asyncio.CancelledError` being raised.
+        Optionally, the dialog can be made cancellable, so that the user can dismiss it on the Ari screen. Cancelling the dialog results in `asyncio.CancelledError` being raised.
 
         :param message: Message text
         :param _type: Type of the items in the option list
         :param options: A list of options to choose from
-        :param cancellable: If true, the message can also be cancelled
+        :param cancellable: If true, the message can also be cancelled by the user
 
-        :raises asyncio.CancelledError: Raised when a cancellable message gets cancelled.
+        :raises asyncio.CancelledError: Raised when a cancellable message gets cancelled by the user.
         :return: Selected value, the type is the same as the :obj:`_type` argument
 
         .. warning::

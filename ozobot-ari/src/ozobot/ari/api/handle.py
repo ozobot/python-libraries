@@ -20,7 +20,7 @@ class BaseAriHandle(BaseHandle):
         """
         Connection key from the Ari's screen.
 
-        If this field is set, a connection is open to the specified robot through WiFi (WebRTC). No BLE communication is done.
+        If this field is set, a connection is opened to the specified robot through WiFi (WebRTC). No BLE communication is done.
 
         .. warning::
             If this field is set, all the other fields are ignored.

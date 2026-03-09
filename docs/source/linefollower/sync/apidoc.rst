@@ -1,6 +1,6 @@
 .. _sync_apidoc:
 
-Ari synchronnous API reference
+Ari synchronous API reference
 ==============================
 
 .. autoclass:: ozobot.ari.SyncAriHandle
@@ -17,7 +17,7 @@ Ari synchronnous API reference
 	:inherited-members:
 
 
-Evo synchronnous API reference
+Evo synchronous API reference
 ==============================
 
 .. autoclass:: ozobot.evo.SyncEvoHandle
