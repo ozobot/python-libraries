@@ -201,7 +201,7 @@ class Direction(enum.Flag):
     """
     Direction.
 
-    Can be combined into a broader direction set by using theunion operator:
+    Can be combined into a broader direction set by using the union operator:
     .. code-block::
 
         # select front center
