@@ -3,10 +3,10 @@ class BaseHandle:
     Factory class for obtaining robot connection.
 
     Instance of this class can be used as a context manager to open a connection to robot given by the connection filters given on initialization. If multiple selectors are
-    specified, every has to match to select the robot. Selectors that are not defined (or set to None) are ignored.
+    specified, each one has to match to select the robot. Selectors that are not defined (or set to None) are ignored.
 
     .. note::
-        The behavior is platform specific and only :py:attr:`name` selector is supported in the web Ozobot Editor.
+        The behavior is platform-specific and only :py:attr:`name` selector is supported in the web Ozobot Editor.
     """
 
     def __init__(self, *, address: str | None = None, id: str | None = None, name: str | None = None) -> None:

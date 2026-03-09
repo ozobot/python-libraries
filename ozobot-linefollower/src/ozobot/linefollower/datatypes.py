@@ -18,7 +18,7 @@ class Color(abc.ABC):
     Abstract color representation.
 
     .. seealso::
-        You will never need to instantiate this class, take a look on the referenced implementations instead.
+        You will never need to instantiate this class - take a look at the referenced implementations instead.
 
         - :py:class:`RawColor`
         - :py:class:`NamedColor`
@@ -42,7 +42,7 @@ class RawColor(Color):
     RGB color.
 
     A color reading that was not classified and therefore has no known name. This color cannot be used in all places where
-    :py:class:`NamedColor` can. For example, one can use this class to set LED color, but cannot use it to say color from
+    :py:class:`NamedColor` can. For example, you can use this class to set LED color, but cannot use it to say color from
     the speaker.
 
     .. seealso::
@@ -98,7 +98,7 @@ class RawColor(Color):
 @dataclass(frozen=True, eq=False, repr=False)
 class NamedColor(Color):
     """
-    Color with name.
+    Color with a name, classifiable by the robot.
 
     Can be compared to other colors or converted to :py:class:`RawColor`
 
@@ -172,7 +172,7 @@ class LEDMask(enum.Flag):
     """
     LED selector mask.
 
-    Can be combined into a broader mask by using union operator:
+    Can be combined into a broader mask by using the union operator:
     .. code-block::
 
         # select front center
@@ -201,7 +201,7 @@ class Direction(enum.Flag):
     """
     Direction.
 
-    Can be combined into a broader direction set by using union operator:
+    Can be combined into a broader direction set by using theunion operator:
     .. code-block::
 
         # select front center
@@ -228,7 +228,7 @@ Strings recognized as notes.
 
 type TAudio = typing.Literal["laugh", "happy", "sad", "surprised"]
 """
-    Strings recognized as audio name.
+Strings recognized as audio names.
 """
 
 
@@ -244,7 +244,7 @@ class ColorCode:
 @dataclass(frozen=True, kw_only=True)
 class IRMessage:
     """
-    IR message sensoric data.
+    IR sensor message data.
     """
 
     message: int
@@ -254,7 +254,7 @@ class IRMessage:
 @dataclass(frozen=True, kw_only=True)
 class TimeOfFlight:
     """
-    Time of flight sensor readout
+    Time-of-Flight sensor readout
     """
 
     distance_mm: float
