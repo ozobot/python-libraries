@@ -130,7 +130,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
   
 Sensor readouts
 ---------------
-The robots have sensors, so let's read them.
+The robots have sensors, so let's read them. Please note that not all sensors are supported by the synchronous API yet.
 
 Sensor data is accessible through a mechanism we call Virtual Memory (VM). The robot firmware reads and processes the raw data values and stores them in the VM. In Python,
 its representation is available as :py:attr:`ozobot.evo.SyncEvo.data` and :py:attr:`ozobot.ari.SyncAri.data` for Evo and Ari respectively. Structures accessible through this property
@@ -145,7 +145,7 @@ For the synchronous API, the data can be read by simply calling the `read` metho
   from ozobot.evo import SyncEvoHandle
 
   with SyncEvoHandle(name="OzoEvo-ABC*") as r:
-      sample = r.data.obstacle_front_left.read()
+      sample = r.data.surface_color.read()
       print(sample.value, sample.timestamp)
 
 
