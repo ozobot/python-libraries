@@ -21,10 +21,10 @@ The library defines global functions that can control any robot supporting that 
 can be done by using a context manager. When an API function is called, the context is searched for available robot and the function is
 executed with the first matching robot. The robot selection follows a few simple rules:
 
- - Actors need to be registered in the dispatcher
+ - Actors need to be registered in the dispatcher with `dispatcher.add()`
  - Actors are put onto the stack as they are registered
- - Selecting an actor puts it on top of the current stack
- - Masking an actor removes it from the current stack
+ - Selecting an actor with `dispatcher.actor()` puts it on top of the current stack
+ - Masking an actor with `dispatcher.mask()` removes it from the current stack
  - Stack is searched from the top
  - First robot having the required functionality is used, leaving the stack untouched
 
