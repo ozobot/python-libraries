@@ -111,11 +111,11 @@ class Ari(LineFollower):
 
             from ozobot.linefollower import Direction, NamedColor
 
-            # select direction. Use empty list for all directions.
+            # select a direction
             dir = await robot.user_io_prompt("Select a direction", Direction, [Direction.LEFT, Direction.RIGHT])
             print(dir)  # prints either Direction.LEFT or Direction.RIGHT depending on what the user selected
 
-            # select color. Use empty list for all colors.
+            # select a color
             color = await robot.user_io_prompt("Select a color", NamedColor, [NamedColor.BLACK, NamedColor.WHITE, NamedColor.BLUE])
             print(color)  # prints one of the colors depending on what the user selected
 
