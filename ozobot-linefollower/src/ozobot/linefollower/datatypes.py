@@ -201,7 +201,7 @@ class Direction(enum.Flag):
     """
     Direction.
 
-    Can be combined into a broader direction set by using the union operator:
+    Can be combined into a broader direction set by using the union operator. Intersections encountered by the robot are also represented by such union.
     .. code-block::
 
         # forward direction
@@ -210,7 +210,7 @@ class Direction(enum.Flag):
         # intersection might contain for example left and right directions
         intersection = Direction.LEFT | Direction.RIGHT
 
-        # convert the intersection to a list of directions
+        # convert the intersection (or any union of directions) to a list of directions
         assert list(intersection) == [Direction.LEFT, Direction.RIGHT]
     """
 
