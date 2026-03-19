@@ -1,8 +1,8 @@
 Migrate from the legacy API
 ===========================
 
-Beta Editor API got deprecated and it's up to the users to migrate their code to the current API so that their programs work correctly. The new API was designed to be more consistent across supported devices and more clean. The following
-document introduces several examples showing the same program written using the legacy and the current API both :ref:`sync <sync_evo>` or :ref:`async <async_evo>`. The programs in the legacy API are presented using both the documented `object oriented` and legacy Blockly runtime `Device Manager` paradigms. 
+The Beta Editor API is now deprecated. To ensure your programs continue to work correctly, please migrate your code to the new API. It's more consistent across supported devices and easier to use. This
+document shows side-by-side examples of the same programs written with both the legacy and the current APIs (:ref:`sync <sync_evo>` or :ref:`async <async_evo>`). Legacy examples are shown using both the documented `object oriented` and legacy Blockly runtime `Device Manager` paradigms. 
 
 While the `Device Manager` based API is slightly different, both the legacy and current API follow similar principles. Therefore the migration should be pretty straightforward in most cases and should mostly consist of replacing individual function calls by their newer equivalents.
 The API for opening connections and managing sensors differs significantly. We suggest that users look at the following examples and compare the differences between the API pairs.

@@ -104,7 +104,6 @@ A list of the supported actions with details can be found in the :ref:`API doc <
   from ozobot.ari import AriHandle
   from ozobot.linefollower import NamedColor, Direction
 
-
   async def main():
       async with AriHandle(name="Ari-ABCD") as r:
           # the robot can play preloaded sounds ..
@@ -125,6 +124,8 @@ A list of the supported actions with details can be found in the :ref:`API doc <
           await play_tone(440, 1, 100)
           await asyncio.sleep(0.5)
           await play_midi(69, 1, 100)
+
+  asyncio.run(main())
 
 
 
@@ -167,6 +168,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
           await r.move(100, 120)
           await r.rotate(90, 120)
   
+  asyncio.run(main())
   
 .. _cancelling:
 
@@ -253,7 +255,7 @@ relevant object, which looks into the VM and returns the current value.
 
   async def main():
       async with EvoHandle(name="OzoEvo-ABC*") as r:
-          sample = await r.data.obstacle_front_left.read()
+          sample = await r.data.obstacle_left_front.read()
           print(sample.value, sample.timestamp)
 
   asyncio.run(main())
@@ -278,7 +280,7 @@ can be used as an asynchronous iterator over all of the sampled sensor data. The
   async def move_until_obstacle(r):
       move_task = asyncio.create_task(r.set_velocity(50, 0))
       
-      async with r.data.obstacle_front_left.watch() as container:
+      async with r.data.obstacle_left_front.watch() as container:
           async for data in aiter(container):
               if data.value > 100:
                   move_task.cancel()

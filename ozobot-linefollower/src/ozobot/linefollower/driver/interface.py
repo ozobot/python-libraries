@@ -85,13 +85,13 @@ class VirtualMemoryRegions(Protocol):
     @property
     def line_following_speed(self) -> ReadableWritableRegion[float]:
         """
-        Line following speed in mm/s.
+        Line-following speed in mm/s.
         """
 
     @property
     def color_code(self) -> WatchableRegion[SampleWithoutTimestamp[ColorCode]]:
         """
-        Color codes detected during line following.
+        Color codes detected during line-following.
         """
 
     @property
@@ -113,7 +113,7 @@ class VirtualMemoryRegions(Protocol):
     @property
     def intersection(self) -> WatchableRegion[SampleWithoutTimestamp[Direction]]:
         """
-        Intersections detected during line following.
+        Intersections detected during line-following.
         """
 
     @property

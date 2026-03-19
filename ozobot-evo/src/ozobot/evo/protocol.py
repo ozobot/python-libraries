@@ -1336,7 +1336,7 @@ class Types:
     @enum.unique
     class LineCharacteristic(enum.IntFlag):
         """Bitmap type LineCharacteristic
-                Line characteristics like whether line is under all sensors. LineOnLeft/Right is set when there are multiple lines detected under the sensors whilst line following. Can me used to read arbitrary data besides the current line-followed line.
+                Line characteristics like whether line is under all sensors. LineOnLeft/Right is set when there are multiple lines detected under the sensors whilst line-following. Can me used to read arbitrary data besides the current line-followed line.
         Can attain none, one or more of (separated by '|' character):
                 LineOnLeft, LineOnRight, LineUnderAll
         """
