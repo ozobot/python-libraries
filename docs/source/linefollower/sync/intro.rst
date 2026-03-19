@@ -45,7 +45,7 @@ A list of the supported actions with details can be found in the :ref:`API doc <
       r.set_led(LEDMask.ALL_FRONT, NamedColor.RED)
       time.sleep(1)
 
-      # set three front center LEDs blue
+      # set three front center LEDs white
       r.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER | LEDMask.FRONT_CENTER, NamedColor.WHITE)
       time.sleep(1)
 

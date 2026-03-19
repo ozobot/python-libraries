@@ -111,21 +111,24 @@ class Ari(LineFollower):
 
             from ozobot.linefollower import Direction, NamedColor
 
-            # select direction
-            dir = await robot.user_io_prompt("Select direction", Direction, [Direction.LEFT, Direction.RIGHT])
+            # select a direction
+            dir = await robot.user_io_prompt("Select a direction", Direction, [Direction.LEFT, Direction.RIGHT])
             print(dir)  # prints either Direction.LEFT or Direction.RIGHT depending on what the user selected
 
-            # select color
-            color = await robot.user_io_prompt("Select color", NamedColor, [NamedColor.BLACK, NamedColor.WHITE, NamedColor.BLUE])
+            # select a color
+            color = await robot.user_io_prompt("Select a color", NamedColor, [NamedColor.BLACK, NamedColor.WHITE, NamedColor.BLUE])
             print(color)  # prints one of the colors depending on what the user selected
 
-
-            # select a number
+            # select a number. Float type is also supported.
             num = await robot.user_io_prompt("Select a number", int, list(range(5)))
             print(num)  # prints number 0 - 4 depending on what the user selected
 
+            # select a string
+            string = await robot.user_io_prompt("Select a string", str, ["Option 1", "Option 2"])
+            print(string)  # prints "Option 1" or "Option 2"
+
             # types cannot be combined, this would fail
-            # selection = await robot.user_io_primpt("Select", float, ["hello", 2, Direction.LEFT])
+            # selection = await robot.user_io_prompt("Select", float, ["hello", 2, Direction.LEFT])
         """
 
         return await self._ari_driver.user_io_prompt(message, _type, options, cancellable=cancellable)

@@ -201,17 +201,17 @@ class Direction(enum.Flag):
     """
     Direction.
 
-    Can be combined into a broader direction set by using the union operator:
+    Can be combined into a broader direction set by using the union operator. Intersections encountered by the robot are also represented by such union.
     .. code-block::
 
-        # select front center
-        mask_c = LEDMask.FRONT_CENTER
+        # forward direction
+        dir = Direction.STRAIGHT
 
-        # select left and right
-        mask_lr = LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT
+        # intersection might contain for example left and right directions
+        intersection = Direction.LEFT | Direction.RIGHT
 
-        # convert the mask to a list
-        assert list(mask_lr) == [LEDMask.FRONT_LEFT, LEDMask.FRONT_RIGHT]
+        # convert the intersection (or any union of directions) to a list of directions
+        assert list(intersection) == [Direction.LEFT, Direction.RIGHT]
     """
 
     BACKWARD = enum.auto()

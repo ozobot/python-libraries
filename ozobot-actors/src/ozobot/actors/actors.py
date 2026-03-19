@@ -90,7 +90,7 @@ class ActorDispatcher:
     @contextlib.contextmanager
     def actor(self, *names: str) -> typing.Iterator[None]:
         """
-        Pushe the agent on top of the stack.
+        Push the actor(s) to the top of the stack.
 
         Example:
 
@@ -121,7 +121,7 @@ class ActorDispatcher:
     @contextlib.contextmanager
     def mask(self, *names: str, all: bool = False) -> typing.Iterator[None]:
         """
-        Mask the agent on top of the stack.
+        Mask the actor(s) with the given name(s).
 
         Example:
 
@@ -133,10 +133,10 @@ class ActorDispatcher:
 
             async with dispatcher.connect("MyEvo", EvoHandle(name="Evo-ABCDE"):
                 with dispatcher.mask("MyEvo"):
-                    # evo won't be accessible here
+                    # MyEvo won't be accessible here
 
-                    with dispatcher.agent("MyEvo"):
-                        # the masking gets overwritten again
+                    with dispatcher.actor("MyEvo"):
+                        # the masking gets overwritten again, MyEvo is accessible
         """
         if all:
             names = tuple(self._actors.keys())
