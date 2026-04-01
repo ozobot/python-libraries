@@ -6,7 +6,7 @@ Datatypes
 There are several datatypes used across the project to represent colors, LEDs, or various sensor data and more.
 
 .. automodule:: ozobot.linefollower.datatypes
-	:members: NamedColor, RawColor, Color, Sample, SampleWithoutTimestamp, IRMessage, RobotGeometry, TimeOfFlight, TNote, TAudio
+	:members: NamedColor, RawColor, Color, ColorCode, Sample, SampleWithoutTimestamp, IRMessage, RobotGeometry, TimeOfFlight, TNote, TAudio
 
 .. autoenumflag:: ozobot.linefollower.datatypes.Direction
 
