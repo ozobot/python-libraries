@@ -235,6 +235,9 @@ class LineFollower:
         except LinefollowerFileNotFoundError as err:
             raise AudioFileNotFoundError(name) from err
 
+    def _int_to_number_asset_name(self, number: int) -> str:
+        return f"010400{format(abs(number), 'x').rjust(2, '0').upper()}"
+
     async def say_number(self, number: int | float) -> None:
         """
         Say number.
@@ -263,8 +266,21 @@ class LineFollower:
         if numint < 0:
             sounds.append("010400FF")  # minus
 
-        asset_name = f"010400{format(abs(numint), 'x').rjust(2, '0').upper()}"
-        sounds.append(asset_name)
+        if numint == 0:
+            sounds.append(self._int_to_number_asset_name(0))
+        else:
+            numint = abs(numint)
+            if numint >= 100:
+                sounds.append(self._int_to_number_asset_name(100))
+                numint -= 100
+
+            if numint >= 20:
+                tens = numint // 10
+                sounds.append(self._int_to_number_asset_name(tens * 10))
+                numint %= 10
+
+            if numint > 0:
+                sounds.append(self._int_to_number_asset_name(numint))
 
         for sound in sounds:
             await self._driver.play_audio_asset(sound)
