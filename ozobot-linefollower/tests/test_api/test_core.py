@@ -53,6 +53,8 @@ async def test_play_midi(midi_number: int, expected_frequency: int) -> None:
         [120, ["01040078"]],
         [-127.521, ["010400FF", "0104007F"]],
         [-112, ["010400FF", "01040070"]],
+        [-199, ["010400FF", "010400C7"]],
+        [199, ["010400C7"]],
     ],
     ids=lambda x: repr(x),
 )

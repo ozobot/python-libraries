@@ -256,7 +256,7 @@ class LineFollower:
         """
 
         numint = int(number)
-        if not (-199 < numint < 199):
+        if not (-200 < numint < 200):
             raise ValueError(f"`say_number` only supports range -199 to 199, got {numint}")
 
         sounds: list[str] = []
