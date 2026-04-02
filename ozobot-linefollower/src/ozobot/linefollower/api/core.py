@@ -124,9 +124,11 @@ class LineFollower:
 
         Given a frequency and a duration, play the sound.
 
-        :param frequency_hz: Sound frequency in Hertz
+        :param frequency_hz: Sound frequency in range 0 - 100_000 in Hertz
         :param duration_s: Sound duration in seconds
         :param volume_percent: Sound volume in percent (0 - 100)
+        :raises ValueError: when the frequency is out of range
+
         :See also: :py:meth:`play_note`, :py:meth:`play_midi`
 
         .. code-block:: python
@@ -134,6 +136,9 @@ class LineFollower:
             # play 440 Hz (A4) for one second at 50% volume
             await robot.play_tone(440, 1, 50)
         """
+
+        if frequency_hz < 0 or frequency_hz > 100_000:
+            raise ValueError(f"Frequency out of range: {frequency_hz}")
 
         logger.debug("Playing tone", frequency=frequency_hz, duration=duration_s, volume=volume_percent)
         await self._driver.play_tone(
@@ -149,9 +154,11 @@ class LineFollower:
         Given a note, octave and a duration, play the sound.
 
         :param note: The note represented by a capital letter and a sharp sign, such as A or F#
-        :param octave: Sound octave number. Middle C and A 440 Hz are in octave 4
+        :param octave: Sound octave number (0 - 9). Middle C and A 440 Hz are in octave 4
         :param duration_s: Sound duration in seconds
         :param volume_percent: Sound volume in percent (0 - 100)
+        :raises ValueError: when the note is invalid
+        :raises ValueError: when the octave is out of range
         :See also: :py:meth:`play_tone`, :py:meth:`play_midi`
 
         .. code-block:: python
@@ -165,6 +172,9 @@ class LineFollower:
 
         if note_idx < 0:
             raise ValueError(f"Invalid note: {note_idx}")
+
+        if octave < 0 or octave > 9:
+            raise ValueError(f"Invalid octave: {octave}")
 
         frequency_hz = self._convert_note_to_frequency(octave, note_idx)
         await self.play_tone(
@@ -182,6 +192,7 @@ class LineFollower:
         :param midi_number: Tone MIDI number, 0-127
         :param duration_s: Sound duration in seconds
         :param volume_percent: Sound volume in percent (0 - 100)
+        :raises ValueError: when the midi number is out of range
         :See also: :py:meth:`play_tone`, :py:meth:`play_note`
 
         .. code-block:: python
@@ -189,6 +200,9 @@ class LineFollower:
             # play MIDI 69 (A4, 440Hz) for one second at 50% volume
             await robot.play_midi(69, 1, 50)
         """
+
+        if midi_number < 0 or midi_number > 127:
+            raise ValueError(f"Midi number out of range: {midi_number}")
 
         frequency_hz = LineFollower._convert_key_to_frequency(midi_number, reference=69)
         await self.play_tone(
