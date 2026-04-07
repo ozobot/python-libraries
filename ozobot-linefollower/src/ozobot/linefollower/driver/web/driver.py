@@ -163,7 +163,7 @@ class WebDataAccessReadWrite[TProtoFrom: pydantic.BaseModel, TProtoTo, TLib](Web
 
 class WebMemoryRegions:
     def __init__(self, rpc: Rpc) -> None:
-        self.color_code = WebDataAccessReadWatch(
+        self.color_code = WebDataAccessWatch(
             rpc,
             "colorCode",
             response_type=rpctypes.ColorCodeResponse,
