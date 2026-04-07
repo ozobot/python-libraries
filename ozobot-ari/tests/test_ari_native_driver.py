@@ -122,9 +122,9 @@ async def test_open_connection_key() -> None:
         (
             "play_tone",
             "PlayTone",
-            [1, 2000, 3],
+            [1, 2000],
             (
-                request.PlayToneRequest(id=0, params=request.PlayToneRequestParams(frequency=1, duration=2, volume=3)),
+                request.PlayToneRequest(id=0, params=request.PlayToneRequestParams(frequency=1, duration=2, volume=1)),
                 methods.PLAY_TONE,
             ),
         ),

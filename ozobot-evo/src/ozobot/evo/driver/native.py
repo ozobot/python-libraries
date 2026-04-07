@@ -279,8 +279,9 @@ class EvoNativeDriver:
             async with self._cancellation(request_id=request_id):
                 await handle_events("Velocity", evts)
 
-    async def play_tone(self, frequency_hz: int, duration_ms: int, volume: int) -> None:
+    async def play_tone(self, frequency_hz: int, duration_ms: int) -> None:
         request_id = self._control.get_next_request_id()
+        volume = 100  # volume parameter is currently ignored by evo
         async with self._control.PlayTone(request_id, frequency_hz, duration_ms, volume) as (
             resp,
             evts,

@@ -47,7 +47,7 @@ def test_import_native() -> None:
         ("move", "MoveStraight", [200, 100], [0.2, 0.1]),
         ("rotate", "Rotate", [90, 10], [math.pi / 2, math.radians(10)]),
         ("velocity", "Velocity", [100, 10, 3], [0.1, math.radians(10), 3]),
-        ("play_tone", "PlayTone", [1, 2, 3], [1, 2, 3]),
+        ("play_tone", "PlayTone", [1, 2], [1, 2, 100]),
         ("play_audio_asset", "ExecuteFile", ["01010100"], ["/system/audio/01010100.wav"]),
     ],
 )
@@ -136,7 +136,7 @@ async def test_set_led(command_direction: LEDMask, rpc_direction: Types.LEDsMask
         ("move", "MoveStraight", [200, 100], [0.2, 0.1]),
         ("rotate", "Rotate", [90, 10], [math.pi / 2, math.radians(10)]),
         ("velocity", "Velocity", [100, 10, 3], [0.1, math.radians(10), 3]),
-        ("play_tone", "PlayTone", [1, 2, 3], [1, 2, 3]),
+        ("play_tone", "PlayTone", [1, 2], [1, 2, 100]),
         ("play_audio_asset", "ExecuteFile", ["01010100"], ["/system/audio/01010100.wav"]),
         (
             "line_navigation",

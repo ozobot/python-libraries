@@ -275,7 +275,7 @@ class LineFollowerWebDriver:
         )
         _ = await self._rpc.execute(req, rpctypes.ValidatedNone)
 
-    async def play_tone(self, frequency_hz: int, duration_ms: int, volume: int) -> None:
+    async def play_tone(self, frequency_hz: int, duration_ms: int) -> None:
         req = rpctypes.PlayToneRequest(frequency_hz=frequency_hz, duration_ms=duration_ms)
         _ = await self._rpc.execute(req, rpctypes.ValidatedNone)
 

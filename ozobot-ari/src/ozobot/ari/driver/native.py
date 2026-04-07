@@ -381,10 +381,10 @@ class AriNativeDriver:
         async with Query(req, methods.VELOCITY).execute(self._executor) as q:
             await self._handle_response("Velocity", q.response)
 
-    async def play_tone(self, frequency_hz: int, duration_ms: int, volume: int) -> None:
+    async def play_tone(self, frequency_hz: int, duration_ms: int) -> None:
         req = request.PlayToneRequest(
             id=self._request_id.get_next(),
-            params=request.PlayToneRequestParams(frequency=frequency_hz, duration=duration_ms / 1000, volume=volume),
+            params=request.PlayToneRequestParams(frequency=frequency_hz, duration=duration_ms / 1000, volume=1),
         )
         async with Query(req, methods.PLAY_TONE).execute(self._executor) as q:
             await self._handle_response("PlayTone", q.response)

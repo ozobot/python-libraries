@@ -39,7 +39,7 @@ _RPC_COROUTINE_MODULE_PATH = "ozobot.linefollower.driver.web.driver._rpcCoroutin
         ),
         (
             "play_tone",
-            (440, 500, 50),
+            (440, 500),
             None,
             "playTone",
             (440, 500),

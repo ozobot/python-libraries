@@ -21,9 +21,9 @@ from ozobot.linefollower.exceptions import InvalidNamedColorError
 async def test_play_note(note: typing.Any, octave: int, expected_frequency: int) -> None:
     driver = AsyncMock()
     lf = LineFollower(driver)
-    await lf.play_note(note, octave, 0, 0)
+    await lf.play_note(note, octave, 0)
 
-    driver.play_tone.assert_called_once_with(expected_frequency, 0, 0)
+    driver.play_tone.assert_called_once_with(expected_frequency, 0)
 
 
 @pytest.mark.parametrize(
@@ -42,9 +42,9 @@ async def test_play_note(note: typing.Any, octave: int, expected_frequency: int)
 async def test_play_midi(midi_number: int, expected_frequency: int) -> None:
     driver = AsyncMock()
     lf = LineFollower(driver)
-    await lf.play_midi(midi_number, 0, 0)
+    await lf.play_midi(midi_number, 0)
 
-    driver.play_tone.assert_called_once_with(expected_frequency, 0, 0)
+    driver.play_tone.assert_called_once_with(expected_frequency, 0)
 
 
 async def test_play_invalid(subtests: pytest.Subtests) -> None:
@@ -52,31 +52,31 @@ async def test_play_invalid(subtests: pytest.Subtests) -> None:
     lf = LineFollower(driver)
     with subtests.test("midi out of range"):
         with pytest.raises(ValueError):
-            await lf.play_midi(-1, 0, 0)
+            await lf.play_midi(-1, 0)
 
         with pytest.raises(ValueError):
-            await lf.play_midi(128, 0, 0)
+            await lf.play_midi(128, 0)
 
     with subtests.test("note out of range"):
         with pytest.raises(ValueError):
-            await lf.play_note("A", -1, 0, 0)
+            await lf.play_note("A", -1, 0)
 
         with pytest.raises(ValueError):
-            await lf.play_note("A", 50, 0, 0)
+            await lf.play_note("A", 50, 0)
 
     with subtests.test("invalid note"):
         with pytest.raises(ValueError):
-            await lf.play_note("X", 0, 0, 0)  # type: ignore[arg-type]
+            await lf.play_note("X", 0, 0)  # type: ignore[arg-type]
 
         with pytest.raises(ValueError):
-            await lf.play_note("X", 0, 0, 0)  # type: ignore[arg-type]
+            await lf.play_note("X", 0, 0)  # type: ignore[arg-type]
 
     with subtests.test("invalid frequency"):
         with pytest.raises(ValueError):
-            await lf.play_tone(-1, 0, 0)
+            await lf.play_tone(-1, 0)
 
         with pytest.raises(ValueError):
-            await lf.play_tone(500_000, 0, 0)
+            await lf.play_tone(500_000, 0)
 
 
 @pytest.mark.parametrize(

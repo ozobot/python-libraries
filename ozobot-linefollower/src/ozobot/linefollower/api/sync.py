@@ -110,7 +110,7 @@ class SyncLineFollower:
         await self._linefollower.set_velocity(linear_mps, angular_degps, duration_s)
 
     @as_sync
-    async def play_tone(self, frequency_hz: int, duration_s: float, volume_percent: int) -> None:
+    async def play_tone(self, frequency_hz: int, duration_s: float) -> None:
         """
         Play sound defined by frequency.
 
@@ -118,18 +118,17 @@ class SyncLineFollower:
 
         :param frequency_hz: Sound frequency in Hertz
         :param duration_s: Sound duration in seconds
-        :param volume_percent: Sound volume in percent (0 - 100)
         :See also: :py:meth:`play_note`, :py:meth:`play_midi`
 
         .. code-block:: python
 
-            # play 440 Hz (A4) for one second at 50% volume
-            robot.play_tone(440, 1, 50)
+            # play 440 Hz (A4) for one second
+            robot.play_tone(440, 1)
         """
-        await self._linefollower.play_tone(frequency_hz, duration_s, volume_percent)
+        await self._linefollower.play_tone(frequency_hz, duration_s)
 
     @as_sync
-    async def play_midi(self, midi_number: int, duration_s: float, volume_percent: int) -> None:
+    async def play_midi(self, midi_number: int, duration_s: float) -> None:
         """
         Play tone defined by its MIDI number.
 
@@ -137,18 +136,17 @@ class SyncLineFollower:
 
         :param midi_number: Tone MIDI number, 0-127
         :param duration_s: Sound duration in seconds
-        :param volume_percent: Sound volume in percent (0 - 100)
         :See also: :py:meth:`play_tone`, :py:meth:`play_note`
 
         .. code-block:: python
 
-            # play MIDI 69 (A4, 440Hz) for one second at 50% volume
-            robot.play_midi(69, 1, 50)
+            # play MIDI 69 (A4, 440Hz) for one second
+            robot.play_midi(69, 1)
         """
-        await self._linefollower.play_midi(midi_number, duration_s, volume_percent)
+        await self._linefollower.play_midi(midi_number, duration_s)
 
     @as_sync
-    async def play_note(self, note: TNote, octave: int, duration_s: float, volume_percent: int) -> None:
+    async def play_note(self, note: TNote, octave: int, duration_s: float) -> None:
         """
         Play sound defined by a note and an octave.
 
@@ -157,15 +155,14 @@ class SyncLineFollower:
         :param note: The note represented by a capital letter and a sharp sign, such as A or F#
         :param octave: Sound octave number. Middle C and A 440 Hz are in octave 4
         :param duration_s: Sound duration in seconds
-        :param volume_percent: Sound volume in percent (0 - 100)
         :See also: :py:meth:`play_tone`, :py:meth:`play_midi`
 
         .. code-block:: python
 
-            # play A4 (440Hz) for one second at 50% volume
-            robot.play_note("A", 4, 1, 50)
+            # play A4 (440Hz) for one second
+            robot.play_note("A", 4, 1)
         """
-        await self._linefollower.play_note(note, octave, duration_s, volume_percent)
+        await self._linefollower.play_note(note, octave, duration_s)
 
     @as_sync
     async def play_audio(self, name: TAudio) -> None:
