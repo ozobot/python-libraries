@@ -28,11 +28,11 @@ def motion(r):
 
 def sound(r):
     r.play_audio("happy")
-    r.play_note("A", 4, 1, 1)
+    r.play_note("A", 4, 1)
     time.sleep(0.5)
-    r.play_tone(440, 1, 1)
+    r.play_tone(440, 1)
     time.sleep(0.5)
-    r.play_midi(69, 1, 1)
+    r.play_midi(69, 1)
 
 
 def led(r):
