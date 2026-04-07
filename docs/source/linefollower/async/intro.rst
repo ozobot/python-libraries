@@ -119,11 +119,11 @@ A list of the supported actions with details can be found in the :ref:`API doc <
           await r.say_number(-111)
 
           # it can also play tones defined by note, its frequency or MIDI note number
-          await play_note("A", 4, 1, 100)
+          await play_note("A", 4, 1)
           await asyncio.sleep(0.5)
-          await play_tone(440, 1, 100)
+          await play_tone(440, 1)
           await asyncio.sleep(0.5)
-          await play_midi(69, 1, 100)
+          await play_midi(69, 1)
 
   asyncio.run(main())
 

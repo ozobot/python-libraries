@@ -101,11 +101,11 @@ A list of the supported actions with details can be found in the :ref:`API doc <
       r.say_number(-111)
 
       # it can also play tones defined by note, its frequency or MIDI note number
-      r.play_note("A", 4, 1, 100)
+      r.play_note("A", 4, 1)
       time.sleep(0.5)
-      r.play_tone(440, 1, 100)
+      r.play_tone(440, 1)
       time.sleep(0.5)
-      r.play_midi(69, 1, 100)
+      r.play_midi(69, 1)
 
 
 .. code-block:: python
