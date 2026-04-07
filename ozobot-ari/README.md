@@ -30,7 +30,7 @@ async def main():
         await ari.set_led(LEDMask.FRONT_LEFT_CENTER | LEDMask.FRONT_RIGHT_CENTER, NamedColor.RED)
 
         await ari.play_sound("happy")
-        await ari.play_tone("A", 4, 1, 1)
+        await ari.play_note("A", 4, 1)
 
         await ari.follow_line(Direction.STRAIGHT)
         intersection = await ari.data.intersection.read()
