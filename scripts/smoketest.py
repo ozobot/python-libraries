@@ -50,11 +50,11 @@ async def motion():
 
 async def sound():
     await play_audio("happy")
-    await play_note("A", 4, 1, 1)
+    await play_note("A", 4, 1)
     await asyncio.sleep(0.5)
-    await play_tone(440, 1, 1)
+    await play_tone(440, 1)
     await asyncio.sleep(0.5)
-    await play_midi(69, 1, 1)
+    await play_midi(69, 1)
 
 
 async def led():
