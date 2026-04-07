@@ -190,7 +190,7 @@ Any action can be cancelled, in most cases by `task cancellation <https://docs.p
               async with asyncio.timeout(10):  # let it walk for 10 seconds
                   while True:
                       await square_walk(r)
-          except asyncio.CancelledError:
+          except asyncio.TimeoutError:
               print("square walk cancelled")
       
   async def square_walk(r):
