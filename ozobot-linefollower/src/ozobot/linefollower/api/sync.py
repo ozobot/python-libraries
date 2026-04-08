@@ -313,7 +313,8 @@ class SyncLineFollower:
         async with self._linefollower.data.color_code.watch() as color_codes:
             intersection = await self._linefollower.follow_line(direction)
 
-        return intersection, [cc.value async for cc in color_codes]
+        cc = [sample.value for sample in color_codes.collect()]
+        return intersection, cc
 
     @as_sync
     async def face_line_direction(self, direction: Direction) -> None:
