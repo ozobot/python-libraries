@@ -58,6 +58,31 @@ class Evo(LineFollower):
         self._set_velocity_overridden = asyncio.Condition()
 
     async def set_velocity(self, linear_mmps: float, angular_degps: float, duration_s: float) -> None:
+        """
+        Move for a specified duration.
+
+        Given linear and angular velocity components, the robot moves at the specified velocity for the given duration, then stops.
+
+        :param linear_mmps: Linear velocity component in millimeters per second
+        :param angular_degps: Angular velocity component in degrees per second
+        :param duration: Movement duration in seconds, -1 for infinity.
+        :See also: :py:meth:`move`, :py:meth:`rotate`
+
+        .. note::
+            Although bad practice, the `duration_s` parameter is here for convenience. If you want to follow asyncio idioms, such as `timeouts <https://docs.python.org/3/library/asyncio-task.html#timeouts>` or
+            `tasks <https://docs.python.org/3/library/asyncio-task.html#creating-tasks>`_, you can use `duration_s=-1` for an infinite duration.
+
+
+        .. code-block:: python
+
+            # move straight forward for 2.5 seconds - the convenient way
+            await robot.set_velocity(100, 0, 2.5)
+
+            # or the asyncio idiomatic way
+            async with asyncio.timeout(2.5):
+                await robot.set_velocity(100, 0, -1)
+        """
+
         logger.debug("Setting velocity", linear=linear_mmps, angular=angular_degps, duration=duration_s)
 
         # If the velocity command is called while another is running, Evo does not send any notification about this. This is problem especially
