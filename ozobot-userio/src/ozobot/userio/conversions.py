@@ -113,6 +113,8 @@ def get_web_type_options[T: (str, float, int, bool, NamedColor, Direction)](
 
 def cast_web_prompt_response[T](_type: type[T], value: typing.Any) -> T:
     if _type is str:
+        if value is None:
+            return typing.cast(T, "")
         return typing.cast(T, value)
     elif _type is int:
         return typing.cast(T, int(value))

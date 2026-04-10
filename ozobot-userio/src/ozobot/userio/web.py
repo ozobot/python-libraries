@@ -72,6 +72,8 @@ class UserIoWebDriverComponent:
             options=protocol_options,
             cancellable=cancellable,
         )
-        response_model: pydantic.TypeAdapter[str | float | bool] = pydantic.TypeAdapter(str | float | bool)
+        response_model: pydantic.TypeAdapter[str | float | bool | None] = pydantic.TypeAdapter(
+            str | float | bool | None
+        )
         response = await self._rpc.execute(req, response_model)
         return conversions.cast_web_prompt_response(_type, response)
