@@ -427,10 +427,9 @@ class LineFollower:
         .. code-block:: python
 
             # turn right at the current intersection, follow the line until the next intersection and collect all color codes on the line segment
-            async with robot.data.color_code.watch() as codes_iterator:
+            async with robot.data.color_code.watch() as cc:
                 intersection = await robot.follow_line(Direction.RIGHT)
-
-            codes = [code async for code in codes_iterator]
+                color_codes = cc.collect()
         """
         logger.debug("Following line", direction=direction)
         async with self.data.intersection.watch() as intersections:
