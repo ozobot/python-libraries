@@ -38,6 +38,8 @@ class LineFollower:
         driver: Driver,
     ) -> None:
         self._driver = driver
+        # hack: last intersection detected by `follow_line` used by the relevant actor property and blockly
+        self._last_intersection: Direction | None = None
 
     async def move(self, distance_mm: float, speed_mmps: float) -> None:
         """
@@ -436,6 +438,7 @@ class LineFollower:
             await self._driver.line_navigation(direction, follow=True)
             intersection_sample = await anext(aiter(intersections))
 
+        self._last_intersection = intersection_sample.value
         return intersection_sample.value
 
     async def face_line_direction(self, direction: Direction) -> None:

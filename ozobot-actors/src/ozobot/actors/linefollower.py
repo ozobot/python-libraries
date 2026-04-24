@@ -48,6 +48,20 @@ class _ProxyVirtualMemoryRegions:
 data: VirtualMemoryRegions = _ProxyVirtualMemoryRegions()
 
 
+class _ProxyLastIntersection:
+    """
+    Proxy for the last intersection property.
+
+    Use :py:meth:`get` to retrieve the last intersection by using the active actor dispatcher.
+    """
+
+    def get(self) -> typing.Any:
+        return context.dispatcher.get_property(object, "_last_intersection")
+
+
+last_intersection: _ProxyLastIntersection = _ProxyLastIntersection()
+
+
 async def move(distance_mm: float, speed_mmps: float) -> None:
     return await context.dispatcher.acall(LineFollower.move, distance_mm, speed_mmps)
 
