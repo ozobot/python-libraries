@@ -9,12 +9,12 @@ requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
     "ozobot-ble>=0.1; platform_system != 'Emscripten'",
-    "ozobot-common>=0.2",
     "ozobot-jsonrpc>=0.2; platform_system != 'Emscripten'",
-    "ozobot-linefollower>=0.2",
-    "ozobot-userio>=0.2; platform_system == 'Emscripten'",
-    "ozobot-web>=0.2; platform_system == 'Emscripten'",
     "ozobot-webrtc>=0.1; platform_system != 'Emscripten'",
+    "ozobot-common>=0.3.0,<0.4.0",
+    "ozobot-linefollower>=0.3.0,<0.4.0",
+    "ozobot-userio>=0.3.0,<0.4.0 ; sys_platform == 'emscripten'",
+    "ozobot-web>=0.3.0,<0.4.0 ; sys_platform == 'emscripten'",
     "pydantic>=2.10.5; platform_system != 'Emscripten'",
 ]
 
