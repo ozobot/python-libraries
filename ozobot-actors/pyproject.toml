@@ -19,6 +19,8 @@ ora = ["ozobot-ora~=1.0.6"]
 
 [dependency-groups]
 dev = [
+    "ozobot-ari",
+    "ozobot-evo",
     "ozobot-ora",
     "ozobot-userio",
     "ozobot-linefollower",

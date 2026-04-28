@@ -3,7 +3,7 @@ import typing
 
 import pytest
 from ozobot.actors.actors import ActorDispatcher, context, new_actor_dispatcher
-from ozobot.common.exceptions import ActorAlreadyExistsError, ActorNotFoundError, SuitableActorNotFoundError
+from ozobot.actors.exceptions import ActorAlreadyExistsError, ActorNotFoundError, SuitableActorNotFoundError
 
 
 @typing.runtime_checkable

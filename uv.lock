@@ -810,6 +810,8 @@ ora = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "ozobot-ari" },
+    { name = "ozobot-evo" },
     { name = "ozobot-linefollower" },
     { name = "ozobot-ora" },
     { name = "ozobot-userio" },
@@ -827,6 +829,8 @@ provides-extras = ["ari", "evo", "ora"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "ozobot-ari", editable = "ozobot-ari" },
+    { name = "ozobot-evo", editable = "ozobot-evo" },
     { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
     { name = "ozobot-ora", editable = "ozobot-ora" },
     { name = "ozobot-userio", editable = "ozobot-userio" },

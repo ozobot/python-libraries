@@ -2,10 +2,10 @@ class OzobotError(Exception):
     """Base Ozobot library error"""
 
     @property
-    def context(self) -> dict[str, str]:
+    def context(self) -> dict[str, str | list[str]]:
         return self._context
 
-    def __init__(self, message: str, *, context: dict[str, str] | None = None) -> None:
+    def __init__(self, message: str, *, context: dict[str, str | list[str]] | None = None) -> None:
         super().__init__(message)
         self._context = context or {}
 
@@ -26,27 +26,3 @@ class OzobotError(Exception):
             args = [message_str]
         name = self.__class__.__name__
         return f"{name}({', '.join(args)})"
-
-
-class ActorError(OzobotError):
-    """Base exception for actor errors."""
-
-
-class ActorNotFoundError(ActorError):
-    def __init__(self, actor: str):
-        super().__init__(f"Actor not found: {actor}")
-
-
-class SuitableActorNotFoundError(ActorError):
-    def __init__(self, description: str):
-        super().__init__(f"No suitable actor found: {description}")
-
-
-class ActorAlreadyExistsError(ActorError):
-    def __init__(self, actor: str):
-        super().__init__(f"Actor already exists: {actor}")
-
-
-class CorruptedStateError(ActorError):
-    def __init__(self):
-        super().__init__("Corrupted state: actor stack mismatch")

@@ -3,7 +3,8 @@ import contextvars
 import typing
 from dataclasses import dataclass
 
-from ozobot.common.exceptions import (
+from ozobot.actors.devices import compatible_devices
+from ozobot.actors.exceptions import (
     ActorAlreadyExistsError,
     ActorNotFoundError,
     SuitableActorNotFoundError,
@@ -193,7 +194,7 @@ class ActorDispatcher:
                 if not callable(_callable):
                     return actor, getattr(actor, name)
 
-        raise SuitableActorNotFoundError(f"missing property {name}")
+        raise SuitableActorNotFoundError(name, compatible=self._find_compatible_devices(name))
 
     def _find_callable_in_stack[U, **P](
         self, _type: typing.Callable[typing.Concatenate[typing.Any, P], U]
@@ -205,7 +206,15 @@ class ActorDispatcher:
                 if callable(_callable):
                     return actor, getattr(actor, name)
 
-        raise SuitableActorNotFoundError(f"missing callable {name}")
+        raise SuitableActorNotFoundError(name, compatible=self._find_compatible_devices(name))
+
+    def _find_compatible_devices(self, property_name: str) -> list[str]:
+        compatible = set()
+        for dev, name in compatible_devices:
+            if hasattr(dev, property_name):
+                compatible.add(name)
+
+        return sorted(compatible)
 
 
 class _Context:
