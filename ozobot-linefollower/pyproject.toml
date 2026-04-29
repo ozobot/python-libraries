@@ -11,6 +11,7 @@ dependencies = [
     "ozobot-common>=0.3.0,<0.4.0",
     "ozobot-web>=0.3.0,<0.4.0",
     "pydantic>=2.10.5; platform_system == 'Emscripten'",
+    "pydantic>=2.11.5; platform_system != 'Emscripten'",
 ]
 
 [dependency-groups]
