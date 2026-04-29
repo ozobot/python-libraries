@@ -906,7 +906,6 @@ dependencies = [
     { name = "ozobot-common" },
     { name = "ozobot-linefollower" },
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'" },
-    { name = "pydantic" },
 ]
 
 [package.dev-dependencies]
@@ -920,7 +919,6 @@ requires-dist = [
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
     { name = "ozobot-web", marker = "sys_platform == 'emscripten'", editable = "ozobot-web" },
-    { name = "pydantic", specifier = ">=2.11.7" },
 ]
 
 [package.metadata.requires-dev]
@@ -995,7 +993,7 @@ dev = [
 requires-dist = [
     { name = "ozobot-common", editable = "ozobot-common" },
     { name = "ozobot-web", editable = "ozobot-web" },
-    { name = "pydantic", marker = "sys_platform == 'emscripten'", specifier = ">=2" },
+    { name = "pydantic", marker = "sys_platform == 'emscripten'", specifier = ">=2.10.5" },
 ]
 
 [package.metadata.requires-dev]
