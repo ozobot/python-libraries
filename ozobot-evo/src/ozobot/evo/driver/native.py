@@ -12,6 +12,7 @@ from ozobot.evo.driver.responses import handle_events, handle_response
 from ozobot.evo.driver.shared import geometry
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
 from ozobot.linefollower.api.data_access import (
+    DataWatcherDeduplicated,
     DataWatcherProxy,
     EventWatcher,
     EventWatcherQueue,
@@ -99,8 +100,9 @@ class NativeMemoryRegions:
             lambda c: Sample(conversions.surface_color_from_protocol(c), c.timestamp),
         )
 
-        proximity = NativeDataWatcher(control, VirtualMemory.irProximity, proximity_watcher, lambda d: d)
-
+        proximity = NativeDataWatcher(
+            control, VirtualMemory.irProximity, watcher_manager, from_protocol=lambda x: Sample(x, x.timestamp)
+        )
 
         self.ir_message_right_front = NativeDataWatcher(
             control,
@@ -139,11 +141,26 @@ class NativeMemoryRegions:
             charger_watcher,
             lambda c: Sample(conversions.charger_state_from_protocol(c), c.timestamp),
         )
-        self.obstacle_right_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.rightFront, p.timestamp))
-        self.obstacle_left_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.leftFront, p.timestamp))
-        self.obstacle_right_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.rightRear, p.timestamp))
-        self.obstacle_left_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.leftRear, p.timestamp))
-
+        self.obstacle_right_front = DataWatcherDeduplicated(
+            DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.rightFront, p.timestamp)),
+            convert_to_comparable=lambda s: s.value,
+        )
+        
+        self.obstacle_left_front = DataWatcherDeduplicated(
+            DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.leftFront, p.timestamp)),
+            convert_to_comparable=lambda s: s.value,
+        )
+        
+        self.obstacle_right_rear = DataWatcherDeduplicated(
+            DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.rightRear, p.timestamp)),
+            convert_to_comparable=lambda s: s.value,
+        )
+        
+        self.obstacle_left_rear = DataWatcherDeduplicated(
+            DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.leftRear, p.timestamp)),
+            convert_to_comparable=lambda s: s.value,
+        )
+        
         self.geometry = geometry
 
 

@@ -74,6 +74,37 @@ class DataWatcherProxy[T, U]:
                 yield container_runner.output_container
 
 
+class DataWatcherDeduplicated[T]:
+    def __init__(
+        self,
+        watcher: _Watcher[T],
+        *,
+        convert_to_comparable: typing.Callable[[Sample[T]], typing.Any],
+    ) -> None:
+        self._watcher = watcher
+        self._convert_to_comparable = convert_to_comparable
+
+    async def read(self) -> T:
+        return await self._watcher.read()
+
+    @contextlib.asynccontextmanager
+    async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[Sample[T]]]:
+        async with self._watcher.watch() as reader:
+
+            async def _reader_deduplicated() -> typing.AsyncGenerator[Sample[T], None]:
+                previous_value = object()
+                async for sample in reader:
+                    compared_value = self._convert_to_comparable(sample)
+                    if compared_value != previous_value:
+                        yield sample
+
+                    previous_value = compared_value
+
+            async with WatcherOutputContainerRunner[Sample[T]]() as container_runner:
+                await container_runner.start(_reader_deduplicated())
+                yield container_runner.output_container
+
+
 class DataReadConstant[T]:
     def __init__(self, factory: typing.Callable[[], T]) -> None:
         self._factory = factory
@@ -125,7 +156,7 @@ class WatcherOutputContainerRunner[T]:
         return self
 
     async def __aexit__(self, *args) -> None:
-        self._tg.cancel()
+        self._tg.cancel_quietly()
         await self._tg.__aexit__(*args)
 
     async def start(self, it: typing.AsyncGenerator[T, None]) -> None:

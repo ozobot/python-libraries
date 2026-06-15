@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import pytest
 from ozobot.linefollower.api.data_access import (
+    DataWatcherDeduplicated,
     DataWatcherProxy,
     EventWatcher,
     EventWatcherQueue,
@@ -45,8 +46,8 @@ async def test_watcher_proxy() -> None:
     source_queue = EventWatcherQueue(Sample(Data(0, ""), 0))
     source = _ReadableEventWatcher(source_queue)
 
-    proxy_int = DataWatcherProxy(source, convert=lambda m: m.data_int)
-    proxy_str = DataWatcherProxy(source, convert=lambda m: m.data_str)
+    proxy_int = DataWatcherProxy(source, convert=lambda m: Sample(m.data_int, 0))
+    proxy_str = DataWatcherProxy(source, convert=lambda m: Sample(m.data_str, 0))
 
     async with proxy_int.watch() as container_int, proxy_str.watch() as container_str:
         it_int = aiter(container_int)
@@ -59,7 +60,7 @@ async def test_watcher_proxy() -> None:
                     "hello",
                 ),
                 0,
-            ),
+            )
         )
 
         await source_queue.write(
@@ -69,14 +70,41 @@ async def test_watcher_proxy() -> None:
                     "world",
                 ),
                 0,
+            )
+        )
+
+        assert (await anext(it_int)).value == 1
+        assert (await anext(it_int)).value == 2
+
+        assert (await anext(it_str)).value == "hello"
+        assert (await anext(it_str)).value == "world"
+
+
+async def test_watcher_deduplicated() -> None:
+    source_queue = EventWatcherQueue(Sample((1, 2), 0))
+    source = _ReadableEventWatcher(source_queue)
+
+    deduped = DataWatcherDeduplicated(source, convert_to_comparable=lambda m: m.value[0])
+
+    async with deduped.watch() as container:
+        it = aiter(container)
+
+        await source_queue.write(
+            Sample(
+                (1, 3),
+                0,
             ),
         )
 
-        assert (await anext(it_int)) == 1
-        assert (await anext(it_int)) == 2
+        await source_queue.write(
+            Sample(
+                (2, 3),
+                0,
+            ),
+        )
 
-        assert (await anext(it_str)) == "hello"
-        assert (await anext(it_str)) == "world"
+        assert (await anext(it)).value == (1, 3)
+        assert (await anext(it)).value == (2, 3)
 
 
 async def test_watcher_container_aiter(subtests: pytest.Subtests) -> None:
