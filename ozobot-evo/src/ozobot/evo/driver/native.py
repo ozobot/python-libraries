@@ -101,10 +101,6 @@ class NativeMemoryRegions:
 
         proximity = NativeDataWatcher(control, VirtualMemory.irProximity, proximity_watcher, lambda d: d)
 
-        self.obstacle_right_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.right_front, p.timestamp))
-        self.obstacle_left_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.left_front, p.timestamp))
-        self.obstacle_right_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.right_rear, p.timestamp))
-        self.obstacle_left_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.left_rear, p.timestamp))
 
         self.ir_message_right_front = NativeDataWatcher(
             control,
@@ -143,6 +139,10 @@ class NativeMemoryRegions:
             charger_watcher,
             lambda c: Sample(conversions.charger_state_from_protocol(c), c.timestamp),
         )
+        self.obstacle_right_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.rightFront, p.timestamp))
+        self.obstacle_left_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.leftFront, p.timestamp))
+        self.obstacle_right_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.rightRear, p.timestamp))
+        self.obstacle_left_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.leftRear, p.timestamp))
 
         self.geometry = geometry
 
