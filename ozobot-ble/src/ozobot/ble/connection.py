@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 import bleak
-from bleak import BleakBackend
 from ozobot.ble.datatypes import TProductName
 from ozobot.ble.exceptions import DeviceDescriptionError, DeviceNotFoundError, NoFilterSpecifiedError
 from ozobot.common.broadcast import BroadcastManager
@@ -81,10 +80,6 @@ async def open_client(
     handle = await _get_device(name=name, address=address, id=id, product=product)
     logger.info("Opening connection")
     async with bleak.BleakClient(handle) as client:
-        # BlueZ doesn't have a proper way to get the MTU, so we have this hack.
-        #     see: https://github.com/hbldh/bleak/blob/master/examples/mtu_size.py
-        if client.backend_id == BleakBackend.BLUEZ_DBUS:
-            await client._backend._acquire_mtu()  # type: ignore
         yield Client(client)
         logger.info("Closing connection")
 
@@ -124,8 +119,10 @@ class Client:
 class Characteristic:
     @property
     def packet_size_max(self) -> int:
-        mtu = self._client.mtu_size if self._mtu_size_override is None else self._mtu_size_override
-        return mtu - 3
+        if self._mtu_size_override is None:
+            return self._characteristic_handle.max_write_without_response_size
+
+        return self._mtu_size_override - 3
 
     def __init__(
         self, *, service: UUID, characteristic: UUID, client: bleak.BleakClient, mtu_size_override: int | None = None
