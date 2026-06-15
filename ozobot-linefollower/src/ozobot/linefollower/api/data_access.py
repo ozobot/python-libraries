@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import typing
 
+from ozobot.common.asyncutils import CancellableTaskGroup
 from ozobot.common.broadcast import BroadcastManager
 from ozobot.linefollower.datatypes import Sample
 
@@ -116,16 +117,16 @@ class WatcherOutputContainerRunner[T]:
 
     def __init__(self) -> None:
         self._container = WatcherOutputContainer[T]()
-        self._task: asyncio.Task[None] | None = None
+        self._tg = CancellableTaskGroup()
         self._task_running = asyncio.Event()
 
     async def __aenter__(self) -> WatcherOutputContainerRunner[T]:
+        await self._tg.__aenter__()
         return self
 
     async def __aexit__(self, *args) -> None:
-        if self._task:
-            self._task.cancel()
-            await self._task
+        self._tg.cancel()
+        await self._tg.__aexit__(*args)
 
     async def start(self, it: typing.AsyncGenerator[T, None]) -> None:
         async def _run() -> None:
@@ -139,5 +140,5 @@ class WatcherOutputContainerRunner[T]:
                 except StopAsyncIteration:
                     return
 
-        self._task = asyncio.create_task(_run())
+        self._tg.create_task(_run())
         await self._task_running.wait()
