@@ -71,17 +71,17 @@ class WatcherSubscription[T: _Deserializable]:
         allocations: list[_WatcherAllocation],
         allocation: _WatcherAllocation[T],
     ) -> typing.AsyncIterator[WatcherSubscription[T]]:
-        async with asyncio.TaskGroup() as tg:
-            parsed_events = cls._parse(events, allocations, allocation)
-            initial_value = await anext(parsed_events)
-            subs = WatcherSubscription(initial_value)
-            process_task = tg.create_task(subs._process(parsed_events))
+        with contextlib.suppress(asyncio.CancelledError):
+            async with asyncio.TaskGroup() as tg:
+                parsed_events = cls._parse(events, allocations, allocation)
+                initial_value = await anext(parsed_events)
+                subs = WatcherSubscription(initial_value)
+                process_task = tg.create_task(subs._process(parsed_events))
 
-            try:
-                yield subs
-            finally:
-                process_task.cancel()
-                with contextlib.suppress(asyncio.CancelledError):
+                try:
+                    yield subs
+                finally:
+                    process_task.cancel()
                     await process_task
 
     @classmethod
@@ -180,24 +180,27 @@ class LineFollowerWatcher:
 
         self._watcher_enabled = True
 
-        async with contextlib.AsyncExitStack() as exit_stack:
-            watcher_info = await self._read_watcher_info()
-            allocator = WatcherAllocator(
-                watcher_info.watcherCount, watcher_info.watcherRegionCount, self._control.packet_size_max
-            )
+        try:
+            async with contextlib.AsyncExitStack() as exit_stack:
+                watcher_info = await self._read_watcher_info()
+                allocator = WatcherAllocator(
+                    watcher_info.watcherCount, watcher_info.watcherRegionCount, self._control.packet_size_max
+                )
 
-            allocations = [allocator.allocate(sub.size, sub.address, sub.type) for sub in subscription_configs]
-            watchers = [await exit_stack.enter_async_context(self._subscribe(allocation)) for allocation in allocations]
-            watcher_ids = [allocation.watcher_id for allocation in allocations]
+                allocations = [allocator.allocate(sub.size, sub.address, sub.type) for sub in subscription_configs]
+                watchers = [await exit_stack.enter_async_context(self._subscribe(allocation)) for allocation in allocations]
+                watcher_ids = [allocation.watcher_id for allocation in allocations]
 
-            async with self._enable_watchers(watcher_ids):
-                subscriptions = [
-                    await exit_stack.enter_async_context(WatcherSubscription.run(watcher, allocations, allocation))
-                    for watcher, allocation in zip(watchers, allocations, strict=False)
-                ]
-                yield tuple(subscriptions)
+                async with self._enable_watchers(watcher_ids):
+                    subscriptions = [
+                        await exit_stack.enter_async_context(WatcherSubscription.run(watcher, allocations, allocation))
+                        for watcher, allocation in zip(watchers, allocations, strict=False)
+                    ]
+                    yield tuple(subscriptions)
 
-            self._watcher_enabled = False
+                self._watcher_enabled = False
+        except* Exception as err:
+            raise err
 
     @contextlib.asynccontextmanager
     async def _enable_watchers(self, watcher_ids: list[int]) -> typing.AsyncIterator[None]:
