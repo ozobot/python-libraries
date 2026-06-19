@@ -4,11 +4,11 @@ from dataclasses import dataclass
 
 import pytest
 from ozobot.linefollower.api.data_access import (
-    DataWatcherDeduplicated,
     DataWatcherProxy,
     EventWatcher,
     EventWatcherQueue,
     WatcherOutputContainerRunner,
+    deduplicate_samples,
 )
 from ozobot.linefollower.datatypes import Sample
 
@@ -59,7 +59,7 @@ async def test_watcher_proxy() -> None:
                     1,
                     "hello",
                 ),
-                0,
+                1,
             )
         )
 
@@ -69,7 +69,7 @@ async def test_watcher_proxy() -> None:
                     2,
                     "world",
                 ),
-                0,
+                2,
             )
         )
 
@@ -80,31 +80,60 @@ async def test_watcher_proxy() -> None:
         assert (await anext(it_str)).value == "world"
 
 
-async def test_watcher_deduplicated() -> None:
-    source_queue = EventWatcherQueue(Sample((1, 2), 0))
-    source = _ReadableEventWatcher(source_queue)
+async def test_samples_deduplication() -> None:
+    samples = [
+        Sample(1, 0),
+        Sample(2, 0),
+        Sample(3, 1),
+        Sample(3, 2),
+    ]
 
-    deduped = DataWatcherDeduplicated(source, convert_to_comparable=lambda m: m.value[0])
+    async def _iter() -> typing.AsyncIterator[Sample[int]]:
+        for s in samples:
+            yield s
 
-    async with deduped.watch() as container:
-        it = aiter(container)
+    it = deduplicate_samples(_iter())
 
-        await source_queue.write(
-            Sample(
-                (1, 3),
-                0,
-            ),
-        )
+    assert (await anext(it)).value == 1
+    assert (await anext(it)).value == 3
+    assert (await anext(it)).value == 3
 
-        await source_queue.write(
-            Sample(
-                (2, 3),
-                0,
-            ),
-        )
 
-        assert (await anext(it)).value == (1, 3)
-        assert (await anext(it)).value == (2, 3)
+async def test_samples_with_matching_initial_sample() -> None:
+    samples = [
+        Sample(1, 0),
+        Sample(2, 0),
+        Sample(3, 1),
+        Sample(3, 2),
+    ]
+
+    async def _iter() -> typing.AsyncIterator[Sample[int]]:
+        for s in samples:
+            yield s
+
+    it = deduplicate_samples(_iter(), 0)
+
+    assert (await anext(it)).value == 3
+    assert (await anext(it)).value == 3
+
+
+async def test_samples_with_non_matching_initial_sample() -> None:
+    samples = [
+        Sample(1, 0),
+        Sample(2, 0),
+        Sample(3, 1),
+        Sample(3, 2),
+    ]
+
+    async def _iter() -> typing.AsyncIterator[Sample[int]]:
+        for s in samples:
+            yield s
+
+    it = deduplicate_samples(_iter(), -1)
+
+    assert (await anext(it)).value == 1
+    assert (await anext(it)).value == 3
+    assert (await anext(it)).value == 3
 
 
 async def test_watcher_container_aiter(subtests: pytest.Subtests) -> None:

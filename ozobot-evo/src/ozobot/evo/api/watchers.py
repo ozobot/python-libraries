@@ -266,7 +266,7 @@ class WatcherManager:
                 task = self._tg.create_task(self._watch(allocation.watcher_id, update_counter_region_id))
                 self._watcher_tasks[allocation.watcher_id] = task
 
-            handle = await self._configure_region(allocation, BroadcastManager[T]())
+            handle = await self._configure_region(allocation, broadcast=BroadcastManager[T]())
             return handle
 
     async def disable(self, subs: _WatcherSubscription) -> None:
@@ -286,7 +286,7 @@ class WatcherManager:
         size = VirtualMemory.watcherUpdateCounters.type.data_width
         address = VirtualMemory.watcherUpdateCounters.address + watcher_id * size
         allocation = self._allocator.allocate(size, address, VirtualMemory.watcherUpdateCounters.type)
-        handle = await self._configure_region(allocation, broadcast=None)
+        handle = await self._configure_region(allocation, flags=Types.WatcherRegionFlags.DoNotSetDirty, broadcast=None)
 
         return handle.allocation.region_id
 
@@ -360,12 +360,19 @@ class WatcherManager:
                 handle_response("WatcherSetup", resp)
 
     async def _configure_region[T: _Deserializable](
-        self, allocation: _WatcherAllocation[T], broadcast: BroadcastManager[T] | None = None
+        self,
+        allocation: _WatcherAllocation[T],
+        *,
+        flags: Types.WatcherRegionFlags | None = None,
+        broadcast: BroadcastManager[T] | None = None,
     ) -> _WatcherSubscription[T]:
         logger.debug("Initializing watcher region", watcher_id=allocation.watcher_id, region_id=allocation.region_id)
-        flags = Types.WatcherRegionFlags(0)
         region_setup_rpc = self._control.WatcherRegionSetup(
-            allocation.watcher_id, allocation.region_id, allocation.address, allocation.size, flags=flags
+            allocation.watcher_id,
+            allocation.region_id,
+            allocation.address,
+            allocation.size,
+            flags=flags or Types.WatcherRegionFlags(0),
         )
 
         async with region_setup_rpc as (resp, _):

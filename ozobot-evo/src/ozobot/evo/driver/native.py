@@ -14,13 +14,14 @@ from ozobot.evo.api.watchers import (
 from ozobot.evo.driver.responses import handle_events, handle_response
 from ozobot.evo.driver.shared import geometry
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
+from ozobot.linefollower import ColorCode
 from ozobot.linefollower.api.data_access import (
-    DataWatcherDeduplicated,
     DataWatcherProxy,
     EventWatcher,
     EventWatcherQueue,
     WatcherOutputContainer,
     WatcherOutputContainerRunner,
+    deduplicate_samples,
 )
 from ozobot.linefollower.datatypes import (
     Direction,
@@ -57,7 +58,7 @@ async def _stop_execution(control: AsyncControl, *, request_id: int) -> None:
 
 class NativeMemoryRegions:
     def __init__(self, control: AsyncControl, watcher_manager: WatcherManager) -> None:
-        self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(0)))
+        self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(1)))
         self.intersection = EventWatcher(self.intersection_queue)
 
         self.line_following_speed = NativeDataAccessReadWrite(
@@ -66,11 +67,12 @@ class NativeMemoryRegions:
             lambda s8_24: float(s8_24) * 1000,
             lambda fl: Types.S8_24(fl / 1000),
         )
-        self.color_code = NativeDataWatcher(
+        self.color_code: NativeDataWatcher[Types.ColorCode, SampleWithoutTimestamp[ColorCode]] = NativeDataWatcher(
             control,
             VirtualMemory.colorCode,
             watcher_manager,
-            lambda c: SampleWithoutTimestamp(conversions.color_code_from_protocol(c)),
+            lambda c: Sample(conversions.color_code_from_protocol(c), c.timestamp),
+            skip_initial_value=True,
         )
         self.line_color = NativeDataWatcher(
             control,
@@ -85,7 +87,9 @@ class NativeMemoryRegions:
             lambda c: Sample(conversions.surface_color_from_protocol(c), c.timestamp),
         )
 
-        proximity = NativeDataWatcher(control, VirtualMemory.irProximity, watcher_manager, from_protocol=lambda x: x)
+        proximity = NativeDataWatcher(
+            control, VirtualMemory.irProximity, watcher_manager, from_protocol=lambda x: Sample(x, x.timestamp)
+        )
 
         self.ir_message_right_front = NativeDataWatcher(
             control,
@@ -124,25 +128,13 @@ class NativeMemoryRegions:
             watcher_manager,
             lambda c: Sample(conversions.charger_state_from_protocol(c), c.timestamp),
         )
-        self.obstacle_right_front = DataWatcherDeduplicated(
-            DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.rightFront, p.timestamp)),
-            convert_to_comparable=lambda s: s.value,
-        )
 
-        self.obstacle_left_front = DataWatcherDeduplicated(
-            DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.leftFront, p.timestamp)),
-            convert_to_comparable=lambda s: s.value,
+        self.obstacle_right_front = DataWatcherProxy(
+            proximity, convert=lambda p: Sample(p.value.rightFront, p.timestamp)
         )
-
-        self.obstacle_right_rear = DataWatcherDeduplicated(
-            DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.rightRear, p.timestamp)),
-            convert_to_comparable=lambda s: s.value,
-        )
-
-        self.obstacle_left_rear = DataWatcherDeduplicated(
-            DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.leftRear, p.timestamp)),
-            convert_to_comparable=lambda s: s.value,
-        )
+        self.obstacle_left_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.leftFront, p.timestamp))
+        self.obstacle_right_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.rightRear, p.timestamp))
+        self.obstacle_left_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.leftRear, p.timestamp))
 
         self.geometry = geometry
 
@@ -155,11 +147,14 @@ class NativeDataAccessRead[T: Deserializable, U]:
         self._property = property
         self._from_protocol = from_protocol
 
-    async def read(self) -> U:
+    async def _read_raw(self) -> T:
         async with self._control.MemRead(self._property.address, self._property.size) as (resp, _):
             handle_response("MemRead", resp)
 
-        val = self._property.type.deserialize(bytes(resp.data))
+        return self._property.type.deserialize(bytes(resp.data))
+
+    async def read(self) -> U:
+        val = await self._read_raw()
         return self._from_protocol(val)
 
 
@@ -181,20 +176,19 @@ class NativeDataAccessReadWrite[T: _DeserializeAndSerializable, U](NativeDataAcc
             handle_response("MemWrite", resp)
 
 
-class NativeDataWatcher[T: _DeserializableWithTimestamp, U]:
+class NativeDataWatcher[T: _DeserializableWithTimestamp, U](NativeDataAccessRead[T, U]):
     def __init__(
         self,
         control: AsyncControl,
         property: MemoryProperty[T],
         watcher_manager: WatcherManager,
         from_protocol: typing.Callable[[T], U],
+        skip_initial_value: bool = False,
     ) -> None:
-        self._reader = NativeDataAccessRead(control, property, from_protocol)
+        super().__init__(control, property, from_protocol)
         self._watcher = RefCountedWatcher(property, watcher_manager)
         self._from_protocol = from_protocol
-
-    async def read(self) -> U:
-        return await self._reader.read()
+        self._skip_initial_value = skip_initial_value
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[U]]:
@@ -204,7 +198,14 @@ class NativeDataWatcher[T: _DeserializableWithTimestamp, U]:
 
         async with WatcherOutputContainerRunner[U]() as container_runner:
             async with self._watcher.watch() as unbuffered_reader:
-                await container_runner.start(_convert_iterator(unbuffered_reader))
+                if self._skip_initial_value:
+                    initial_value = (await self._read_raw()).timestamp
+                else:
+                    initial_value = None
+
+                await container_runner.start(
+                    _convert_iterator(deduplicate_samples(unbuffered_reader, initial_value=initial_value))
+                )
                 yield container_runner.output_container
 
 

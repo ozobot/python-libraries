@@ -5,6 +5,7 @@ import contextlib
 import typing
 
 from ozobot.common.broadcast import BroadcastManager
+from ozobot.linefollower.conversions import _HasTimestamp
 from ozobot.linefollower.datatypes import Sample
 
 
@@ -12,6 +13,30 @@ class _Watcher[T](typing.Protocol):
     async def read(self) -> T: ...
 
     def watch(self) -> contextlib.AbstractAsyncContextManager[WatcherOutputContainer[Sample[T]]]: ...
+
+
+async def deduplicate_samples[T: _HasTimestamp](
+    it: typing.AsyncIterator[T], initial_value: float | None = None
+) -> typing.AsyncIterator[T]:
+    """
+    Deduplicates consecutive samples by timestamp:
+
+    :param it: iterator to deduplicate
+    :param initial_value: if set, an initial value that is not yielded by the iterator
+    """
+
+    if initial_value is not None:
+        last_timestamp = initial_value
+    else:
+        last_val = await anext(it)
+        yield last_val
+        last_timestamp = last_val.timestamp
+
+    async for val in it:
+        timestamp = val.timestamp
+        if timestamp != last_timestamp:
+            yield val
+        last_timestamp = timestamp
 
 
 class EventWatcherQueue[T]:
@@ -65,42 +90,11 @@ class DataWatcherProxy[T, U]:
         async with self._watcher.watch() as reader:
 
             async def _reader_converted() -> typing.AsyncGenerator[U, None]:
-                async for sample in reader:
+                async for sample in deduplicate_samples(aiter(reader)):
                     yield self._convert(sample.value)
 
             async with WatcherOutputContainerRunner[U]() as container_runner:
                 await container_runner.start(_reader_converted())
-                yield container_runner.output_container
-
-
-class DataWatcherDeduplicated[T]:
-    def __init__(
-        self,
-        watcher: _Watcher[T],
-        *,
-        convert_to_comparable: typing.Callable[[Sample[T]], typing.Any],
-    ) -> None:
-        self._watcher = watcher
-        self._convert_to_comparable = convert_to_comparable
-
-    async def read(self) -> T:
-        return await self._watcher.read()
-
-    @contextlib.asynccontextmanager
-    async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[Sample[T]]]:
-        async with self._watcher.watch() as reader:
-
-            async def _reader_deduplicated() -> typing.AsyncGenerator[Sample[T], None]:
-                previous_value = object()
-                async for sample in reader:
-                    compared_value = self._convert_to_comparable(sample)
-                    if compared_value != previous_value:
-                        yield sample
-
-                    previous_value = compared_value
-
-            async with WatcherOutputContainerRunner[Sample[T]]() as container_runner:
-                await container_runner.start(_reader_deduplicated())
                 yield container_runner.output_container
 
 
