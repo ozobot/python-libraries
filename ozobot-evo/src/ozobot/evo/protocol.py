@@ -7074,15 +7074,17 @@ class AsyncControl:
             async with self._rpc_lock, self._channel.open_session() as response_session:
                 logger.debug('Writting request')
                 if length > self._channel.packet_size_max:
-                    await self._long_rpc(request, response_type)
+                    logger.debug("writing long rpc", request=request)
+                    response = await self._long_rpc(request, response_type)
+                    logger.debug("got long rpc response", response=response)
                 else:
                     await response_session.write(request.serialize())
-                logger.debug('expecting response')
-                async for message in self._receive(response_session):
-                    if message.is_response_to(request):
-                        response = message
-                        break
-                logger.debug('got rpc response', response=response)
+                    logger.debug('expecting response')
+                    async for message in self._receive(response_session):
+                        if message.is_response_to(request):
+                            response = message
+                            break
+                    logger.debug('got rpc response', response=response)
 
             async def _event_generator():
                 logger.debug('expecting events')
@@ -7102,18 +7104,18 @@ class AsyncControl:
         logger.debug('executing long RPC', chunk_size=chunk_size)
         for chunk_start in range(0, len(data), chunk_size):
             logger.debug('writting long rpc request chunk', chunk_start=chunk_start)
-            chunk_result_wr = await self.MemWrite(Types.addr_t(24576)+chunk_start, min(chunk_size, len(data)-chunk_start), bytes(data[chunk_start:chunk_start+chunk_size]))
-            assert chunk_result_wr.result == Types.IOResult.Success
-        result = await self.LongRPCExtensionExecute(Types.size_t(len(data)), Types.u32(crc32(data)))
-        assert result.callStatus == Types.CallStatus.CallSuccess
+            async with self.MemWrite(Types.addr_t(24576)+chunk_start, min(chunk_size, len(data)-chunk_start), bytes(data[chunk_start:chunk_start+chunk_size])) as (chunk_result_wr, _):
+                assert chunk_result_wr.result == Types.IOResult.Success
+        async with self.LongRPCExtensionExecute(Types.size_t(len(data)), Types.u32(crc32(data))) as (result, _):
+            assert result.callStatus == Types.CallStatus.CallSuccess
         chunk_size = self._channel.packet_size_max - 5
         result_data = memoryview(bytearray(result.dataLength))
         for chunk_start in range(0, result.dataLength, chunk_size):
             logger.debug('reading long rpc response chunk', chunk_start=chunk_start)
             this_chunk_size = min(chunk_size, result.dataLength-chunk_start)
-            chunk_result_rd = await self.MemRead(Types.addr_t(24576)+chunk_start, this_chunk_size)
-            assert chunk_result_rd.result == Types.IOResult.Success
-            result_data[chunk_start:chunk_start+this_chunk_size] = bytes(chunk_result_rd.data)
+            async with self.MemRead(Types.addr_t(24576)+chunk_start, this_chunk_size) as (chunk_result_rd, _):
+                assert chunk_result_rd.result == Types.IOResult.Success
+                result_data[chunk_start:chunk_start+this_chunk_size] = bytes(chunk_result_rd.data)
         assert crc32(result_data) == result.dataCRC
         return response_type.deserialize(bytes(result_data))
 
