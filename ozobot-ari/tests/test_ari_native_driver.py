@@ -55,10 +55,7 @@ def _create_query(response=None, notifications=None):
 def test_import_native() -> None:
     from ozobot.ari.driver import get_driver
 
-    with pytest.raises(NotImplementedError):
-        _ = get_driver()
-
-    # assert issubclass(get_driver(), AriNativeDriver)
+    assert issubclass(get_driver(), AriNativeDriver)
 
 
 async def test_open_ble() -> None:
@@ -124,7 +121,7 @@ async def test_open_connection_key() -> None:
             "PlayTone",
             [1, 2000],
             (
-                request.PlayToneRequest(id=0, params=request.PlayToneRequestParams(frequency=1, duration=2, volume=1)),
+                request.PlayToneRequest(id=0, params=request.PlayToneRequestParams(frequency=1, duration=2)),
                 methods.PLAY_TONE,
             ),
         ),
