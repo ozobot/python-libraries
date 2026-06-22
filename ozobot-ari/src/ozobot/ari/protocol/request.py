@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal as L
 
 from ozobot.linefollower.datatypes import TDirection, TNamedColor
-from ozobot.userio.datatypes import TUserIoPrompt
+from ozobot.userio.datatypes import TAriUserIoPromptDirections, TUserIoPrompt
 
 from .base import Model, Request
 from .types import Color, Lights
@@ -64,7 +64,8 @@ class SetLEDRequest(Request):
 class PlayToneRequestParams(Model):
     frequency: int
     duration: float
-    volume: float
+    # volume is currently not supported by the user api
+    # volume: float
 
 
 class PlayToneRequest(Request):
@@ -116,7 +117,7 @@ class UserIoPromptRequestParams(Model):
     message: str
     cancellable: bool
     type: TUserIoPrompt
-    options: list[str | int | float | bool | TNamedColor | TDirection]
+    options: list[str | int | float | bool | TNamedColor | TAriUserIoPromptDirections]
 
 
 class UserIoPromptRequest(Request):

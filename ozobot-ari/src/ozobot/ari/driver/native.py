@@ -384,7 +384,7 @@ class AriNativeDriver:
     async def play_tone(self, frequency_hz: int, duration_ms: int) -> None:
         req = request.PlayToneRequest(
             id=self._request_id.get_next(),
-            params=request.PlayToneRequestParams(frequency=frequency_hz, duration=duration_ms / 1000, volume=1),
+            params=request.PlayToneRequestParams(frequency=frequency_hz, duration=duration_ms / 1000),
         )
         async with Query(req, methods.PLAY_TONE).execute(self._executor) as q:
             await self._handle_response("PlayTone", q.response)
@@ -492,7 +492,7 @@ class AriNativeDriver:
                     if isinstance(color, _type):
                         return color
                 case response.UserIoPromptDirectionResponseBody(), _:
-                    direction = conversions.intersection_direction_from_protocol(resp.result.value)
+                    direction = userio_conversions.native_intersection_direction_from_protocol(resp.result.value)
                     if isinstance(direction, _type):
                         return direction
                 case _ as r, _ as t:
