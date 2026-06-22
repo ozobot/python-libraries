@@ -8,8 +8,10 @@ from ozobot.userio.conversions import (
     color_to_protocol,
     get_type_name,
     get_web_type_name,
-    intersection_direction_to_protocol,
+    native_intersection_direction_from_protocol,
+    native_intersection_direction_to_protocol,
 )
+from ozobot.userio.datatypes import TAriUserIoPromptDirections
 
 
 @pytest.mark.parametrize(
@@ -88,4 +90,20 @@ def test_unknown_color_to_protocol() -> None:
     ids=lambda x: repr(x),
 )
 def test_intersection_direction_to_protocol(direction: Direction, protocol_direction: TDirection) -> None:
-    assert intersection_direction_to_protocol(direction) == protocol_direction
+    assert native_intersection_direction_to_protocol(direction) == protocol_direction
+
+
+@pytest.mark.parametrize(
+    ["protocol_direction", "direction"],
+    argvalues=[
+        ("Forward", Direction.STRAIGHT),
+        ("Back", Direction.BACKWARD),
+        ("Left", Direction.LEFT),
+        ("Right", Direction.RIGHT),
+    ],
+    ids=lambda x: repr(x),
+)
+def test_intersection_direction_from_protocol(
+    protocol_direction: TAriUserIoPromptDirections, direction: Direction
+) -> None:
+    assert native_intersection_direction_from_protocol(protocol_direction) == direction

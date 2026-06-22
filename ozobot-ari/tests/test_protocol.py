@@ -54,9 +54,9 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         request.LineNavigationRequest(
             id=1,
-            params=request.LineNavigationRequestParams(direction="Forward", follow="Follow", detect_color_codes=True),
+            params=request.LineNavigationRequestParams(direction="Straight", follow="Follow", detect_color_codes=True),
         ),
-        '{"id":1,"jsonrpc":"2.0","method":"LineNavigation","params":{"direction":"Forward","follow":"Follow","detectColorCodes":true}}',
+        '{"id":1,"jsonrpc":"2.0","method":"LineNavigation","params":{"direction":"Straight","follow":"Follow","detectColorCodes":true}}',
         None,
     ),
     (
@@ -99,8 +99,8 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         request.SetLEDRequest,
     ),
     (
-        request.PlayToneRequest(id=1, params=request.PlayToneRequestParams(frequency=440, duration=1000, volume=50)),
-        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":440,"duration":1000,"volume":50}}',
+        request.PlayToneRequest(id=1, params=request.PlayToneRequestParams(frequency=440, duration=1000)),
+        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":440,"duration":1000}}',
         None,
     ),
     (

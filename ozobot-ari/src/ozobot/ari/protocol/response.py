@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal as L
 
-from ozobot.linefollower.datatypes import TDirection
+from ozobot.userio.datatypes import TAriUserIoPromptDirections
 
 from .base import Model, Response
 from .types import TNamedColorLowercase
@@ -63,7 +63,7 @@ class UserIoPromptLineColorResponseBody(Model):
 
 class UserIoPromptDirectionResponseBody(Model):
     type: L["direction"] = "direction"
-    value: TDirection
+    value: TAriUserIoPromptDirections
 
 
 type UserIoPromptResponseBody = (
