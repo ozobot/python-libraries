@@ -123,3 +123,12 @@ class UserIoPromptRequestParams(Model):
 class UserIoPromptRequest(Request):
     method: L["UserIoPrompt"] = "UserIoPrompt"
     params: UserIoPromptRequestParams
+
+
+class HealthCheckRequestParams(Model):
+    expiration: float | None = None
+
+
+class HealthCheckRequest(Request):
+    method: L["HealthCheck"] = "HealthCheck"
+    params: HealthCheckRequestParams

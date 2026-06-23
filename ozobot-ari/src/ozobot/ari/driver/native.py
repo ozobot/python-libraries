@@ -11,6 +11,7 @@ from ozobot.ari import conversions
 from ozobot.ari.driver.shared import geometry
 from ozobot.ari.exceptions import (
     AriProtocolCommandError,
+    HealthcheckTimeoutError,
     MemoryReadUnsuccessfulError,
     MemoryWriteUnsuccessfulError,
 )
@@ -19,6 +20,7 @@ from ozobot.ari.protocol.memread import MemReadResponseBody, MemWatchResponseBod
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
+from ozobot.common.asyncutils import BackgroundTask
 from ozobot.common.logging import logger
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import (
@@ -312,6 +314,8 @@ class AriNativeDriver:
         self._executor = executor
         self._request_id = _RequestIdCounter()
         self._memory = NativeMemoryRegions(executor, self._request_id)
+        self._healthcheck_expiration_s: float = 60.0
+        self._healthcheck_interval_s: float = 30.0
 
     @classmethod
     @contextlib.asynccontextmanager
@@ -348,7 +352,10 @@ class AriNativeDriver:
 
             transport = SerializingTransportLayer(WebrtcTransportAdapter())
             async with Executor.create(transport, base.Cancellation) as ex:
-                yield cls(ex)
+                driver = cls(ex)
+                async with BackgroundTask() as bg:
+                    bg.start(driver._healthcheck_loop())
+                    yield driver
         finally:
             if rk_task:
                 await rk_task
@@ -504,3 +511,21 @@ class AriNativeDriver:
         val = await resp
         if val.result.type != "finished":
             raise AriProtocolCommandError(function_name, val.result.type, description="call failed")
+
+    async def _healthcheck_loop(self) -> None:
+        while True:
+            try:
+                logger.debug("Sending healthcheck request", expiration_s=self._healthcheck_expiration_s)
+                async with asyncio.timeout(self._healthcheck_expiration_s):
+                    req = request.HealthCheckRequest(
+                        id=self._request_id.get_next(),
+                        params=request.HealthCheckRequestParams(expiration=self._healthcheck_expiration_s),
+                    )
+                    async with Query(req, methods.HEALTH_CHECK).execute(self._executor) as q:
+                        _ = await q.response
+                logger.debug("Healthcheck response received")
+
+                await asyncio.sleep(self._healthcheck_interval_s)
+            except TimeoutError:
+                logger.warning("Healthcheck timeout", expiration_s=self._healthcheck_expiration_s)
+                raise HealthcheckTimeoutError(self._healthcheck_expiration_s) from None
