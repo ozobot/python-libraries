@@ -114,3 +114,7 @@ class UserIoAlertResponse(Response):
 
 class UserIoPromptResponse(Response):
     result: UserIoPromptResponseBody
+
+
+class HealthCheckResponse(Response):
+    result: bool

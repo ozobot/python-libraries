@@ -62,8 +62,16 @@ async def test_open_ble() -> None:
     async def _get_rk_mock(*args, out_queue, **kwargs):
         await out_queue.put("anvil.abcdefgh")
 
+    async def _blocking_receive_str():
+        await asyncio.Future()
+        yield
+
+    channel_mock_obj = Mock()
+    channel_mock_obj.receive_str = _blocking_receive_str
+    channel_mock_obj.send = Mock()
+
     with patch("ozobot.ari.driver.native._get_routing_key_from_ble", side_effect=_get_rk_mock) as routing_key_mock:
-        with patch("ozobot.ari.driver.native._create_webrtc_channel") as channel_mock:
+        with patch("ozobot.ari.driver.native._create_webrtc_channel", return_value=channel_mock_obj) as channel_mock:
             async with AriNativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
                 assert isinstance(driver, AriNativeDriver)
                 routing_key_mock.assert_called_with(
@@ -73,7 +81,15 @@ async def test_open_ble() -> None:
 
 
 async def test_open_connection_key() -> None:
-    with patch("ozobot.ari.driver.native._create_webrtc_channel") as channel_mock:
+    async def _blocking_receive_str():
+        await asyncio.Future()
+        yield
+
+    channel_mock_obj = Mock()
+    channel_mock_obj.receive_str = _blocking_receive_str
+    channel_mock_obj.send = Mock()
+
+    with patch("ozobot.ari.driver.native._create_webrtc_channel", return_value=channel_mock_obj) as channel_mock:
         async with AriNativeDriver.open(connection_key="1234abcd") as driver:
             assert isinstance(driver, AriNativeDriver)
             channel_mock.assert_called_once_with("anvil.1234abcd")

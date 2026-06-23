@@ -47,3 +47,10 @@ class MemoryReadUnsuccessfulError(DriverError):
 
     def __init__(self, name: str, reason: str) -> None:
         super().__init__(f"Could not read virtual memory: '{reason}' on '{name}'")
+
+
+class HealthcheckTimeoutError(DriverError):
+    """Healthcheck response not received within expiration time."""
+
+    def __init__(self, expiration_s: float) -> None:
+        super().__init__(f"Healthcheck response not received within {expiration_s}s")
