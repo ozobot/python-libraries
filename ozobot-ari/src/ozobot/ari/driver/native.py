@@ -371,7 +371,7 @@ class AriNativeDriver:
     async def rotate(self, angle_deg: float, angular_speed_degps: float) -> None:
         req = request.RotateRequest(
             id=self._request_id.get_next(),
-            params=request.RotateRequestParams(angle=math.radians(angle_deg), speed=math.radians(angular_speed_degps)),
+            params=request.RotateRequestParams(angle=angle_deg, speed=angular_speed_degps),
         )
         async with Query(req, methods.ROTATE).execute(self._executor) as q:
             await self._handle_response("Rotate", q.response)
