@@ -52,6 +52,8 @@ _ROUTING_KEY_CHARACTERISTIC_UUID = UUID("6b63040a-520e-4d24-0000-65c78f1d0001")
 
 USER_IO_USER_CANCELLED_CODE = 17
 
+type _AriExecutor = Executor[base.Message, base.Message, base.Cancellation, base.Error]
+
 
 @contextlib.asynccontextmanager
 async def _cancellation_handling(
@@ -83,7 +85,7 @@ class _HasResult(typing.Protocol):
 
 
 class NativeMemoryRegions:
-    def __init__(self, executor: Executor, request_id: _RequestIdCounter) -> None:
+    def __init__(self, executor: _AriExecutor, request_id: _RequestIdCounter) -> None:
         self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(0)))
         self.intersection = EventWatcher(self.intersection_queue)
 
@@ -183,7 +185,7 @@ class _RequestIdCounter:
 class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
     def __init__(
         self,
-        executor: Executor,
+        executor: _AriExecutor,
         id_counter: _RequestIdCounter,
         name: str,
         *,
@@ -201,7 +203,7 @@ class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
             id=self._request_id_counter.get_next(),
             params=memread.MemReadRequestParams(segment=self._name),
         )
-        async with Query(req, methods.MEM_READ).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.MEM_READ)) as q:
             resp = await q.response
             return self._from_protocol(typing.cast(TProtoFrom, resp.result))
 
@@ -209,7 +211,7 @@ class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
 class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAccessRead[TProtoFrom, TLib]):
     def __init__(
         self,
-        executor: Executor,
+        executor: _AriExecutor,
         id_counter: _RequestIdCounter,
         name: str,
         *,
@@ -233,7 +235,7 @@ class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAc
             params=memread.MemReadRequestParams(segment=self._name),
         )
         async with WatcherOutputContainerRunner[TLib]() as container_runner:
-            async with Query(req, methods.WATCH).execute(self._executor) as q:
+            async with self._executor.execute(Query(req, methods.WATCH)) as q:
                 await container_runner.start(_convert_iterator(q.notifications))
                 yield container_runner.output_container
 
@@ -249,7 +251,7 @@ class NativeDataAccessReadWrite[TProtoFrom: MemReadResponseBody, TProtoTo: MemWr
 ):
     def __init__(
         self,
-        executor: Executor,
+        executor: _AriExecutor,
         id_counter: _RequestIdCounter,
         name: str,
         *,
@@ -266,14 +268,14 @@ class NativeDataAccessReadWrite[TProtoFrom: MemReadResponseBody, TProtoTo: MemWr
             id=self._request_id_counter.get_next(),
             params=request_params,
         )
-        async with Query(req, methods.MEM_WRITE).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.MEM_WRITE)) as q:
             resp = await q.response
             if not resp.result.success:
                 raise MemoryWriteUnsuccessfulError(self._name, "failure reported")
 
 
 class NativeTimeOfFlightWatcher:
-    def __init__(self, executor: Executor, request_id: _RequestIdCounter) -> None:
+    def __init__(self, executor: _AriExecutor, request_id: _RequestIdCounter) -> None:
         self._executor = executor
         self._request_id = request_id
 
@@ -285,7 +287,7 @@ class NativeTimeOfFlightWatcher:
         )
 
         async with WatcherOutputContainerRunner[Sample[TimeOfFlight]]() as container_runner:
-            async with Query(req, methods.TIME_OF_FLIGHT).execute(self._executor) as q:
+            async with self._executor.execute(Query(req, methods.TIME_OF_FLIGHT)) as q:
                 await container_runner.start(self._watch_iter(q.notifications))
                 yield container_runner.output_container
 
@@ -332,7 +334,7 @@ class AriNativeDriver:
     def memory(self) -> NativeMemoryRegions:
         return self._memory
 
-    def __init__(self, executor: Executor) -> None:
+    def __init__(self, executor: _AriExecutor) -> None:
         self._executor = executor
         self._request_id = _RequestIdCounter()
         self._memory = NativeMemoryRegions(executor, self._request_id)
@@ -387,7 +389,7 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.MoveStraightRequestParams(distance=distance_mm / 1000, speed=speed_mmps / 1000),
         )
-        async with Query(req, methods.MOVE_STRAIGHT).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.MOVE_STRAIGHT)) as q:
             await self._handle_response("MoveStraight", q.response)
 
     async def rotate(self, angle_deg: float, angular_speed_degps: float) -> None:
@@ -395,7 +397,7 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.RotateRequestParams(angle=angle_deg, speed=angular_speed_degps),
         )
-        async with Query(req, methods.ROTATE).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.ROTATE)) as q:
             await self._handle_response("Rotate", q.response)
 
     async def velocity(self, linear_mmps: float, angular_degps: float, duration_ms: int) -> None:
@@ -407,7 +409,7 @@ class AriNativeDriver:
                 expiration=duration_ms / 1000,
             ),
         )
-        async with Query(req, methods.VELOCITY).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.VELOCITY)) as q:
             await self._handle_response("Velocity", q.response)
 
     async def play_tone(self, frequency_hz: int, duration_ms: int) -> None:
@@ -415,7 +417,7 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.PlayToneRequestParams(frequency=frequency_hz, duration=duration_ms / 1000),
         )
-        async with Query(req, methods.PLAY_TONE).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.PLAY_TONE)) as q:
             await self._handle_response("PlayTone", q.response)
 
     async def play_audio_asset(self, audio_name: str) -> None:
@@ -423,7 +425,7 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.PlaySoundRequestParams(name=audio_name, loop=False),
         )
-        async with Query(req, methods.PLAY_SOUND).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.PLAY_SOUND)) as q:
             await self._handle_response("PlaySound", q.response)
 
     async def set_led(self, mask: LEDMask, red: float, green: float, blue: float) -> None:
@@ -432,7 +434,7 @@ class AriNativeDriver:
         req = request.SetLEDRequest(
             id=self._request_id.get_next(), params=request.SetLEDRequestParams(lights=lights, color=color)
         )
-        async with Query(req, methods.SET_LED).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.SET_LED)) as q:
             await self._handle_response("SetLED", q.response)
 
     async def line_navigation(self, direction: Direction, follow: bool) -> None:
@@ -444,7 +446,7 @@ class AriNativeDriver:
                 direction=direction_protocol, follow=follow_arg, detect_color_codes=True
             ),
         )
-        async with Query(req, methods.LINE_NAVIGATION).execute(self._executor) as q, asyncio.TaskGroup() as tg:
+        async with self._executor.execute(Query(req, methods.LINE_NAVIGATION)) as q, asyncio.TaskGroup() as tg:
             notifications_task = tg.create_task(self._process_line_navigation_notifications(q.notifications))
             try:
                 await self._handle_response("LineNavigation", q.response)
@@ -472,7 +474,7 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.UserIoPrintRequestParams(message=message),
         )
-        async with Query(req, methods.USER_IO_PRINT).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.USER_IO_PRINT)) as q:
             _ = await q.response
 
     async def user_io_alert(self, message: str, *, cancellable: bool = False) -> None:
@@ -481,7 +483,7 @@ class AriNativeDriver:
             params=request.UserIoAlertRequestParams(message=message, cancellable=cancellable),
         )
         async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE):
-            async with Query(req, methods.USER_IO_ALERT).execute(self._executor) as q:
+            async with self._executor.execute(Query(req, methods.USER_IO_ALERT)) as q:
                 _ = await q.response
 
     async def user_io_prompt[T: (str, float, int, bool, NamedColor, Direction)](
@@ -503,7 +505,7 @@ class AriNativeDriver:
         )
 
         async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE):
-            async with Query(req, methods.USER_IO_PROMPT).execute(self._executor) as q:
+            async with self._executor.execute(Query(req, methods.USER_IO_PROMPT)) as q:
                 resp = await q.response
                 match resp.result, _type:
                     case response.UserIoPromptStringResponseBody(), t if isinstance(resp.result.value, t):
@@ -548,7 +550,7 @@ class AriNativeDriver:
                         id=self._request_id.get_next(),
                         params=request.HealthCheckRequestParams(expiration=self._healthcheck_expiration_s),
                     )
-                    async with Query(req, methods.HEALTH_CHECK).execute(self._executor) as q:
+                    async with self._executor.execute(Query(req, methods.HEALTH_CHECK)) as q:
                         _ = await q.response
                 logger.debug("Healthcheck response received")
 
