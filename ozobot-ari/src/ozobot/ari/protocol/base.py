@@ -50,3 +50,13 @@ class Cancellation(Message):
     @classmethod
     def create(cls, id: int, code: int, message: str | None) -> Cancellation:
         return Cancellation(id=id, code=code, message=message)
+
+
+class ErrorDetail(Model):
+    code: int
+    message: str
+
+
+class Error(Message):
+    jsonrpc: L["2.0"] = "2.0"
+    error: ErrorDetail

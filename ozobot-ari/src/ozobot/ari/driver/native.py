@@ -22,6 +22,7 @@ from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
 from ozobot.common.asyncutils import BackgroundTask
 from ozobot.common.logging import logger
+from ozobot.jsonrpc.exceptions import JsonRpcError
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import (
     EventWatcher,
@@ -48,6 +49,27 @@ _ROUTING_KEY_SERVICE_UUID = UUID(
     "6b63040a-520e-4d24-0000-65c78f1d0000"
 )  # taken from anvil-control/src/lib/ble-setup.ts
 _ROUTING_KEY_CHARACTERISTIC_UUID = UUID("6b63040a-520e-4d24-0000-65c78f1d0001")
+
+USER_IO_USER_CANCELLED_CODE = 17
+
+
+@contextlib.asynccontextmanager
+async def _cancellation_handling(
+    *,
+    cancellation_code: int,
+) -> typing.AsyncIterator[None]:
+    """
+    Context manager that converts a specific JsonRpcError code to CancelledError.
+
+    Args:
+        cancellation_code: Error code that should be converted to CancelledError.
+    """
+    try:
+        yield
+    except JsonRpcError as e:
+        if e.code == cancellation_code:
+            raise asyncio.CancelledError(e.message) from e
+        raise
 
 
 class _HasResultType(typing.Protocol):
@@ -351,7 +373,7 @@ class AriNativeDriver:
                         yield raw_data
 
             transport = SerializingTransportLayer(WebrtcTransportAdapter())
-            async with Executor.create(transport, base.Cancellation) as ex:
+            async with Executor.create(transport, base.Cancellation, base.Error) as ex:
                 driver = cls(ex)
                 async with BackgroundTask() as bg:
                     bg.start(driver._healthcheck_loop())
@@ -458,8 +480,9 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.UserIoAlertRequestParams(message=message, cancellable=cancellable),
         )
-        async with Query(req, methods.USER_IO_ALERT).execute(self._executor) as q:
-            _ = await q.response
+        async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE):
+            async with Query(req, methods.USER_IO_ALERT).execute(self._executor) as q:
+                _ = await q.response
 
     async def user_io_prompt[T: (str, float, int, bool, NamedColor, Direction)](
         self,
@@ -479,33 +502,37 @@ class AriNativeDriver:
             ),
         )
 
-        async with Query(req, methods.USER_IO_PROMPT).execute(self._executor) as q:
-            resp = await q.response
-            match resp.result, _type:
-                case response.UserIoPromptStringResponseBody(), t if isinstance(resp.result.value, t):
-                    return resp.result.value
-                case response.UserIoPromptNumberResponseBody(), t if issubclass(t, int):
-                    num_int = int(resp.result.value)
-                    if isinstance(num_int, _type):
-                        return num_int
-                case response.UserIoPromptNumberResponseBody(), t if issubclass(t, float):
-                    num_float = float(resp.result.value)
-                    if isinstance(num_float, _type):
-                        return num_float
-                case response.UserIoPromptBooleanResponseBody(), t if isinstance(resp.result.value, t):
-                    return resp.result.value
-                case response.UserIoPromptSurfaceColorResponseBody() | response.UserIoPromptLineColorResponseBody(), _:
-                    color = conversions.color_from_protocol(resp.result.value)
-                    if isinstance(color, _type):
-                        return color
-                case response.UserIoPromptDirectionResponseBody(), _:
-                    direction = userio_conversions.native_intersection_direction_from_protocol(resp.result.value)
-                    if isinstance(direction, _type):
-                        return direction
-                case _ as r, _ as t:
-                    logger.debug("User IO prompt response not recognized", response=r, expected_type=t)
+        async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE):
+            async with Query(req, methods.USER_IO_PROMPT).execute(self._executor) as q:
+                resp = await q.response
+                match resp.result, _type:
+                    case response.UserIoPromptStringResponseBody(), t if isinstance(resp.result.value, t):
+                        return resp.result.value
+                    case response.UserIoPromptNumberResponseBody(), t if issubclass(t, int):
+                        num_int = int(resp.result.value)
+                        if isinstance(num_int, _type):
+                            return num_int
+                    case response.UserIoPromptNumberResponseBody(), t if issubclass(t, float):
+                        num_float = float(resp.result.value)
+                        if isinstance(num_float, _type):
+                            return num_float
+                    case response.UserIoPromptBooleanResponseBody(), t if isinstance(resp.result.value, t):
+                        return resp.result.value
+                    case (
+                        response.UserIoPromptSurfaceColorResponseBody() | response.UserIoPromptLineColorResponseBody(),
+                        _,
+                    ):
+                        color = conversions.color_from_protocol(resp.result.value)
+                        if isinstance(color, _type):
+                            return color
+                    case response.UserIoPromptDirectionResponseBody(), _:
+                        direction = userio_conversions.native_intersection_direction_from_protocol(resp.result.value)
+                        if isinstance(direction, _type):
+                            return direction
+                    case _ as r, _ as t:
+                        logger.debug("User IO prompt response not recognized", response=r, expected_type=t)
 
-            raise UnexpectedUserIoPromptResponseReceivedError(resp.result.value, _type)
+                raise UnexpectedUserIoPromptResponseReceivedError(resp.result.value, _type)
 
     async def _handle_response(self, function_name: str, resp: typing.Awaitable[_HasResult]) -> None:
         val = await resp

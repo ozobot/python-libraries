@@ -4,7 +4,15 @@ import typing
 import pydantic
 from ozobot.ari.exceptions import DuplicateMessageIdError, MalformedMessageError, UnknownMessageIdError
 from ozobot.ari.framing import FrameDecoder, encode_frame
-from ozobot.ari.protocol.base import CANCELLATION_MESSAGE_LABEL, Cancellation, Message, Notification, Request, Response
+from ozobot.ari.protocol.base import (
+    CANCELLATION_MESSAGE_LABEL,
+    Cancellation,
+    Error,
+    Message,
+    Notification,
+    Request,
+    Response,
+)
 from ozobot.ari.protocol.methods import REQUEST_METHODS
 from ozobot.ari.protocol.serialization import (
     MessageTypeAdapter,
@@ -36,12 +44,13 @@ class SerializingTransportLayer:
         raw = serialize(message)
         await self._transport.write(raw)
 
-    async def read(self) -> typing.AsyncIterator[Message]:
+    async def read(self) -> typing.AsyncIterator[Message | Error]:
         async for data in self._transport.read():
             parsed = json.loads(data)
             msg_id = parsed.get("id", None)
             has_id = msg_id is not None
             is_request = "method" in parsed and "params" in parsed
+            is_error = "error" in parsed
             err_if_failure = None
             is_cancellation = parsed.get("jsonrpc", None) == CANCELLATION_MESSAGE_LABEL
 
@@ -52,6 +61,8 @@ class SerializingTransportLayer:
                 parser = MessageTypeAdapter
             elif is_cancellation:
                 parser = pydantic.TypeAdapter(Cancellation)
+            elif is_error:
+                parser = pydantic.TypeAdapter(Error)
             elif msg_id not in self._context:
                 if msg_id:
                     err_if_failure = UnknownMessageIdError(msg_id)
@@ -71,7 +82,7 @@ class SerializingTransportLayer:
                 else:
                     raise MalformedMessageError() from err
 
-            if isinstance(msg, Response | Cancellation):
+            if isinstance(msg, Response | Cancellation | Error):
                 _ = self._context.pop(msg.id)
 
             yield msg
