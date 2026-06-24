@@ -28,6 +28,19 @@ class _Cancel:
         return _Cancel(id, code, message)
 
 
+@dataclass(frozen=True)
+class _ErrorDetail:
+    code: int
+    message: str
+
+
+@dataclass(frozen=True)
+class _Error:
+    id: int
+    error: _ErrorDetail
+    jsonrpc: str = field(default="2.0")
+
+
 class _RequestA(_Message): ...
 
 
@@ -56,26 +69,28 @@ _method_c = Method.without_response(_RequestC, _NotificationC)
 
 class _QueueTransport:
     def __init__(
-        self, to_transport: asyncio.Queue[_Message | _Cancel], from_transport: asyncio.Queue[_Message | _Cancel]
+        self,
+        to_transport: asyncio.Queue[_Message | _Cancel | _Error],
+        from_transport: asyncio.Queue[_Message | _Cancel | _Error],
     ) -> None:
         self._read_queue = to_transport
         self._write_queue = from_transport
 
-    async def read(self) -> typing.AsyncIterator[_Message | _Cancel]:
+    async def read(self) -> typing.AsyncIterator[_Message | _Cancel | _Error]:
         while True:
             yield await self._read_queue.get()
 
-    async def write(self, data: _Message | _Cancel) -> None:
+    async def write(self, data: _Message | _Cancel | _Error) -> None:
         await self._write_queue.put(data)
 
 
 async def test_executor_types() -> None:
-    to_transport = asyncio.Queue[_Message | _Cancel]()
-    from_transport = asyncio.Queue[_Message | _Cancel]()
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor[_Message, _Cancel].create(transport, _Cancel) as executor:
-        async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
+    async with Executor[_Message, _Cancel, _Error].create(transport, _Cancel, _Error) as executor:
+        async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:  # type: ignore[arg-type]
             resp = execution.response
             typing.assert_type(resp, typing.Awaitable[_ResponseA])
             typing.assert_type(execution.notifications, typing.AsyncIterator[_NotificationA])
@@ -85,12 +100,12 @@ async def test_executor_types() -> None:
 
 
 async def test_executor_types_no_response() -> None:
-    to_transport = asyncio.Queue[_Message | _Cancel]()
-    from_transport = asyncio.Queue[_Message | _Cancel]()
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor.create(transport, _Cancel) as executor:
-        async with Query(_RequestB(id=1, data="hello world"), _method_b).execute(executor) as execution:
+    async with Executor.create(transport, _Cancel, _Error) as executor:
+        async with Query(_RequestB(id=1, data="hello world"), _method_b).execute(executor) as execution:  # type: ignore[arg-type]
             resp = execution.response
             typing.assert_type(resp, typing.Awaitable[_ResponseB])
             typing.assert_type(execution.notifications, typing.AsyncIterator[typing.Never])
@@ -100,12 +115,12 @@ async def test_executor_types_no_response() -> None:
 
 
 async def test_executor_types_no_notification() -> None:
-    to_transport = asyncio.Queue[_Message | _Cancel]()
-    from_transport = asyncio.Queue[_Message | _Cancel]()
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor.create(transport, _Cancel) as executor:
-        async with Query(_RequestC(id=1, data="hello world"), _method_c).execute(executor) as execution:
+    async with Executor.create(transport, _Cancel, _Error) as executor:
+        async with Query(_RequestC(id=1, data="hello world"), _method_c).execute(executor) as execution:  # type: ignore[arg-type]
             resp = execution.response
             typing.assert_type(resp, typing.Awaitable[typing.Never])
             typing.assert_type(execution.notifications, typing.AsyncIterator[_NotificationC])
@@ -115,12 +130,12 @@ async def test_executor_types_no_notification() -> None:
 
 
 async def test_executor_rpc() -> None:
-    to_transport = asyncio.Queue[_Message | _Cancel]()
-    from_transport = asyncio.Queue[_Message | _Cancel]()
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor.create(transport, _Cancel) as executor:
-        async with Query(_RequestA(id=2, data="hello world"), _method_a).execute(executor) as execution:
+    async with Executor.create(transport, _Cancel, _Error) as executor:
+        async with Query(_RequestA(id=2, data="hello world"), _method_a).execute(executor) as execution:  # type: ignore[arg-type]
             assert await from_transport.get() == _RequestA(id=2, data="hello world")
 
             await to_transport.put(_ResponseB(id=1, data="other request"))
@@ -134,12 +149,12 @@ async def test_executor_rpc() -> None:
 
 
 async def test_executor_notifications() -> None:
-    to_transport = asyncio.Queue[_Message | _Cancel]()
-    from_transport = asyncio.Queue[_Message | _Cancel]()
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     transport = _QueueTransport(to_transport, from_transport)
 
-    async with Executor.create(transport, _Cancel) as executor:
-        async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
+    async with Executor.create(transport, _Cancel, _Error) as executor:
+        async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:  # type: ignore[arg-type]
             assert await from_transport.get() == _RequestA(id=1, data="hello world")
 
             await to_transport.put(_NotificationA(id=1, data="hi there"))
@@ -158,13 +173,13 @@ async def test_executor_notifications() -> None:
 
 
 async def test_executor_cancellation_explicit_by_client() -> None:
-    to_transport = asyncio.Queue[_Message | _Cancel]()
-    from_transport = asyncio.Queue[_Message | _Cancel]()
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     transport = _QueueTransport(to_transport, from_transport)
 
     with pytest.raises(asyncio.CancelledError):
-        async with Executor.create(transport, _Cancel) as executor:
-            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
+        async with Executor.create(transport, _Cancel, _Error) as executor:
+            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:  # type: ignore[arg-type]
                 assert await from_transport.get() == _RequestA(id=1, data="hello world")
                 execution.cancel()
                 await asyncio.Future()
@@ -175,13 +190,13 @@ async def test_executor_cancellation_explicit_by_client() -> None:
 
 
 async def test_executor_cancellation_on_program_cancellation_by_client() -> None:
-    to_transport = asyncio.Queue[_Message | _Cancel]()
-    from_transport = asyncio.Queue[_Message | _Cancel]()
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     transport = _QueueTransport(to_transport, from_transport)
 
     with contextlib.suppress(asyncio.CancelledError):
-        async with Executor.create(transport, _Cancel) as executor:
-            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as _:
+        async with Executor.create(transport, _Cancel, _Error) as executor:
+            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as _:  # type: ignore[arg-type]
                 assert await from_transport.get() == _RequestA(id=1, data="hello world")
                 raise asyncio.CancelledError()
 
@@ -191,13 +206,13 @@ async def test_executor_cancellation_on_program_cancellation_by_client() -> None
 
 
 async def test_executor_cancellation_on_error_by_client() -> None:
-    to_transport = asyncio.Queue[_Message | _Cancel]()
-    from_transport = asyncio.Queue[_Message | _Cancel]()
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     transport = _QueueTransport(to_transport, from_transport)
 
     with contextlib.suppress(asyncio.CancelledError):
-        async with Executor.create(transport, _Cancel) as executor:
-            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as _:
+        async with Executor.create(transport, _Cancel, _Error) as executor:
+            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as _:  # type: ignore[arg-type]
                 assert await from_transport.get() == _RequestA(id=1, data="hello world")
                 raise Exception("Some generic exception")
 
@@ -207,30 +222,49 @@ async def test_executor_cancellation_on_error_by_client() -> None:
 
 
 async def test_executor_cancellation_by_server() -> None:
-    to_transport = asyncio.Queue[_Message | _Cancel]()
-    from_transport = asyncio.Queue[_Message | _Cancel]()
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     transport = _QueueTransport(to_transport, from_transport)
 
     # when awaiting the response
     with pytest.raises(asyncio.CancelledError):
-        async with Executor.create(transport, _Cancel) as executor:
-            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
+        async with Executor.create(transport, _Cancel, _Error) as executor:
+            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:  # type: ignore[arg-type]
                 assert await from_transport.get() == _RequestA(id=1, data="hello world")
                 await to_transport.put(_Cancel(id=1, code=0, message="Canceled by test"))
                 await execution.response
 
     # when awaiting notifications
     with pytest.raises(asyncio.CancelledError):
-        async with Executor.create(transport, _Cancel) as executor:
-            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
+        async with Executor.create(transport, _Cancel, _Error) as executor:
+            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:  # type: ignore[arg-type]
                 assert await from_transport.get() == _RequestA(id=1, data="hello world")
                 await to_transport.put(_Cancel(id=1, code=0, message="Canceled by test"))
                 await anext(execution.notifications)
 
     # when not awaiting anything
     with pytest.raises(asyncio.CancelledError):
-        async with Executor.create(transport, _Cancel) as executor:
-            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:
+        async with Executor.create(transport, _Cancel, _Error) as executor:
+            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:  # type: ignore[arg-type]
                 assert await from_transport.get() == _RequestA(id=1, data="hello world")
                 await to_transport.put(_Cancel(id=1, code=0, message="Canceled by test"))
                 await asyncio.Future()  # wait for the cancellation message to process
+
+
+async def test_executor_error_response() -> None:
+    from ozobot.jsonrpc.exceptions import JsonRpcError
+
+    to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    from_transport = asyncio.Queue[_Message | _Cancel | _Error]()
+    transport = _QueueTransport(to_transport, from_transport)
+
+    with pytest.raises(JsonRpcError) as exc_info:
+        async with Executor.create(transport, _Cancel, _Error) as executor:
+            async with Query(_RequestA(id=1, data="hello world"), _method_a).execute(executor) as execution:  # type: ignore[arg-type]
+                assert await from_transport.get() == _RequestA(id=1, data="hello world")
+                await to_transport.put(_Error(id=1, error=_ErrorDetail(code=-32601, message="Method not found")))
+                await execution.response
+
+    assert exc_info.value.id == 1
+    assert exc_info.value.code == -32601
+    assert exc_info.value.message == "Method not found"

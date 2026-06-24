@@ -112,9 +112,7 @@ async def test_open_connection_key() -> None:
             "Rotate",
             [90, 10],
             (
-                request.RotateRequest(
-                    id=0, params=request.RotateRequestParams(angle=90, speed=10)
-                ),
+                request.RotateRequest(id=0, params=request.RotateRequestParams(angle=90, speed=10)),
                 methods.ROTATE,
             ),
         ),

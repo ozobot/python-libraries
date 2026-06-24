@@ -20,7 +20,7 @@ class FrameDecoder:
     FRAME_ESCAPE = 0x7D
     FRAME_ALT = 0x20
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._buffer = bytearray()
         self._state = _State.INIT
 
@@ -53,7 +53,7 @@ class FrameDecoder:
                 if byte == self.FRAME_FLAG:
                     # Received end of frame, move the buffer as a complete packet and reset
                     packets.append(self._buffer)
-                    self._buffer = b""
+                    self._buffer = bytearray()
                     self._state = _State.IDLE
                 elif byte == self.FRAME_ESCAPE:
                     # Escape encountered, mark that and continue
