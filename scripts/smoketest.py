@@ -113,8 +113,11 @@ async def read_watch_sensors(sensors):
         if hasattr(data, name):
             sensor = getattr(data, name)
 
-            val = await sensor.read()
-            print(f"read {name}: {val.value} @ {val.timestamp}")
+            if hasattr(sensor, "read"):
+                val = await sensor.read()
+                print(f"read {name}: {val.value} @ {val.timestamp}")
+            else:
+                print(f"read {name} not available")
 
             t = asyncio.create_task(_watch(name, sensor))
             await user_io_alert("Confirm to continue")
