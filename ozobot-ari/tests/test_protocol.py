@@ -119,18 +119,18 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         request.PlaySoundRequest,
     ),
     (
-        request.TimeOfFlightRequest(id=1, params=request.TimeOfFlightRequestParams(latency=10)),
-        '{"id":1,"jsonrpc":"2.0","method":"TimeOfFlight","params":{"latency":10}}',
+        request.TimeOfFlightRequest(id=1, params=request.TimeOfFlightRequestParams()),
+        '{"id":1,"jsonrpc":"2.0","method":"TimeOfFlight","params":{}}',
         None,
     ),
     (
         notification.TimeOfFlightNotification(
             id=1,
-            result=notification.TimeOfFlightNotificationBody(
+            notification=notification.TimeOfFlightNotificationBody(
                 distance=1.0, deviation=2.0, ambient_rate=3.0, signal_rate=4.0, active_count=5, timestamp=6
             ),
         ),
-        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"distance":1.0,"deviation":2.0,"ambientRate":3.0,"signalRate":4.0,"activeCount":5,"timestamp":6}}',
+        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","notification":{"distance":1.0,"deviation":2.0,"ambientRate":3.0,"signalRate":4.0,"activeCount":5,"timestamp":6}}',
         request.TimeOfFlightRequest,
     ),
     (

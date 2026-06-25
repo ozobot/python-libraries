@@ -86,7 +86,7 @@ class PlaySoundRequest(Request):
 
 
 class TimeOfFlightRequestParams(Model):
-    latency: int | None = None
+    pass
 
 
 class TimeOfFlightRequest(Request):

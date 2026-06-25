@@ -282,8 +282,8 @@ class NativeTimeOfFlightWatcher:
     ) -> typing.AsyncGenerator[Sample[TimeOfFlight]]:
         async for val in iter:
             yield Sample(
-                conversions.time_of_flight_from_protocol(val.result),
-                val.result.timestamp,
+                conversions.time_of_flight_from_protocol(val.notification),
+                val.notification.timestamp,
             )
 
 
