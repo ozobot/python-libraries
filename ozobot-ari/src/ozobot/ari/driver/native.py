@@ -450,8 +450,9 @@ class AriNativeDriver:
                     await self.memory.intersection_queue.write(sample_intersection)
                 case notification.LineNavigationColorNotificationBody():
                     color_code = conversions.color_code_from_protocol(msg.result.colors)
-                    sample_color_code = SampleWithoutTimestamp(color_code)
-                    await self.memory.color_code_queue.write(sample_color_code)
+                    if color_code:
+                        sample_color_code = SampleWithoutTimestamp(color_code)
+                        await self.memory.color_code_queue.write(sample_color_code)
                 case _:
                     typing.assert_never(msg.result)
 
