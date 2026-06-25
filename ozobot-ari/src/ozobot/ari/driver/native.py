@@ -134,20 +134,6 @@ class NativeMemoryRegions:
             response_type=memread.MemReadResponseProximity,
             from_protocol=lambda m: Sample(float(m.value), m.timestamp),
         )
-        self.obstacle_left_rear = NativeDataAccessWatch(
-            executor,
-            request_id,
-            "proximityEdgeLeft",
-            response_type=memread.MemReadResponseProximity,
-            from_protocol=lambda m: Sample(float(m.value), m.timestamp),
-        )
-        self.obstacle_right_rear = NativeDataAccessWatch(
-            executor,
-            request_id,
-            "proximityEdgeRight",
-            response_type=memread.MemReadResponseProximity,
-            from_protocol=lambda m: Sample(float(m.value), m.timestamp),
-        )
 
         self.ir_message_left_front = NativeDataAccessWatch(
             executor,
