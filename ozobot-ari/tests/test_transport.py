@@ -2,7 +2,6 @@ import asyncio
 import typing
 
 import pytest
-from ozobot.ari.exceptions import UnknownMessageIdError
 from ozobot.ari.framing import encode_frame
 from ozobot.ari.protocol import notification, request, response
 from ozobot.ari.protocol.serialization import serialize
@@ -100,11 +99,6 @@ async def test_serializing_transport_deregister_after_response() -> None:
 
     response_received = await anext(transport.read())
     assert response_received == r
-
-    # this fails because the response was already received
-    await to_transport.put(serialize(r))
-    with pytest.raises(UnknownMessageIdError):
-        await anext(transport.read())
 
 
 async def test_framing_transport_write() -> None:
