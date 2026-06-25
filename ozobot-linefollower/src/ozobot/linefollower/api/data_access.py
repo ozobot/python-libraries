@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import typing
 
+from ozobot.common.asyncutils import BackgroundTask
 from ozobot.common.broadcast import BroadcastManager
 from ozobot.linefollower.conversions import _HasTimestamp
 
@@ -140,29 +141,15 @@ class WatcherOutputContainerRunner[T]:
 
     def __init__(self) -> None:
         self._container = WatcherOutputContainer[T]()
-        self._task: asyncio.Task | None = None
-        self._base_task = asyncio.current_task()
+        self._background_task = BackgroundTask()
         self._task_running = asyncio.Event()
 
-    async def __aenter__(self) -> WatcherOutputContainerRunner[T]:
+    async def __aenter__(self) -> typing.Self:
+        await self._background_task.__aenter__()
         return self
 
     async def __aexit__(self, *args) -> None:
-        if self._task:
-            self._task.remove_done_callback(self._on_task_done)
-            if not self._task.done():
-                self._task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._task
-
-    def _on_task_done(self, task: asyncio.Task) -> None:
-        if task.cancelled():
-            return
-
-        self._task_exception = task.exception()
-
-        if self._base_task and not self._base_task.done():
-            self._base_task.cancel()
+        await self._background_task.__aexit__(*args)
 
     async def start(self, it: typing.AsyncGenerator[T, None]) -> None:
         async def _run() -> None:
@@ -176,6 +163,5 @@ class WatcherOutputContainerRunner[T]:
                 except StopAsyncIteration:
                     return
 
-        self._task = asyncio.create_task(_run())
-        self._task.add_done_callback(self._on_task_done)
+        self._background_task.start(_run())
         await self._task_running.wait()
