@@ -9,11 +9,6 @@ class DuplicateMessageIdError(TransportError):
         super().__init__(f"Request with this message id is already pending: {id}")
 
 
-class UnknownMessageIdError(TransportError):
-    def __init__(self, id: int) -> None:
-        super().__init__(f"Message with this message id is unexpected: {id}")
-
-
 class MalformedMessageError(TransportError):
     def __init__(self) -> None:
         super().__init__("Unable to parse received message")
