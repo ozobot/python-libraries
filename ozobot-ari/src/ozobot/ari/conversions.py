@@ -72,7 +72,15 @@ def intersection_bitmap_from_protocol(intersection_mask: types.Intersection) -> 
     return intersection
 
 
-def color_from_protocol(color: TNamedColor) -> NamedColor:
+@typing.overload
+def color_from_protocol(color: TNamedColor) -> NamedColor: ...
+
+
+@typing.overload
+def color_from_protocol(color: TNamedColor | typing.Literal["Unknown"]) -> NamedColor | None: ...
+
+
+def color_from_protocol(color: TNamedColor | typing.Literal["Unknown"]) -> NamedColor | None:
     match color:
         case "Green":
             return NamedColor.GREEN
@@ -84,12 +92,20 @@ def color_from_protocol(color: TNamedColor) -> NamedColor:
             return NamedColor.BLUE
         case "White":
             return NamedColor.WHITE
+        case "Unknown":
+            return None
         case _:
             typing.assert_never(color)
 
 
-def color_code_from_protocol(color_code: list[TNamedColor]) -> ColorCode:
-    return ColorCode(colors=tuple(color_from_protocol(c) for c in color_code))
+def color_code_from_protocol(color_code: typing.Sequence[TNamedColor | None]) -> ColorCode | None:
+    correct_color_code: list[TNamedColor] = []
+    for c in color_code:
+        if c == None:
+            return None
+        correct_color_code.append(c)
+
+    return ColorCode(colors=tuple(color_from_protocol(c) for c in correct_color_code))
 
 
 def ir_message_from_protocol(ir_message: memread.MemReadResponseReadIr) -> IRMessage:
