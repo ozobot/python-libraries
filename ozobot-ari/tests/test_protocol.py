@@ -382,12 +382,12 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     ),
     (
         response.UserIoPromptResponse(id=1, result=response.UserIoPromptSurfaceColorResponseBody(value="Red")),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"surfaceColor","value":"red"}}',
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"surfaceColor","value":"Red"}}',
         request.UserIoPromptRequest,
     ),
     (
         response.UserIoPromptResponse(id=1, result=response.UserIoPromptLineColorResponseBody(value="Blue")),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineColor","value":"blue"}}',
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineColor","value":"Blue"}}',
         request.UserIoPromptRequest,
     ),
     (
