@@ -49,3 +49,10 @@ class HealthcheckTimeoutError(DriverError):
 
     def __init__(self, expiration_s: float) -> None:
         super().__init__(f"Healthcheck response not received within {expiration_s}s")
+
+
+class BlocklyApplicationNotResponding(DriverError):
+    """Blockly application on Ari provided invalid or empty routing key"""
+
+    def __init__(self) -> None:
+        super().__init__("The Blockly application on Ari is unresponsive or not running")
