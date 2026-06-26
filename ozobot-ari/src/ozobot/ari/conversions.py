@@ -60,9 +60,9 @@ def intersection_direction_from_protocol(direction: TDirection) -> Direction:
 def intersection_bitmap_from_protocol(intersection_mask: types.Intersection) -> Direction:
     intersection = Direction(0)
 
-    if intersection_mask.back:
+    if intersection_mask.backward:
         intersection |= Direction.BACKWARD
-    if intersection_mask.forward:
+    if intersection_mask.straight:
         intersection |= Direction.STRAIGHT
     if intersection_mask.left:
         intersection |= Direction.LEFT

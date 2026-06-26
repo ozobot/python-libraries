@@ -77,9 +77,9 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         notification.LineNavigationNotification(
             id=1,
-            result=types.Intersection(back=True, right=True),
+            result=types.Intersection(backward=True, right=True),
         ),
-        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"Back": true, "Right": true}}',
+        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"Backward": true, "Right": true}}',
         request.LineNavigationRequest,
     ),
     (
