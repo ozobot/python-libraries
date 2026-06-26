@@ -188,7 +188,7 @@ async def test_command_with_response(
 async def test_line_navigation(follow_bool: bool, follow_protocol: typing.Literal["Follow", "DoNotFollow"]) -> None:
     executor_mock, query_mock = _create_query(
         notifications=[
-            notification.LineNavigationNotification(id=0, result=types.Intersection(back=True)),
+            notification.LineNavigationNotification(id=0, result=types.Intersection(backward=True, left=True)),
             notification.LineNavigationNotification(
                 id=0, result=notification.LineNavigationColorNotificationBody(colors=["Red", "Black", "Blue"])
             ),
@@ -199,7 +199,7 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: typing.Litera
     async with driver.memory.intersection.watch() as intersection_it, driver.memory.color_code.watch() as cc_it:
         await driver.line_navigation(Direction.LEFT, follow_bool)
 
-        assert await anext(aiter(intersection_it)) == SampleWithoutTimestamp(Direction.BACKWARD)
+        assert await anext(aiter(intersection_it)) == SampleWithoutTimestamp(Direction.BACKWARD | Direction.LEFT)
         assert await anext(aiter(cc_it)) == SampleWithoutTimestamp(
             ColorCode(colors=(NamedColor.RED, NamedColor.BLACK, NamedColor.BLUE)),
         )

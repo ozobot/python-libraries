@@ -62,10 +62,11 @@ def test_intersection_direction_from_protocol(protocol_direction: TDirection, di
 @pytest.mark.parametrize(
     ["intersection", "expected_direction"],
     argvalues=[
-        (types.Intersection(forward=True), Direction.STRAIGHT),
+        (types.Intersection(straight=True), Direction.STRAIGHT),
         (types.Intersection(left=True), Direction.LEFT),
         (types.Intersection(right=True), Direction.RIGHT),
-        (types.Intersection(back=True), Direction.BACKWARD),
+        (types.Intersection(backward=True), Direction.BACKWARD),
+        (types.Intersection(backward=True, left=True), Direction.BACKWARD | Direction.LEFT),
     ],
     ids=lambda x: repr(x),
 )
