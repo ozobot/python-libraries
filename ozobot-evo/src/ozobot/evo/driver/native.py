@@ -7,16 +7,21 @@ from uuid import UUID
 
 from ozobot.ble.connection import open_client
 from ozobot.evo import conversions
-from ozobot.evo.api.watchers import LineFollowerWatcher, WatcherSubscription
+from ozobot.evo.api.watchers import (
+    RefCountedWatcher,
+    WatcherManager,
+)
 from ozobot.evo.driver.responses import handle_events, handle_response
 from ozobot.evo.driver.shared import geometry
 from ozobot.evo.protocol import AsyncControl, Types, VirtualMemory
+from ozobot.linefollower import ColorCode
 from ozobot.linefollower.api.data_access import (
     DataWatcherProxy,
     EventWatcher,
     EventWatcherQueue,
     WatcherOutputContainer,
     WatcherOutputContainerRunner,
+    deduplicate_samples,
 )
 from ozobot.linefollower.datatypes import (
     Direction,
@@ -46,32 +51,14 @@ class MemoryProperty[T](typing.Protocol):
     def size(self) -> int: ...
 
 
-type _TWatchers = tuple[
-    WatcherSubscription[Types.ColorCode],
-    WatcherSubscription[Types.LineColor],
-    WatcherSubscription[Types.SurfaceColor],
-    WatcherSubscription[Types.IRProximity],
-    WatcherSubscription[Types.IRMessage],
-    WatcherSubscription[Types.IRMessage],
-    WatcherSubscription[Types.IRMessage],
-    WatcherSubscription[Types.IRMessage],
-    WatcherSubscription[Types.Button],
-    WatcherSubscription[Types.ChargerState],
-]
-
-
 async def _stop_execution(control: AsyncControl, *, request_id: int) -> None:
     async with control.StopExecution(request_id) as (resp, _):
         pass  # there's nothing to check in the StopExecution response
 
 
 class NativeMemoryRegions:
-    def __init__(self, control: AsyncControl, watchers: _TWatchers) -> None:
-        color_code_watcher, line_color_watcher, surface_color_watcher, proximity_watcher = watchers[:4]
-        ir_right_front_watcher, ir_left_front_watcher, ir_right_rear_watcher, ir_left_rear_watcher = watchers[4:8]
-        button_watcher, charger_watcher = watchers[8:10]
-
-        self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(0)))
+    def __init__(self, control: AsyncControl, watcher_manager: WatcherManager) -> None:
+        self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(1)))
         self.intersection = EventWatcher(self.intersection_queue)
 
         self.line_following_speed = NativeDataAccessReadWrite(
@@ -80,69 +67,74 @@ class NativeMemoryRegions:
             lambda s8_24: float(s8_24) * 1000,
             lambda fl: Types.S8_24(fl / 1000),
         )
-        self.color_code = NativeDataWatcher(
+        self.color_code: NativeDataWatcher[Types.ColorCode, SampleWithoutTimestamp[ColorCode]] = NativeDataWatcher(
             control,
             VirtualMemory.colorCode,
-            color_code_watcher,
-            lambda c: SampleWithoutTimestamp(conversions.color_code_from_protocol(c)),
+            watcher_manager,
+            lambda c: Sample(conversions.color_code_from_protocol(c), c.timestamp),
+            skip_initial_value=True,
         )
         self.line_color = NativeDataWatcher(
             control,
             VirtualMemory.lineColor,
-            line_color_watcher,
+            watcher_manager,
             lambda c: Sample(conversions.line_color_from_protocol(c), c.timestamp),
         )
         self.surface_color = NativeDataWatcher(
             control,
             VirtualMemory.surfaceColor,
-            surface_color_watcher,
+            watcher_manager,
             lambda c: Sample(conversions.surface_color_from_protocol(c), c.timestamp),
         )
 
-        proximity = NativeDataWatcher(control, VirtualMemory.irProximity, proximity_watcher, lambda d: d)
-
-        self.obstacle_right_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.right_front, p.timestamp))
-        self.obstacle_left_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.left_front, p.timestamp))
-        self.obstacle_right_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.right_rear, p.timestamp))
-        self.obstacle_left_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.left_rear, p.timestamp))
+        proximity = NativeDataWatcher(
+            control, VirtualMemory.irProximity, watcher_manager, from_protocol=lambda x: Sample(x, x.timestamp)
+        )
 
         self.ir_message_right_front = NativeDataWatcher(
             control,
             VirtualMemory.irMessageRightFront,
-            ir_right_front_watcher,
+            watcher_manager,
             lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
 
         self.ir_message_left_front = NativeDataWatcher(
             control,
             VirtualMemory.irMessageLeftFront,
-            ir_left_front_watcher,
+            watcher_manager,
             lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
 
         self.ir_message_right_rear = NativeDataWatcher(
             control,
             VirtualMemory.irMessageRightRear,
-            ir_right_rear_watcher,
+            watcher_manager,
             lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
 
         self.ir_message_left_rear = NativeDataWatcher(
             control,
             VirtualMemory.irMessageLeftRear,
-            ir_left_rear_watcher,
+            watcher_manager,
             lambda m: Sample(conversions.ir_message_from_protocol(m), m.timestamp),
         )
 
         self.button = NativeDataWatcher(
-            control, VirtualMemory.button, button_watcher, lambda b: Sample(b.press, b.timestamp)
+            control, VirtualMemory.button, watcher_manager, lambda b: Sample(b.press, b.timestamp)
         )
         self.charger = NativeDataWatcher(
             control,
             VirtualMemory.chargerState,
-            charger_watcher,
+            watcher_manager,
             lambda c: Sample(conversions.charger_state_from_protocol(c), c.timestamp),
         )
+
+        self.obstacle_right_front = DataWatcherProxy(
+            proximity, convert=lambda p: Sample(p.value.rightFront, p.timestamp)
+        )
+        self.obstacle_left_front = DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.leftFront, p.timestamp))
+        self.obstacle_right_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.rightRear, p.timestamp))
+        self.obstacle_left_rear = DataWatcherProxy(proximity, convert=lambda p: Sample(p.value.leftRear, p.timestamp))
 
         self.geometry = geometry
 
@@ -155,11 +147,14 @@ class NativeDataAccessRead[T: Deserializable, U]:
         self._property = property
         self._from_protocol = from_protocol
 
-    async def read(self) -> U:
+    async def _read_raw(self) -> T:
         async with self._control.MemRead(self._property.address, self._property.size) as (resp, _):
             handle_response("MemRead", resp)
 
-        val = self._property.type.deserialize(bytes(resp.data))
+        return self._property.type.deserialize(bytes(resp.data))
+
+    async def read(self) -> U:
+        val = await self._read_raw()
         return self._from_protocol(val)
 
 
@@ -173,6 +168,7 @@ class NativeDataAccessReadWrite[T: _DeserializeAndSerializable, U](NativeDataAcc
     ) -> None:
         super().__init__(control, property, from_protocol)
         self._to_protocol = to_protocol
+        self._open_watcher_count = 0
 
     async def write(self, data: U) -> None:
         raw_data = self._to_protocol(data).serialize()
@@ -180,20 +176,19 @@ class NativeDataAccessReadWrite[T: _DeserializeAndSerializable, U](NativeDataAcc
             handle_response("MemWrite", resp)
 
 
-class NativeDataWatcher[T: _DeserializableWithTimestamp, U]:
+class NativeDataWatcher[T: _DeserializableWithTimestamp, U](NativeDataAccessRead[T, U]):
     def __init__(
         self,
         control: AsyncControl,
         property: MemoryProperty[T],
-        watcher: WatcherSubscription[T],
+        watcher_manager: WatcherManager,
         from_protocol: typing.Callable[[T], U],
+        skip_initial_value: bool = False,
     ) -> None:
-        self._watcher = watcher
-        self._reader = NativeDataAccessRead(control, property, from_protocol)
+        super().__init__(control, property, from_protocol)
+        self._watcher = RefCountedWatcher(property, watcher_manager)
         self._from_protocol = from_protocol
-
-    async def read(self) -> U:
-        return await self._reader.read()
+        self._skip_initial_value = skip_initial_value
 
     @contextlib.asynccontextmanager
     async def watch(self) -> typing.AsyncIterator[WatcherOutputContainer[U]]:
@@ -203,38 +198,21 @@ class NativeDataWatcher[T: _DeserializableWithTimestamp, U]:
 
         async with WatcherOutputContainerRunner[U]() as container_runner:
             async with self._watcher.watch() as unbuffered_reader:
-                await container_runner.start(_convert_iterator(unbuffered_reader))
+                if self._skip_initial_value:
+                    initial_value = (await self._read_raw()).timestamp
+                else:
+                    initial_value = None
+
+                await container_runner.start(
+                    _convert_iterator(deduplicate_samples(unbuffered_reader, initial_value=initial_value))
+                )
                 yield container_runner.output_container
 
 
-@contextlib.asynccontextmanager
-async def create_memory_regions_structure(control: AsyncControl) -> typing.AsyncIterator[NativeMemoryRegions]:
-    config = (
-        VirtualMemory.colorCode,
-        VirtualMemory.lineColor,
-        VirtualMemory.surfaceColor,
-        VirtualMemory.irProximity,
-        VirtualMemory.irMessageRightFront,
-        VirtualMemory.irMessageLeftFront,
-        VirtualMemory.irMessageRightRear,
-        VirtualMemory.irMessageLeftRear,
-        VirtualMemory.button,
-        VirtualMemory.chargerState,
-    )
-
-    watcher = LineFollowerWatcher(control)
-
-    # Until typing allows tuple mapping, we need to do the casts below. See: https://github.com/python/typing/issues/1383
-    type TExpectedInput = tuple[MemoryProperty[Types.ColorCode | Types.LineColor | Types.SurfaceColor]]
-
-    async with watcher.watch(typing.cast(TExpectedInput, config)) as subscriptions:
-        yield NativeMemoryRegions(control, typing.cast(_TWatchers, subscriptions))
-
-
 class EvoNativeDriver:
-    def __init__(self, control: AsyncControl, memory: NativeMemoryRegions) -> None:
+    def __init__(self, control: AsyncControl, watcher_manager: WatcherManager) -> None:
         self._control = control
-        self.memory = memory
+        self.memory = NativeMemoryRegions(control, watcher_manager)
 
     @classmethod
     @contextlib.asynccontextmanager
@@ -249,8 +227,8 @@ class EvoNativeDriver:
             control = AsyncControl(char)
             await _stop_execution(control, request_id=0)
 
-            async with create_memory_regions_structure(control) as memory:
-                yield cls(control, memory)
+            async with WatcherManager.open(control) as watcher_manager:
+                yield cls(control, watcher_manager)
 
     async def move(self, distance_mm: float, speed_mmps: float) -> None:
         request_id = self._control.get_next_request_id()

@@ -1,13 +1,16 @@
+import asyncio
+import contextlib
 import typing
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from ozobot.evo.api.watchers import (
     WatcherAllocator,
-    WatcherSubscription,
+    WatcherManager,
+    _flatten,
     _WatcherAllocation,
 )
-from ozobot.evo.protocol import PacketTypes
+from ozobot.evo.protocol import PacketTypes, Types
 
 
 def test_allocator() -> None:
@@ -33,39 +36,70 @@ def test_allocator_type() -> None:
     typing.assert_type(alloc, _WatcherAllocation[PacketTypes.PacketEvent_Shutdown])
 
 
-async def test_subscription() -> None:
-    allocator = WatcherAllocator(4, 4, 18)
+def _ok_command(**response: typing.Any):
+    async def _evts():
+        return
+        yield  # pragma: no cover - makes this an async generator
 
-    type1_mock = Mock(deserialize=lambda e: bytes(e))
-    allocation1 = allocator.allocate(5, 0, type1_mock)  # type: ignore[var-annotated]
+    @contextlib.asynccontextmanager
+    async def _resp():
+        yield Mock(callStatus=Types.CallStatus.CallSuccess, **response), _evts()
 
-    type2_mock = Mock(deserialize=lambda e: bytes(e))
-    allocation2 = allocator.allocate(3, 5, type2_mock)  # type: ignore[var-annotated]
+    return _resp()
 
-    async def _iter() -> typing.AsyncIterator[PacketTypes.PacketEvent_WatcherDirty]:
-        yield PacketTypes.PacketEvent_WatcherDirty(0, [0, 0, 0, 0, 0, 1, 1, 1])
-        yield PacketTypes.PacketEvent_WatcherDirty(0, [10, 10, 10, 10, 10, 11, 11, 11])
-        yield PacketTypes.PacketEvent_WatcherDirty(0, [20, 20, 20, 20, 20, 21, 21, 21])
 
-    async with WatcherSubscription.run(_iter(), [allocation1, allocation2], allocation1) as subs1:
-        async with subs1.watch() as read1:
-            assert subs1.last == bytes([0, 0, 0, 0, 0])
-            data1 = [await anext(read1) for _ in range(2)]
+def _make_control() -> Mock:
+    return Mock(
+        MemRead=Mock(side_effect=lambda *a, **k: _ok_command(data=[4, 4])),
+        WatcherSetup=Mock(side_effect=lambda *a, **k: _ok_command()),
+        WatcherRegionSetup=Mock(side_effect=lambda *a, **k: _ok_command()),
+        packet_size_max=100,
+    )
 
-    async with WatcherSubscription.run(_iter(), [allocation1, allocation2], allocation2) as subs2:
-        assert subs2.last == bytes([1, 1, 1])
-        async with subs2.watch() as read2:
-            data2 = [await anext(read2) for _ in range(2)]
 
-    assert data1 == [
-        bytes([10, 10, 10, 10, 10]),
-        bytes([20, 20, 20, 20, 20]),
-    ]
+async def test_watcher_failure_propagation() -> None:
+    """A failing watcher task surfaces as a flat exception, not an ExceptionGroup."""
 
-    assert data2 == [
-        bytes([11, 11, 11]),
-        bytes([21, 21, 21]),
-    ]
+    class CustomError(Exception):
+        pass
+
+    async def _failing_watch(self, watcher_id: int, update_counter_region_id: int) -> None:
+        raise CustomError("watcher boom")
+
+    control = _make_control()
+    subs_info = Mock(address=0x1000, size=4, type=Mock(deserialize=Mock(return_value=Mock())))
+
+    with patch.object(WatcherManager, "_watch", _failing_watch):
+        with pytest.raises(CustomError) as excinfo:
+            async with WatcherManager.open(control) as manager:
+                await manager.enable(subs_info)
+                # block until the task group cancels us because the watcher task failed
+                await asyncio.Event().wait()
+
+    # the failure must be flattened out of the TaskGroup's ExceptionGroup
+    assert not isinstance(excinfo.value, BaseExceptionGroup)
+
+
+def test_flatten_returns_first_non_cancelled_failure_and_logs_the_rest() -> None:
+    first = ValueError("first")
+    second = RuntimeError("second")
+    group = BaseExceptionGroup(
+        "watchers",
+        [asyncio.CancelledError(), BaseExceptionGroup("nested", [first]), second],
+    )
+
+    with patch("ozobot.evo.api.watchers.logger") as logger_mock:
+        result = _flatten(group)
+
+    assert result is first
+    logger_mock.exception.assert_called_once()
+
+
+def test_flatten_falls_back_to_cancellation_when_no_other_failure() -> None:
+    cancelled = asyncio.CancelledError()
+    group = BaseExceptionGroup("watchers", [cancelled])
+
+    assert _flatten(group) is cancelled
 
 
 @pytest.mark.skip("not implemented")

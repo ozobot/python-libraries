@@ -19,7 +19,6 @@ def get_driver() -> type[EvoDriver]:
 
         return EvoWebDriver
     else:
-        raise NotImplementedError("Evo native driver is not yet implemented")
         from ozobot.evo.driver.native import EvoNativeDriver
 
         return EvoNativeDriver
