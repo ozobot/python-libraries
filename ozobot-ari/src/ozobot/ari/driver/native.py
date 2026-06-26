@@ -11,6 +11,7 @@ from ozobot.ari import conversions
 from ozobot.ari.driver.shared import geometry
 from ozobot.ari.exceptions import (
     AriProtocolCommandError,
+    BlocklyApplicationNotResponding,
     HealthcheckTimeoutError,
     MemoryReadUnsuccessfulError,
     MemoryWriteUnsuccessfulError,
@@ -20,6 +21,7 @@ from ozobot.ari.protocol.memread import MemReadResponseBody, MemWatchResponseBod
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.ari.transport import SerializingTransportLayer
 from ozobot.ble.connection import open_client
+from ozobot.ble.exceptions import DeviceDescriptionError
 from ozobot.common.asyncutils import BackgroundTask
 from ozobot.common.logging import logger
 from ozobot.jsonrpc.exceptions import JsonRpcError
@@ -294,10 +296,14 @@ async def _get_routing_key_from_ble(
     name: str | None = None,
 ) -> None:
     async with open_client(name=name, id=id, address=address, product="ari") as ble_client:
-        char = ble_client.get_characteristic(
-            _ROUTING_KEY_SERVICE_UUID,
-            _ROUTING_KEY_CHARACTERISTIC_UUID,
-        )
+        try:
+            char = ble_client.get_characteristic(
+                _ROUTING_KEY_SERVICE_UUID,
+                _ROUTING_KEY_CHARACTERISTIC_UUID,
+            )
+        except DeviceDescriptionError as err:
+            raise BlocklyApplicationNotResponding() from err
+
         device_id_bytes = await char.read()
         await out_queue.put(
             device_id_bytes.decode("utf8"),
@@ -337,17 +343,17 @@ class AriNativeDriver:
         name: str | None = None,
         connection_key: str | None = None,
     ) -> typing.AsyncIterator[AriNativeDriver]:
-        if connection_key:
-            routing_key = f"anvil.{connection_key}"
-            rk_task = None
-        else:
-            # ble disconnection was taking too long which slowed down the whole process. Therefore we
-            #     instead spawn a task and get the rk from the queue. The disconnection then does not block the
-            #     program flow.
-            q = asyncio.Queue[str]()
-            rk_task = asyncio.create_task(_get_routing_key_from_ble(address=address, id=id, name=name, out_queue=q))
-            routing_key = await q.get()
-        try:
+        async with BackgroundTask() as routing_key_bg_task:
+            if connection_key:
+                routing_key = f"anvil.{connection_key}"
+            else:
+                # ble disconnection was taking too long which slowed down the whole process. Therefore we
+                #     instead spawn a task and get the rk from the queue. The disconnection then does not block the
+                #     program flow.
+                q = asyncio.Queue[str]()
+                routing_key_bg_task.start(_get_routing_key_from_ble(address=address, id=id, name=name, out_queue=q))
+                routing_key = await q.get()
+
             channel = await _create_webrtc_channel(routing_key)
 
             class WebrtcTransportAdapter:
@@ -366,9 +372,6 @@ class AriNativeDriver:
                 async with BackgroundTask() as bg:
                     bg.start(driver._healthcheck_loop())
                     yield driver
-        finally:
-            if rk_task:
-                await rk_task
 
     async def move(self, distance_mm: float, speed_mmps: float) -> None:
         req = request.MoveStraightRequest(
