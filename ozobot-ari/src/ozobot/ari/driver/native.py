@@ -5,13 +5,12 @@ import contextlib
 import math
 import typing
 from builtins import issubclass
-from uuid import UUID
 
 from ozobot.ari import conversions
-from ozobot.ari.driver.shared import geometry
+from ozobot.ari.driver.shared import TransportBackend, geometry
+from ozobot.ari.driver.transport import SerializingTransportLayer, _open_transport
 from ozobot.ari.exceptions import (
     AriProtocolCommandError,
-    BlocklyApplicationNotResponding,
     HealthcheckTimeoutError,
     MemoryReadUnsuccessfulError,
     MemoryWriteUnsuccessfulError,
@@ -19,9 +18,6 @@ from ozobot.ari.exceptions import (
 from ozobot.ari.protocol import base, memread, memwrite, methods, notification, request, response, types
 from ozobot.ari.protocol.memread import MemReadResponseBody, MemWatchResponseBody
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
-from ozobot.ari.transport import SerializingTransportLayer
-from ozobot.ble.connection import open_client
-from ozobot.ble.exceptions import DeviceDescriptionError
 from ozobot.common.asyncutils import BackgroundTask
 from ozobot.common.logging import logger
 from ozobot.jsonrpc.exceptions import JsonRpcError
@@ -43,16 +39,9 @@ from ozobot.linefollower.datatypes import (
 )
 from ozobot.userio import conversions as userio_conversions
 from ozobot.userio.exceptions import UnexpectedUserIoPromptResponseReceivedError
-from ozobot.webrtc import messaging
-from ozobot.webrtc.connection import Channel
-from ozobot.webrtc.signaling import negotiation, token
-
-_ROUTING_KEY_SERVICE_UUID = UUID(
-    "6b63040a-520e-4d24-0000-65c78f1d0000"
-)  # taken from anvil-control/src/lib/ble-setup.ts
-_ROUTING_KEY_CHARACTERISTIC_UUID = UUID("6b63040a-520e-4d24-0000-65c78f1d0001")
 
 USER_IO_USER_CANCELLED_CODE = 17
+
 
 type _AriExecutor = Executor[base.Message, base.Message, base.Cancellation, base.Error]
 
@@ -289,38 +278,6 @@ class NativeTimeOfFlightWatcher:
             )
 
 
-async def _get_routing_key_from_ble(
-    out_queue: asyncio.Queue[str],
-    address: str | None = None,
-    id: str | None = None,
-    name: str | None = None,
-) -> None:
-    async with open_client(name=name, id=id, address=address, product="ari") as ble_client:
-        try:
-            char = ble_client.get_characteristic(
-                _ROUTING_KEY_SERVICE_UUID,
-                _ROUTING_KEY_CHARACTERISTIC_UUID,
-            )
-        except DeviceDescriptionError as err:
-            raise BlocklyApplicationNotResponding() from err
-
-        device_id_bytes = await char.read()
-        await out_queue.put(
-            device_id_bytes.decode("utf8"),
-        )
-    logger.debug("ble client closed")
-
-
-async def _create_webrtc_channel(connection_key: str) -> Channel:
-    jwt = await token.get_jwt_token(token.TOKEN_ENDPOINT_URL, device_id=connection_key, mode="server")
-    config = messaging.MessagingChannelConfig(device_id=connection_key, username="", password=jwt)
-    async with messaging.create_channel_factory(config) as channel_factory:
-        client = negotiation.SignalingCaller(channel_factory, connection_key)
-        connection, channels = await client.signal(channels=("control",))
-
-    return channels[0]
-
-
 class AriNativeDriver:
     @property
     def memory(self) -> NativeMemoryRegions:
@@ -342,31 +299,19 @@ class AriNativeDriver:
         id: str | None = None,
         name: str | None = None,
         connection_key: str | None = None,
+        transport_backend: TransportBackend = "auto",
     ) -> typing.AsyncIterator[AriNativeDriver]:
-        async with BackgroundTask() as routing_key_bg_task:
-            if connection_key:
-                routing_key = f"anvil.{connection_key}"
-            else:
-                # ble disconnection was taking too long which slowed down the whole process. Therefore we
-                #     instead spawn a task and get the rk from the queue. The disconnection then does not block the
-                #     program flow.
-                q = asyncio.Queue[str]()
-                routing_key_bg_task.start(_get_routing_key_from_ble(address=address, id=id, name=name, out_queue=q))
-                routing_key = await q.get()
+        if transport_backend not in typing.get_args(TransportBackend):
+            raise ValueError(f"Invalid transport_backend: {transport_backend!r}")
 
-            channel = await _create_webrtc_channel(routing_key)
-
-            class WebrtcTransportAdapter:
-                async def write(self, data: str) -> None:
-                    logger.debug("Sending message", message=data)
-                    await channel.send(data)
-
-                async def read(self) -> typing.AsyncIterator[str]:
-                    async for raw_data in channel.receive_str():
-                        logger.debug("Received message", message=raw_data)
-                        yield raw_data
-
-            transport = SerializingTransportLayer(WebrtcTransportAdapter())
+        async with _open_transport(
+            address=address,
+            id=id,
+            name=name,
+            connection_key=connection_key,
+            transport_backend=transport_backend,
+        ) as inner_transport:
+            transport = SerializingTransportLayer(inner_transport)
             async with Executor.create(transport, base.Cancellation, base.Error) as ex:
                 driver = cls(ex)
                 async with BackgroundTask() as bg:

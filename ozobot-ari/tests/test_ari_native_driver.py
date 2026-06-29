@@ -2,7 +2,7 @@ import asyncio
 import contextlib
 import math
 import typing
-from unittest.mock import ANY, Mock, PropertyMock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 from ozobot.ari.driver.native import AriNativeDriver
@@ -58,8 +58,11 @@ def test_import_native() -> None:
 
 
 async def test_open_ble() -> None:
-    async def _get_rk_mock(*args, out_queue, **kwargs):
-        await out_queue.put("anvil.abcdefgh")
+    mock_client = Mock()
+
+    @contextlib.asynccontextmanager
+    async def _mock_open_client(**kwargs):
+        yield mock_client
 
     async def _blocking_receive_str():
         await asyncio.Future()
@@ -69,14 +72,17 @@ async def test_open_ble() -> None:
     channel_mock_obj.receive_str = _blocking_receive_str
     channel_mock_obj.send = Mock()
 
-    with patch("ozobot.ari.driver.native._get_routing_key_from_ble", side_effect=_get_rk_mock) as routing_key_mock:
-        with patch("ozobot.ari.driver.native._create_webrtc_channel", return_value=channel_mock_obj) as channel_mock:
-            async with AriNativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
-                assert isinstance(driver, AriNativeDriver)
-                routing_key_mock.assert_called_with(
-                    address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF", out_queue=ANY
-                )
-                channel_mock.assert_called_once_with("anvil.abcdefgh")
+    with patch("ozobot.ari.driver.transport.open_client", side_effect=_mock_open_client):
+        with patch(
+            "ozobot.ari.driver.transport._fetch_routing_key_with_timeout", return_value="anvil.abcdefgh"
+        ) as routing_key_mock:
+            with patch(
+                "ozobot.ari.driver.transport._create_webrtc_channel", return_value=channel_mock_obj
+            ) as channel_mock:
+                async with AriNativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
+                    assert isinstance(driver, AriNativeDriver)
+                    routing_key_mock.assert_called_once_with(mock_client)
+                    channel_mock.assert_called_once_with("anvil.abcdefgh")
 
 
 async def test_open_connection_key() -> None:
@@ -88,8 +94,8 @@ async def test_open_connection_key() -> None:
     channel_mock_obj.receive_str = _blocking_receive_str
     channel_mock_obj.send = Mock()
 
-    with patch("ozobot.ari.driver.native._create_webrtc_channel", return_value=channel_mock_obj) as channel_mock:
-        async with AriNativeDriver.open(connection_key="1234abcd") as driver:
+    with patch("ozobot.ari.driver.transport._create_webrtc_channel", return_value=channel_mock_obj) as channel_mock:
+        async with AriNativeDriver.open(connection_key="1234abcd", transport_backend="webrtc") as driver:
             assert isinstance(driver, AriNativeDriver)
             channel_mock.assert_called_once_with("anvil.1234abcd")
 

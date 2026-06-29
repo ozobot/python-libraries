@@ -2,10 +2,10 @@ import asyncio
 import typing
 
 import pytest
+from ozobot.ari.driver.transport import FramingTransportLayer, SerializingTransportLayer
 from ozobot.ari.framing import encode_frame
 from ozobot.ari.protocol import notification, request, response
 from ozobot.ari.protocol.serialization import serialize
-from ozobot.ari.transport import FramingTransportLayer, SerializingTransportLayer
 
 
 class _QueueTransport[T]:
