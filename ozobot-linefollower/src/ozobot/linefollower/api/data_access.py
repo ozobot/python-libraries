@@ -139,10 +139,11 @@ class WatcherOutputContainerRunner[T]:
     def output_container(self) -> WatcherOutputContainer[T]:
         return self._container
 
-    def __init__(self) -> None:
+    def __init__(self, *, skip_initial_value: bool = False) -> None:
         self._container = WatcherOutputContainer[T]()
         self._background_task = BackgroundTask()
         self._task_running = asyncio.Event()
+        self._skip_initial_value = skip_initial_value
 
     async def __aenter__(self) -> typing.Self:
         await self._background_task.__aenter__()
@@ -154,6 +155,8 @@ class WatcherOutputContainerRunner[T]:
     async def start(self, it: typing.AsyncGenerator[T, None]) -> None:
         async def _run() -> None:
             self._task_running.set()
+            if self._skip_initial_value:
+                _ = await anext(it)  # drop initial value
             while True:
                 try:
                     data = await anext(it)
