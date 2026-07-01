@@ -101,7 +101,7 @@ def color_from_protocol(color: TNamedColor | typing.Literal["Unknown"]) -> Named
 def color_code_from_protocol(color_code: typing.Sequence[TNamedColor | None]) -> ColorCode | None:
     correct_color_code: list[TNamedColor] = []
     for c in color_code:
-        if c == None:
+        if c is None:
             return None
         correct_color_code.append(c)
 
