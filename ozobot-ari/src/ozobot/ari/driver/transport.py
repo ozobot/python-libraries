@@ -34,7 +34,7 @@ from ozobot.ble.exceptions import DeviceDescriptionError
 from ozobot.common.logging import logger
 from ozobot.jsonrpc.executor import Method
 from ozobot.webrtc import messaging
-from ozobot.webrtc.connection import Channel
+from ozobot.webrtc.connection import Channel, Connection
 from ozobot.webrtc.signaling import negotiation, token
 
 _ROUTING_KEY_SERVICE_UUID = UUID(
@@ -161,14 +161,14 @@ async def _fetch_routing_key_with_timeout(ble_client: Client) -> str:
     return routing_key
 
 
-async def _create_webrtc_channel(connection_key: str) -> Channel:
+async def _create_webrtc_channel(connection_key: str) -> tuple[Connection, Channel]:
     jwt = await token.get_jwt_token(token.TOKEN_ENDPOINT_URL, device_id=connection_key, mode="server")
     config = messaging.MessagingChannelConfig(device_id=connection_key, username="", password=jwt)
     async with messaging.create_channel_factory(config) as channel_factory:
         client = negotiation.SignalingCaller(channel_factory, connection_key)
         connection, channels = await client.signal(channels=("control",))
 
-    return channels[0]
+    return connection, channels[0]
 
 
 class _WebrtcTransportAdapter:
@@ -187,8 +187,12 @@ class _WebrtcTransportAdapter:
 
 @contextlib.asynccontextmanager
 async def _webrtc_transport_from_routing_key(routing_key: str) -> typing.AsyncIterator[_WebrtcTransportAdapter]:
-    channel = await _create_webrtc_channel(routing_key)
-    yield _WebrtcTransportAdapter(channel)
+    connection, channel = await _create_webrtc_channel(routing_key)
+    try:
+        yield _WebrtcTransportAdapter(channel)
+    finally:
+        channel.close()
+        await connection.close()
 
 
 @contextlib.asynccontextmanager
