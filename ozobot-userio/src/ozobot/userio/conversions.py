@@ -4,7 +4,7 @@ from ozobot.linefollower.datatypes import Direction, NamedColor, TDirection, TNa
 from ozobot.linefollower.driver.web import conversions as web_conversions
 from ozobot.linefollower.driver.web.rpctypes import TWebDirection
 from ozobot.linefollower.exceptions import InvalidNamedColorError
-from ozobot.userio.datatypes import TUserIoPrompt, TWebUserIoPrompt
+from ozobot.userio.datatypes import TAriUserIoPromptDirections, TUserIoPrompt, TWebUserIoPrompt
 from ozobot.userio.exceptions import (
     UnexpectedUserIoPromptOptionTypeError,
     UnexpectedUserIoPromptResponseReceivedError,
@@ -42,7 +42,7 @@ def get_type_name(_type: type[str | int | float | bool | NamedColor | Direction]
         raise UnexpectedUserIoPromptTypeError(_type)
 
 
-def intersection_direction_to_protocol(direction: Direction) -> TDirection:
+def native_intersection_direction_to_protocol(direction: Direction) -> TAriUserIoPromptDirections:
     if not len(direction) == 1:
         raise ValueError("Direction attribute needs to define exactly one direction")
 
@@ -55,6 +55,20 @@ def intersection_direction_to_protocol(direction: Direction) -> TDirection:
             return "Forward"
         case Direction.BACKWARD:
             return "Back"
+        case _:
+            typing.assert_never(direction)
+
+
+def native_intersection_direction_from_protocol(direction: TAriUserIoPromptDirections) -> Direction:
+    match direction:
+        case "Left":
+            return Direction.LEFT
+        case "Right":
+            return Direction.RIGHT
+        case "Forward":
+            return Direction.STRAIGHT
+        case "Back":
+            return Direction.BACKWARD
         case _:
             typing.assert_never(direction)
 
@@ -85,7 +99,7 @@ def get_type_options[T: (str, float, int, bool, NamedColor, Direction)](
         if isinstance(opt, NamedColor):
             protocol_options.append(color_to_protocol(opt))
         elif isinstance(opt, Direction):
-            protocol_options.append(intersection_direction_to_protocol(opt))
+            protocol_options.append(native_intersection_direction_to_protocol(opt))
         else:
             protocol_options.append(opt)
 

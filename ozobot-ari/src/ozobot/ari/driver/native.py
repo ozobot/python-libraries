@@ -5,28 +5,31 @@ import contextlib
 import math
 import typing
 from builtins import issubclass
-from uuid import UUID
 
 from ozobot.ari import conversions
-from ozobot.ari.driver.shared import geometry
+from ozobot.ari.driver.shared import TransportBackend, geometry
+from ozobot.ari.driver.transport import SerializingTransportLayer, _open_transport
 from ozobot.ari.exceptions import (
     AriProtocolCommandError,
+    HealthcheckTimeoutError,
     MemoryReadUnsuccessfulError,
     MemoryWriteUnsuccessfulError,
 )
 from ozobot.ari.protocol import base, memread, memwrite, methods, notification, request, response, types
 from ozobot.ari.protocol.memread import MemReadResponseBody, MemWatchResponseBody
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
-from ozobot.ari.transport import SerializingTransportLayer
-from ozobot.ble.connection import open_client
+from ozobot.common.asyncutils import BackgroundTask
 from ozobot.common.logging import logger
+from ozobot.jsonrpc.exceptions import JsonRpcError
 from ozobot.jsonrpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import (
     EventWatcher,
     EventWatcherQueue,
     WatcherOutputContainer,
     WatcherOutputContainerRunner,
+    deduplicate_samples,
 )
+from ozobot.linefollower.conversions import _HasTimestamp
 from ozobot.linefollower.datatypes import (
     ColorCode,
     Direction,
@@ -38,14 +41,30 @@ from ozobot.linefollower.datatypes import (
 )
 from ozobot.userio import conversions as userio_conversions
 from ozobot.userio.exceptions import UnexpectedUserIoPromptResponseReceivedError
-from ozobot.webrtc import messaging
-from ozobot.webrtc.connection import Channel
-from ozobot.webrtc.signaling import negotiation, token
 
-_ROUTING_KEY_SERVICE_UUID = UUID(
-    "6b63040a-520e-4d24-0000-65c78f1d0000"
-)  # taken from anvil-control/src/lib/ble-setup.ts
-_ROUTING_KEY_CHARACTERISTIC_UUID = UUID("6b63040a-520e-4d24-0000-65c78f1d0001")
+USER_IO_USER_CANCELLED_CODE = 17
+
+
+type _AriExecutor = Executor[base.Message, base.Message, base.Cancellation, base.Error]
+
+
+@contextlib.asynccontextmanager
+async def _cancellation_handling(
+    *,
+    cancellation_code: int,
+) -> typing.AsyncIterator[None]:
+    """
+    Context manager that converts a specific JsonRpcError code to CancelledError.
+
+    Args:
+        cancellation_code: Error code that should be converted to CancelledError.
+    """
+    try:
+        yield
+    except JsonRpcError as e:
+        if e.code == cancellation_code:
+            raise asyncio.CancelledError(e.message) from e
+        raise
 
 
 class _HasResultType(typing.Protocol):
@@ -59,7 +78,7 @@ class _HasResult(typing.Protocol):
 
 
 class NativeMemoryRegions:
-    def __init__(self, executor: Executor, request_id: _RequestIdCounter) -> None:
+    def __init__(self, executor: _AriExecutor, request_id: _RequestIdCounter) -> None:
         self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(0)))
         self.intersection = EventWatcher(self.intersection_queue)
 
@@ -108,20 +127,6 @@ class NativeMemoryRegions:
             response_type=memread.MemReadResponseProximity,
             from_protocol=lambda m: Sample(float(m.value), m.timestamp),
         )
-        self.obstacle_left_rear = NativeDataAccessWatch(
-            executor,
-            request_id,
-            "proximityEdgeLeft",
-            response_type=memread.MemReadResponseProximity,
-            from_protocol=lambda m: Sample(float(m.value), m.timestamp),
-        )
-        self.obstacle_right_rear = NativeDataAccessWatch(
-            executor,
-            request_id,
-            "proximityEdgeRight",
-            response_type=memread.MemReadResponseProximity,
-            from_protocol=lambda m: Sample(float(m.value), m.timestamp),
-        )
 
         self.ir_message_left_front = NativeDataAccessWatch(
             executor,
@@ -159,7 +164,7 @@ class _RequestIdCounter:
 class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
     def __init__(
         self,
-        executor: Executor,
+        executor: _AriExecutor,
         id_counter: _RequestIdCounter,
         name: str,
         *,
@@ -177,15 +182,17 @@ class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
             id=self._request_id_counter.get_next(),
             params=memread.MemReadRequestParams(segment=self._name),
         )
-        async with Query(req, methods.MEM_READ).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.MEM_READ)) as q:
             resp = await q.response
             return self._from_protocol(typing.cast(TProtoFrom, resp.result))
 
 
-class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAccessRead[TProtoFrom, TLib]):
+class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib: _HasTimestamp](
+    NativeDataAccessRead[TProtoFrom, TLib]
+):
     def __init__(
         self,
-        executor: Executor,
+        executor: _AriExecutor,
         id_counter: _RequestIdCounter,
         name: str,
         *,
@@ -208,9 +215,9 @@ class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAc
             id=self._request_id_counter.get_next(),
             params=memread.MemReadRequestParams(segment=self._name),
         )
-        async with WatcherOutputContainerRunner[TLib]() as container_runner:
-            async with Query(req, methods.WATCH).execute(self._executor) as q:
-                await container_runner.start(_convert_iterator(q.notifications))
+        async with WatcherOutputContainerRunner[TLib](skip_initial_value=True) as container_runner:
+            async with self._executor.execute(Query(req, methods.WATCH)) as q:
+                await container_runner.start(deduplicate_samples(_convert_iterator(q.notifications)))
                 yield container_runner.output_container
 
     def _convert_sample_from_protocol(self, val: MemReadResponseBody) -> TLib:
@@ -225,7 +232,7 @@ class NativeDataAccessReadWrite[TProtoFrom: MemReadResponseBody, TProtoTo: MemWr
 ):
     def __init__(
         self,
-        executor: Executor,
+        executor: _AriExecutor,
         id_counter: _RequestIdCounter,
         name: str,
         *,
@@ -242,14 +249,14 @@ class NativeDataAccessReadWrite[TProtoFrom: MemReadResponseBody, TProtoTo: MemWr
             id=self._request_id_counter.get_next(),
             params=request_params,
         )
-        async with Query(req, methods.MEM_WRITE).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.MEM_WRITE)) as q:
             resp = await q.response
             if not resp.result.success:
                 raise MemoryWriteUnsuccessfulError(self._name, "failure reported")
 
 
 class NativeTimeOfFlightWatcher:
-    def __init__(self, executor: Executor, request_id: _RequestIdCounter) -> None:
+    def __init__(self, executor: _AriExecutor, request_id: _RequestIdCounter) -> None:
         self._executor = executor
         self._request_id = request_id
 
@@ -261,7 +268,7 @@ class NativeTimeOfFlightWatcher:
         )
 
         async with WatcherOutputContainerRunner[Sample[TimeOfFlight]]() as container_runner:
-            async with Query(req, methods.TIME_OF_FLIGHT).execute(self._executor) as q:
+            async with self._executor.execute(Query(req, methods.TIME_OF_FLIGHT)) as q:
                 await container_runner.start(self._watch_iter(q.notifications))
                 yield container_runner.output_container
 
@@ -270,37 +277,9 @@ class NativeTimeOfFlightWatcher:
     ) -> typing.AsyncGenerator[Sample[TimeOfFlight]]:
         async for val in iter:
             yield Sample(
-                conversions.time_of_flight_from_protocol(val.result),
-                val.result.timestamp,
+                conversions.time_of_flight_from_protocol(val.notification),
+                val.notification.timestamp,
             )
-
-
-async def _get_routing_key_from_ble(
-    out_queue: asyncio.Queue[str],
-    address: str | None = None,
-    id: str | None = None,
-    name: str | None = None,
-) -> None:
-    async with open_client(name=name, id=id, address=address, product="ari") as ble_client:
-        char = ble_client.get_characteristic(
-            _ROUTING_KEY_SERVICE_UUID,
-            _ROUTING_KEY_CHARACTERISTIC_UUID,
-        )
-        device_id_bytes = await char.read()
-        await out_queue.put(
-            device_id_bytes.decode("utf8"),
-        )
-    logger.debug("ble client closed")
-
-
-async def _create_webrtc_channel(connection_key: str) -> Channel:
-    jwt = await token.get_jwt_token(token.TOKEN_ENDPOINT_URL, device_id=connection_key, mode="server")
-    config = messaging.MessagingChannelConfig(device_id=connection_key, username="", password=jwt)
-    async with messaging.create_channel_factory(config) as channel_factory:
-        client = negotiation.SignalingCaller(channel_factory, connection_key)
-        connection, channels = await client.signal(channels=("control",))
-
-    return channels[0]
 
 
 class AriNativeDriver:
@@ -308,10 +287,12 @@ class AriNativeDriver:
     def memory(self) -> NativeMemoryRegions:
         return self._memory
 
-    def __init__(self, executor: Executor) -> None:
+    def __init__(self, executor: _AriExecutor) -> None:
         self._executor = executor
         self._request_id = _RequestIdCounter()
         self._memory = NativeMemoryRegions(executor, self._request_id)
+        self._healthcheck_expiration_s: float = 60.0
+        self._healthcheck_interval_s: float = 30.0
 
     @classmethod
     @contextlib.asynccontextmanager
@@ -322,51 +303,39 @@ class AriNativeDriver:
         id: str | None = None,
         name: str | None = None,
         connection_key: str | None = None,
+        transport_backend: TransportBackend = "auto",
     ) -> typing.AsyncIterator[AriNativeDriver]:
-        if connection_key:
-            routing_key = f"anvil.{connection_key}"
-            rk_task = None
-        else:
-            # ble disconnection was taking too long which slowed down the whole process. Therefore we
-            #     instead spawn a task and get the rk from the queue. The disconnection then does not block the
-            #     program flow.
-            q = asyncio.Queue[str]()
-            rk_task = asyncio.create_task(_get_routing_key_from_ble(address=address, id=id, name=name, out_queue=q))
-            routing_key = await q.get()
-        try:
-            channel = await _create_webrtc_channel(routing_key)
+        if transport_backend not in typing.get_args(TransportBackend):
+            raise ValueError(f"Invalid transport_backend: {transport_backend!r}")
 
-            class WebrtcTransportAdapter:
-                async def write(self, data: str) -> None:
-                    logger.debug("Sending message", message=data)
-                    await channel.send(data)
-
-                async def read(self) -> typing.AsyncIterator[str]:
-                    async for raw_data in channel.receive_str():
-                        logger.debug("Received message", message=raw_data)
-                        yield raw_data
-
-            transport = SerializingTransportLayer(WebrtcTransportAdapter())
-            async with Executor.create(transport, base.Cancellation) as ex:
-                yield cls(ex)
-        finally:
-            if rk_task:
-                await rk_task
+        async with _open_transport(
+            address=address,
+            id=id,
+            name=name,
+            connection_key=connection_key,
+            transport_backend=transport_backend,
+        ) as inner_transport:
+            transport = SerializingTransportLayer(inner_transport)
+            async with Executor.create(transport, base.Cancellation, base.Error) as ex:
+                driver = cls(ex)
+                async with BackgroundTask() as bg:
+                    bg.start(driver._healthcheck_loop())
+                    yield driver
 
     async def move(self, distance_mm: float, speed_mmps: float) -> None:
         req = request.MoveStraightRequest(
             id=self._request_id.get_next(),
             params=request.MoveStraightRequestParams(distance=distance_mm / 1000, speed=speed_mmps / 1000),
         )
-        async with Query(req, methods.MOVE_STRAIGHT).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.MOVE_STRAIGHT)) as q:
             await self._handle_response("MoveStraight", q.response)
 
     async def rotate(self, angle_deg: float, angular_speed_degps: float) -> None:
         req = request.RotateRequest(
             id=self._request_id.get_next(),
-            params=request.RotateRequestParams(angle=math.radians(angle_deg), speed=math.radians(angular_speed_degps)),
+            params=request.RotateRequestParams(angle=angle_deg, speed=angular_speed_degps),
         )
-        async with Query(req, methods.ROTATE).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.ROTATE)) as q:
             await self._handle_response("Rotate", q.response)
 
     async def velocity(self, linear_mmps: float, angular_degps: float, duration_ms: int) -> None:
@@ -378,15 +347,15 @@ class AriNativeDriver:
                 expiration=duration_ms / 1000,
             ),
         )
-        async with Query(req, methods.VELOCITY).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.VELOCITY)) as q:
             await self._handle_response("Velocity", q.response)
 
     async def play_tone(self, frequency_hz: int, duration_ms: int) -> None:
         req = request.PlayToneRequest(
             id=self._request_id.get_next(),
-            params=request.PlayToneRequestParams(frequency=frequency_hz, duration=duration_ms / 1000, volume=1),
+            params=request.PlayToneRequestParams(frequency=frequency_hz, duration=duration_ms / 1000),
         )
-        async with Query(req, methods.PLAY_TONE).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.PLAY_TONE)) as q:
             await self._handle_response("PlayTone", q.response)
 
     async def play_audio_asset(self, audio_name: str) -> None:
@@ -394,7 +363,7 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.PlaySoundRequestParams(name=audio_name, loop=False),
         )
-        async with Query(req, methods.PLAY_SOUND).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.PLAY_SOUND)) as q:
             await self._handle_response("PlaySound", q.response)
 
     async def set_led(self, mask: LEDMask, red: float, green: float, blue: float) -> None:
@@ -403,7 +372,7 @@ class AriNativeDriver:
         req = request.SetLEDRequest(
             id=self._request_id.get_next(), params=request.SetLEDRequestParams(lights=lights, color=color)
         )
-        async with Query(req, methods.SET_LED).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.SET_LED)) as q:
             await self._handle_response("SetLED", q.response)
 
     async def line_navigation(self, direction: Direction, follow: bool) -> None:
@@ -415,12 +384,10 @@ class AriNativeDriver:
                 direction=direction_protocol, follow=follow_arg, detect_color_codes=True
             ),
         )
-        async with Query(req, methods.LINE_NAVIGATION).execute(self._executor) as q, asyncio.TaskGroup() as tg:
-            notifications_task = tg.create_task(self._process_line_navigation_notifications(q.notifications))
-            try:
+        async with self._executor.execute(Query(req, methods.LINE_NAVIGATION)) as q:
+            async with BackgroundTask() as bg:
+                bg.start(self._process_line_navigation_notifications(q.notifications))
                 await self._handle_response("LineNavigation", q.response)
-            finally:
-                notifications_task.cancel()
 
     async def _process_line_navigation_notifications(
         self, it: typing.AsyncIterator[notification.LineNavigationNotification]
@@ -433,8 +400,9 @@ class AriNativeDriver:
                     await self.memory.intersection_queue.write(sample_intersection)
                 case notification.LineNavigationColorNotificationBody():
                     color_code = conversions.color_code_from_protocol(msg.result.colors)
-                    sample_color_code = SampleWithoutTimestamp(color_code)
-                    await self.memory.color_code_queue.write(sample_color_code)
+                    if color_code:
+                        sample_color_code = SampleWithoutTimestamp(color_code)
+                        await self.memory.color_code_queue.write(sample_color_code)
                 case _:
                     typing.assert_never(msg.result)
 
@@ -443,7 +411,7 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.UserIoPrintRequestParams(message=message),
         )
-        async with Query(req, methods.USER_IO_PRINT).execute(self._executor) as q:
+        async with self._executor.execute(Query(req, methods.USER_IO_PRINT)) as q:
             _ = await q.response
 
     async def user_io_alert(self, message: str, *, cancellable: bool = False) -> None:
@@ -451,8 +419,9 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.UserIoAlertRequestParams(message=message, cancellable=cancellable),
         )
-        async with Query(req, methods.USER_IO_ALERT).execute(self._executor) as q:
-            _ = await q.response
+        async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE):
+            async with self._executor.execute(Query(req, methods.USER_IO_ALERT)) as q:
+                _ = await q.response
 
     async def user_io_prompt[T: (str, float, int, bool, NamedColor, Direction)](
         self,
@@ -472,35 +441,57 @@ class AriNativeDriver:
             ),
         )
 
-        async with Query(req, methods.USER_IO_PROMPT).execute(self._executor) as q:
-            resp = await q.response
-            match resp.result, _type:
-                case response.UserIoPromptStringResponseBody(), t if isinstance(resp.result.value, t):
-                    return resp.result.value
-                case response.UserIoPromptNumberResponseBody(), t if issubclass(t, int):
-                    num_int = int(resp.result.value)
-                    if isinstance(num_int, _type):
-                        return num_int
-                case response.UserIoPromptNumberResponseBody(), t if issubclass(t, float):
-                    num_float = float(resp.result.value)
-                    if isinstance(num_float, _type):
-                        return num_float
-                case response.UserIoPromptBooleanResponseBody(), t if isinstance(resp.result.value, t):
-                    return resp.result.value
-                case response.UserIoPromptSurfaceColorResponseBody() | response.UserIoPromptLineColorResponseBody(), _:
-                    color = conversions.color_from_protocol(resp.result.value)
-                    if isinstance(color, _type):
-                        return color
-                case response.UserIoPromptDirectionResponseBody(), _:
-                    direction = conversions.intersection_direction_from_protocol(resp.result.value)
-                    if isinstance(direction, _type):
-                        return direction
-                case _ as r, _ as t:
-                    logger.debug("User IO prompt response not recognized", response=r, expected_type=t)
+        async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE):
+            async with self._executor.execute(Query(req, methods.USER_IO_PROMPT)) as q:
+                resp = await q.response
+                match resp.result, _type:
+                    case response.UserIoPromptStringResponseBody(), t if isinstance(resp.result.value, t):
+                        return resp.result.value
+                    case response.UserIoPromptNumberResponseBody(), t if issubclass(t, int):
+                        num_int = int(resp.result.value)
+                        if isinstance(num_int, _type):
+                            return num_int
+                    case response.UserIoPromptNumberResponseBody(), t if issubclass(t, float):
+                        num_float = float(resp.result.value)
+                        if isinstance(num_float, _type):
+                            return num_float
+                    case response.UserIoPromptBooleanResponseBody(), t if isinstance(resp.result.value, t):
+                        return resp.result.value
+                    case (
+                        response.UserIoPromptSurfaceColorResponseBody() | response.UserIoPromptLineColorResponseBody(),
+                        _,
+                    ):
+                        color = conversions.color_from_protocol(resp.result.value)
+                        if isinstance(color, _type):
+                            return color
+                    case response.UserIoPromptDirectionResponseBody(), _:
+                        direction = userio_conversions.native_intersection_direction_from_protocol(resp.result.value)
+                        if isinstance(direction, _type):
+                            return direction
+                    case _ as r, _ as t:
+                        logger.debug("User IO prompt response not recognized", response=r, expected_type=t)
 
-            raise UnexpectedUserIoPromptResponseReceivedError(resp.result.value, _type)
+                raise UnexpectedUserIoPromptResponseReceivedError(resp.result.value, _type)
 
     async def _handle_response(self, function_name: str, resp: typing.Awaitable[_HasResult]) -> None:
         val = await resp
         if val.result.type != "finished":
             raise AriProtocolCommandError(function_name, val.result.type, description="call failed")
+
+    async def _healthcheck_loop(self) -> None:
+        while True:
+            try:
+                logger.debug("Sending healthcheck request", expiration_s=self._healthcheck_expiration_s)
+                async with asyncio.timeout(self._healthcheck_expiration_s):
+                    req = request.HealthCheckRequest(
+                        id=self._request_id.get_next(),
+                        params=request.HealthCheckRequestParams(expiration=self._healthcheck_expiration_s),
+                    )
+                    async with self._executor.execute(Query(req, methods.HEALTH_CHECK)) as q:
+                        _ = await q.response
+                logger.debug("Healthcheck response received")
+
+                await asyncio.sleep(self._healthcheck_interval_s)
+            except TimeoutError:
+                logger.warning("Healthcheck timeout", expiration_s=self._healthcheck_expiration_s)
+                raise HealthcheckTimeoutError(self._healthcheck_expiration_s) from None

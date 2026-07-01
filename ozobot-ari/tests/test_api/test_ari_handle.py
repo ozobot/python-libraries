@@ -28,10 +28,12 @@ async def test_ari_handle_context_manager() -> None:
         mock_driver_class.open.return_value = mock_driver
         mock_get_driver.return_value = mock_driver_class
 
-        handle = AriHandle(name="test", connection_key="key")
+        handle = AriHandle(name="test", connection_key="key", transport_backend="webrtc")
 
         async with handle as _:
-            mock_driver_class.open.assert_called_once_with(address=None, id=None, name="test", connection_key="key")
+            mock_driver_class.open.assert_called_once_with(
+                address=None, id=None, name="test", connection_key="key", transport_backend="webrtc"
+            )
             mock_driver.__aenter__.assert_awaited_once()
             mock_driver.__aexit__.assert_not_called()
 
@@ -82,10 +84,12 @@ def test_sync_ari_handle_context_manager() -> None:
         mock_driver_class.open.return_value = mock_driver
         mock_get_driver.return_value = mock_driver_class
 
-        handle = SyncAriHandle(name="test", connection_key="key")
+        handle = SyncAriHandle(name="test", connection_key="key", transport_backend="webrtc")
 
         with handle as _:
-            mock_driver_class.open.assert_called_once_with(address=None, id=None, name="test", connection_key="key")
+            mock_driver_class.open.assert_called_once_with(
+                address=None, id=None, name="test", connection_key="key", transport_backend="webrtc"
+            )
             mock_driver.__aenter__.assert_awaited_once()
             mock_driver.__aexit__.assert_not_called()
 
