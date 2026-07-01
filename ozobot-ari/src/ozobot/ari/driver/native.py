@@ -211,7 +211,7 @@ class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAc
             id=self._request_id_counter.get_next(),
             params=memread.MemReadRequestParams(segment=self._name),
         )
-        async with WatcherOutputContainerRunner[TLib]() as container_runner:
+        async with WatcherOutputContainerRunner[TLib](skip_initial_value=True) as container_runner:
             async with self._executor.execute(Query(req, methods.WATCH)) as q:
                 await container_runner.start(_convert_iterator(q.notifications))
                 yield container_runner.output_container
