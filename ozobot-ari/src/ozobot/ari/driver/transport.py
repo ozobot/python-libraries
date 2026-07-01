@@ -13,7 +13,6 @@ from ozobot.ari.exceptions import (
     DuplicateMessageIdError,
     MalformedMessageError,
 )
-from ozobot.ari.framing import FrameDecoder, encode_frame
 from ozobot.ari.protocol.base import (
     CANCELLATION_MESSAGE_LABEL,
     Cancellation,
@@ -120,20 +119,6 @@ class SerializingTransportLayer:
 
             if msg:
                 yield msg
-
-
-class FramingTransportLayer:
-    def __init__(self, transport: _MessageTransport[bytes]) -> None:
-        self._transport = transport
-        self._decoder = FrameDecoder()
-
-    async def write(self, message: str) -> None:
-        await self._transport.write(encode_frame(message.encode("utf8")))
-
-    async def read(self) -> typing.AsyncIterator[str]:
-        async for data in self._transport.read():
-            for msg in self._decoder.feed(data):
-                yield msg.decode("utf8")
 
 
 async def _fetch_routing_key(ble_client: Client) -> str:

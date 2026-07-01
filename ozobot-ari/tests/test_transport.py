@@ -1,9 +1,7 @@
 import asyncio
 import typing
 
-import pytest
-from ozobot.ari.driver.transport import FramingTransportLayer, SerializingTransportLayer
-from ozobot.ari.framing import encode_frame
+from ozobot.ari.driver.transport import SerializingTransportLayer
 from ozobot.ari.protocol import notification, request, response
 from ozobot.ari.protocol.serialization import serialize
 
@@ -99,54 +97,3 @@ async def test_serializing_transport_deregister_after_response() -> None:
 
     response_received = await anext(transport.read())
     assert response_received == r
-
-
-async def test_framing_transport_write() -> None:
-    to_transport = asyncio.Queue[bytes]()
-    from_transport = asyncio.Queue[bytes]()
-    transport = FramingTransportLayer(_QueueTransport(to_transport, from_transport))
-
-    await transport.write("hello")
-    await transport.write("world")
-
-    assert await from_transport.get() == encode_frame(b"hello")
-    assert await from_transport.get() == encode_frame(b"world")
-
-    with pytest.raises(asyncio.TimeoutError):
-        async with asyncio.timeout(0.1):
-            _ = await from_transport.get()
-
-
-async def test_framing_transport_read() -> None:
-    to_transport = asyncio.Queue[bytes]()
-    from_transport = asyncio.Queue[bytes]()
-    transport = FramingTransportLayer(_QueueTransport(to_transport, from_transport))
-
-    for d in [b"hello", b"world"]:
-        await to_transport.put(encode_frame(d))
-
-    assert await anext(transport.read()) == "hello"
-    assert await anext(transport.read()) == "world"
-
-    with pytest.raises(asyncio.TimeoutError):
-        async with asyncio.timeout(0.1):
-            _ = await anext(transport.read())
-
-
-async def test_framing_transport_corrupted_data() -> None:
-    to_transport = asyncio.Queue[bytes]()
-    from_transport = asyncio.Queue[bytes]()
-    transport = FramingTransportLayer(_QueueTransport(to_transport, from_transport))
-
-    # data not framed
-    data = b"hello world"
-    await to_transport.put(data)
-
-    # the corrupted data got dropped
-    with pytest.raises(asyncio.TimeoutError):
-        async with asyncio.timeout(0.1):
-            _ = await anext(transport.read())
-
-    await to_transport.put(encode_frame(b"hi"))
-    result = await anext(transport.read())
-    assert result == "hi"
