@@ -81,7 +81,6 @@ class SerializingTransportLayer:
             has_id = msg_id is not None
             is_request = "method" in parsed and "params" in parsed
             is_error = "error" in parsed
-            err_if_failure = None
             is_cancellation = parsed.get("jsonrpc", None) == CANCELLATION_MESSAGE_LABEL
             parser = None
 
@@ -109,10 +108,7 @@ class SerializingTransportLayer:
                 else:
                     msg = None
             except pydantic.ValidationError as err:
-                if err_if_failure:
-                    raise err_if_failure from err
-                else:
-                    raise MalformedMessageError() from err
+                raise MalformedMessageError() from err
 
             if isinstance(msg, Response | Cancellation | Error):
                 _ = self._context.pop(msg.id)
