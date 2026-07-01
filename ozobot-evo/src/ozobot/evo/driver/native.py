@@ -168,7 +168,6 @@ class NativeDataAccessReadWrite[T: _DeserializeAndSerializable, U](NativeDataAcc
     ) -> None:
         super().__init__(control, property, from_protocol)
         self._to_protocol = to_protocol
-        self._open_watcher_count = 0
 
     async def write(self, data: U) -> None:
         raw_data = self._to_protocol(data).serialize()
