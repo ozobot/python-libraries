@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from ozobot.common.broadcast import BroadcastManager
 from ozobot.common.logging import logger
 from ozobot.evo.driver.responses import handle_response
+from ozobot.evo.exceptions import NoFreeWatcherError
 from ozobot.evo.protocol import AsyncControl, PacketTypes, Types, VirtualMemory
 
 
@@ -126,7 +127,7 @@ class WatcherAllocator:
             available_watchers.items(), default=(None, None), key=lambda e: e[1].num_used_bytes
         )
         if watcher_id is None or watcher_allocation is None:
-            raise Exception("No free watcher found")
+            raise NoFreeWatcherError()
 
         # get the first unused
         unused_region_ids = set(range(self._region_count)) - set(watcher_allocation.used_regions)
@@ -280,6 +281,10 @@ class WatcherManager:
             # check if any user subscriptions remain (counter subscriptions have broadcast=None)
             user_subs_remaining = any(s.broadcast is not None for s in self._subscriptions[watcher_id])
             if not user_subs_remaining:
+                counter_sub = next(s for s in self._subscriptions[watcher_id] if s.broadcast is None)
+                await self._deconfigure_region(counter_sub.allocation)
+                self._allocator.deallocate(counter_sub.allocation)
+                self._subscriptions[watcher_id].remove(counter_sub)
                 self._watcher_tasks.pop(watcher_id).cancel()
 
     async def _enable_update_counter_region(self, watcher_id: int) -> int:

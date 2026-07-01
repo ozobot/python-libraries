@@ -102,6 +102,29 @@ def test_flatten_falls_back_to_cancellation_when_no_other_failure() -> None:
     assert _flatten(group) is cancelled
 
 
+async def test_watcher_disable_removes_counter_subscription() -> None:
+    """disable() must remove the internal counter subscription and allocation, not just the user's."""
+
+    async def _blocking_watch(self, watcher_id: int, update_counter_region_id: int) -> None:
+        await asyncio.Future()
+
+    control = _make_control()
+    subs_info = Mock(address=0x1000, size=4, type=Mock(deserialize=Mock(return_value=Mock())))
+
+    with patch.object(WatcherManager, "_watch", _blocking_watch):
+        async with WatcherManager.open(control) as manager:
+            handle = await manager.enable(subs_info)
+            watcher_id = handle.allocation.watcher_id
+
+            assert len(manager._subscriptions[watcher_id]) == 2
+            assert len(manager._allocator._allocations[watcher_id]) == 2
+
+            await manager.disable(handle)
+
+            assert manager._subscriptions[watcher_id] == []
+            assert manager._allocator._allocations[watcher_id] == []
+
+
 @pytest.mark.skip("not implemented")
 async def test_evo_watcher():
     pass

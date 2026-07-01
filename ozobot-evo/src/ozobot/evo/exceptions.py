@@ -23,3 +23,10 @@ class OzobotDataTypeError(EvoError):
 class UnsupportedColorCodeNumberError(EvoError):
     def __init__(self, number: int) -> None:
         super().__init__(f"Received color code has unsupported color segment: {number}")
+
+
+class NoFreeWatcherError(EvoError):
+    """Raised when no watcher/region can accommodate a new allocation."""
+
+    def __init__(self) -> None:
+        super().__init__("No free watcher found")
