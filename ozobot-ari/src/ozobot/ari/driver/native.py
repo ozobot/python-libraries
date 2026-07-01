@@ -380,12 +380,10 @@ class AriNativeDriver:
                 direction=direction_protocol, follow=follow_arg, detect_color_codes=True
             ),
         )
-        async with self._executor.execute(Query(req, methods.LINE_NAVIGATION)) as q, asyncio.TaskGroup() as tg:
-            notifications_task = tg.create_task(self._process_line_navigation_notifications(q.notifications))
-            try:
+        async with self._executor.execute(Query(req, methods.LINE_NAVIGATION)) as q:
+            async with BackgroundTask() as bg:
+                bg.start(self._process_line_navigation_notifications(q.notifications))
                 await self._handle_response("LineNavigation", q.response)
-            finally:
-                notifications_task.cancel()
 
     async def _process_line_navigation_notifications(
         self, it: typing.AsyncIterator[notification.LineNavigationNotification]

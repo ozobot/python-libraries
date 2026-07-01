@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
 from ozobot.ari.driver.native import AriNativeDriver
+from ozobot.ari.exceptions import AriProtocolCommandError
 from ozobot.ari.protocol import memread, memwrite, methods, notification, request, response, types
 from ozobot.linefollower.datatypes import (
     ColorCode,
@@ -221,6 +222,19 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: typing.Litera
         ),
         methods.LINE_NAVIGATION,
     )
+
+
+async def test_line_navigation_failure_raises_command_error_directly() -> None:
+    executor_mock, _ = _create_query(
+        notifications=[
+            notification.LineNavigationNotification(id=0, result=types.Intersection(backward=True, left=True)),
+        ],
+        response=Mock(type="error"),
+    )
+    driver = AriNativeDriver(executor_mock)
+
+    with pytest.raises(AriProtocolCommandError):
+        await driver.line_navigation(Direction.LEFT, True)
 
 
 async def test_request_id_counter() -> None:
