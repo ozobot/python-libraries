@@ -6,13 +6,12 @@ import typing
 
 from ozobot.common.broadcast import BroadcastManager
 from ozobot.linefollower.conversions import _HasTimestamp
-from ozobot.linefollower.datatypes import Sample
 
 
 class _Watcher[T](typing.Protocol):
     async def read(self) -> T: ...
 
-    def watch(self) -> contextlib.AbstractAsyncContextManager[WatcherOutputContainer[Sample[T]]]: ...
+    def watch(self) -> contextlib.AbstractAsyncContextManager[WatcherOutputContainer[T]]: ...
 
 
 async def deduplicate_samples[T: _HasTimestamp](
@@ -71,7 +70,7 @@ class EventWatcher[T]:
                 yield container_runner.output_container
 
 
-class DataWatcherProxy[T, U]:
+class DataWatcherProxy[T: _HasTimestamp, U]:
     def __init__(
         self,
         watcher: _Watcher[T],
@@ -90,8 +89,8 @@ class DataWatcherProxy[T, U]:
         async with self._watcher.watch() as reader:
 
             async def _reader_converted() -> typing.AsyncGenerator[U, None]:
-                async for sample in deduplicate_samples(aiter(reader)):
-                    yield self._convert(sample.value)
+                async for value in deduplicate_samples(aiter(reader)):
+                    yield self._convert(value)
 
             async with WatcherOutputContainerRunner[U]() as container_runner:
                 await container_runner.start(_reader_converted())

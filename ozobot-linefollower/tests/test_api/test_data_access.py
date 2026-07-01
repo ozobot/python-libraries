@@ -14,8 +14,8 @@ from ozobot.linefollower.datatypes import Sample
 
 
 class _ReadableEventWatcher[T](EventWatcher[Sample[T]]):
-    async def read(self) -> T:
-        return self._queue.last.value
+    async def read(self) -> Sample[T]:
+        return self._queue.last
 
 
 async def _aqueue_to_aiter[T](q: asyncio.Queue[T]) -> typing.AsyncGenerator[T]:
@@ -46,8 +46,8 @@ async def test_watcher_proxy() -> None:
     source_queue = EventWatcherQueue(Sample(Data(0, ""), 0))
     source = _ReadableEventWatcher(source_queue)
 
-    proxy_int = DataWatcherProxy(source, convert=lambda m: Sample(m.data_int, 0))
-    proxy_str = DataWatcherProxy(source, convert=lambda m: Sample(m.data_str, 0))
+    proxy_int = DataWatcherProxy(source, convert=lambda m: Sample(m.value.data_int, 0))
+    proxy_str = DataWatcherProxy(source, convert=lambda m: Sample(m.value.data_str, 0))
 
     async with proxy_int.watch() as container_int, proxy_str.watch() as container_str:
         it_int = aiter(container_int)
