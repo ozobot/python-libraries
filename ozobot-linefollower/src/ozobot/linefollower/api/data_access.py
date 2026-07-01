@@ -17,7 +17,7 @@ class _Watcher[T](typing.Protocol):
 
 async def deduplicate_samples[T: _HasTimestamp](
     it: typing.AsyncIterator[T], initial_value: float | None = None
-) -> typing.AsyncIterator[T]:
+) -> typing.AsyncGenerator[T]:
     """
     Deduplicates consecutive samples by timestamp:
 

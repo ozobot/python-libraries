@@ -403,13 +403,16 @@ async def test_native_data_access_watch() -> None:
     executor_mock, query_mock = _create_query(
         notifications=[
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="Red", light_source=True, timestamp=0)
+                id=0, notification=memread.MemReadResponseLineColor(color="White", light_source=True, timestamp=0)
             ),
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="Blue", light_source=True, timestamp=1)
+                id=0, notification=memread.MemReadResponseLineColor(color="Red", light_source=True, timestamp=1)
             ),
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="Green", light_source=True, timestamp=2)
+                id=0, notification=memread.MemReadResponseLineColor(color="Blue", light_source=True, timestamp=2)
+            ),
+            memread.WatchNotification(
+                id=0, notification=memread.MemReadResponseLineColor(color="Green", light_source=True, timestamp=3)
             ),
         ],
     )
@@ -420,9 +423,9 @@ async def test_native_data_access_watch() -> None:
         notifications = [await anext(it) for _ in range(3)]
 
     assert notifications == [
-        Sample(NamedColor.RED, 0),
-        Sample(NamedColor.BLUE, 1),
-        Sample(NamedColor.GREEN, 2),
+        Sample(NamedColor.RED, 1),
+        Sample(NamedColor.BLUE, 2),
+        Sample(NamedColor.GREEN, 3),
     ]
 
     query_mock.assert_called_with(
