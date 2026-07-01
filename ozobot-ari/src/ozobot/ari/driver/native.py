@@ -27,7 +27,9 @@ from ozobot.linefollower.api.data_access import (
     EventWatcherQueue,
     WatcherOutputContainer,
     WatcherOutputContainerRunner,
+    deduplicate_samples,
 )
+from ozobot.linefollower.conversions import _HasTimestamp
 from ozobot.linefollower.datatypes import (
     ColorCode,
     Direction,
@@ -185,7 +187,9 @@ class NativeDataAccessRead[TProtoFrom: MemReadResponseBody, TLib]:
             return self._from_protocol(typing.cast(TProtoFrom, resp.result))
 
 
-class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAccessRead[TProtoFrom, TLib]):
+class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib: _HasTimestamp](
+    NativeDataAccessRead[TProtoFrom, TLib]
+):
     def __init__(
         self,
         executor: _AriExecutor,
@@ -213,7 +217,7 @@ class NativeDataAccessWatch[TProtoFrom: MemWatchResponseBody, TLib](NativeDataAc
         )
         async with WatcherOutputContainerRunner[TLib](skip_initial_value=True) as container_runner:
             async with self._executor.execute(Query(req, methods.WATCH)) as q:
-                await container_runner.start(_convert_iterator(q.notifications))
+                await container_runner.start(deduplicate_samples(_convert_iterator(q.notifications)))
                 yield container_runner.output_container
 
     def _convert_sample_from_protocol(self, val: MemReadResponseBody) -> TLib:
