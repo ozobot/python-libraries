@@ -58,7 +58,7 @@ async def _stop_execution(control: AsyncControl, *, request_id: int) -> None:
 
 class NativeMemoryRegions:
     def __init__(self, control: AsyncControl, watcher_manager: WatcherManager) -> None:
-        self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(1)))
+        self.intersection_queue = EventWatcherQueue(SampleWithoutTimestamp(Direction(0)))
         self.intersection = EventWatcher(self.intersection_queue)
 
         self.line_following_speed = NativeDataAccessReadWrite(
@@ -168,7 +168,6 @@ class NativeDataAccessReadWrite[T: _DeserializeAndSerializable, U](NativeDataAcc
     ) -> None:
         super().__init__(control, property, from_protocol)
         self._to_protocol = to_protocol
-        self._open_watcher_count = 0
 
     async def write(self, data: U) -> None:
         raw_data = self._to_protocol(data).serialize()
