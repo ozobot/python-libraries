@@ -142,7 +142,7 @@ class PeekableAiter[T]:
         self._peeked: T | None = None
 
     async def __anext__(self) -> T:
-        if self._peeked:
+        if self._peeked is not None:
             p = self._peeked
             self._peeked = None
             return p
@@ -150,7 +150,7 @@ class PeekableAiter[T]:
         return await anext(self._aiter)
 
     async def peek(self) -> T:
-        if self._peeked:
+        if self._peeked is not None:
             return self._peeked
 
         p = await anext(self._aiter)
