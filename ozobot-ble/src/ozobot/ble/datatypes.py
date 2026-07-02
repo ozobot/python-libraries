@@ -48,6 +48,6 @@ class DeviceDescription:
             address=device.address,
             rssi=adv_data.rssi,
             id=device_id,
-            version=version,
+            version=version if version else None,
             product=product,
         )
