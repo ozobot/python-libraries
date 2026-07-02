@@ -23,7 +23,10 @@ Users are generally interested in the control libraries:
 
  - [`ozobot-ari`](/ozobot-ari) for Ari
  - [`ozobot-evo`](/ozobot-evo) for Evo
- - [`ozobot-actors`](/ozobot-actors) used by Blockly exported programs for Ari and Evo 
+ - [`ozobot-actors`](/ozobot-actors) used by Blockly exported programs for Ari and Evo
+
+or command line utility to manage Ozobots
+ - [`ozobot-cli`](/ozobot-cli)
 
 But there are also other back end libraries such as:
 
