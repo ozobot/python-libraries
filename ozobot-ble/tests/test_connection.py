@@ -67,7 +67,7 @@ async def test_scan_devices() -> None:
 
         assert desc_2.name == "EVO-123456"
         assert desc_2.address == "77:88:99:AA:BB:CC"
-        assert desc_2.product == "jot15b"
+        assert desc_2.product == "evo"
         assert desc_2.id == "00010203040506070001020304050607"
         assert desc_2.version == (5, 6, 7)
 
@@ -80,7 +80,7 @@ async def _scan_devices() -> typing.AsyncGenerator[tuple[DeviceDescription, Mock
         id="00112233445566778899AABBCCDDEEFF",
         rssi=10,
         version=(10, 20, 30),
-        product="jot15b",
+        product="evo",
     )
 
     dev1 = sentinel.scanned_device_1
@@ -119,7 +119,7 @@ async def _scan_devices() -> typing.AsyncGenerator[tuple[DeviceDescription, Mock
         (
             {
                 "name": "EVO-123456",
-                "product": "evo",
+                "product": "ari",
             },
             None,
         ),

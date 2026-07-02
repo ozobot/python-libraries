@@ -5,11 +5,11 @@ from dataclasses import dataclass
 
 from bleak import AdvertisementData, BLEDevice
 
-TProductName = typing.Literal["evo", "jot15b", "ari"]
+TProductName = typing.Literal["evo", "ari"]
 
 _products: dict[int, TProductName] = {
     0: "evo",
-    4: "jot15b",
+    4: "evo",  # jot15b
     5: "ari",
 }
 
