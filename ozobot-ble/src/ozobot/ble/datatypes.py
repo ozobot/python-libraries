@@ -38,6 +38,9 @@ class DeviceDescription:
                 int(manufacturer_data[24]),
                 int.from_bytes(manufacturer_data[25:27], "little") if len(manufacturer_data[23:27]) == 4 else 0,
             )
+
+            if version == (0, 0, 0):
+                version = None
         else:
             device_id = None
             version = None
