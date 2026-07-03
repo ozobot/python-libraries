@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import typing
 from logging import getLogger
@@ -16,6 +17,7 @@ from ozobot.ora.datatypes import (
     ToolType,
     VacuumGripperState,
 )
+from ozobot.ora.exceptions import CancellationCausedUndefinedState, CancellationNotSupported
 from ozobot.ora.units import PhysicalQuantityDomain, Value, domains, number_to_value, quantities, units, value_to_number
 from ozobot.web.browser import _rpcCoroutine
 
@@ -69,6 +71,7 @@ class OraWebDriver:
         self._default_joint_speed_deg_s: float = 20
         self._default_joint_acceleration_deg_s2: float = 500
         self._default_joint_jerk_deg_s3: float = 11459
+        self._cancelled_undefined_state = False  # indicates Ora unknown state caused by cancellation
 
         self.device_name = device_name or "ora"
         if "." in self.device_name:
@@ -79,8 +82,20 @@ class OraWebDriver:
     async def open(cls, *, name: str | None = None) -> typing.AsyncIterator["OraWebDriver"]:
         yield OraWebDriver(name)
 
+    @contextlib.contextmanager
+    def _cancellation_guard(self) -> typing.Iterator[None]:
+        if self._cancelled_undefined_state:
+            raise CancellationCausedUndefinedState()
+
+        try:
+            yield
+        except asyncio.CancelledError as err:
+            self._cancelled_undefined_state = True
+            raise CancellationNotSupported() from err
+
     async def _controller(self, method_name: str, args: list[typing.Any] | None = None) -> typing.Any:
-        return await _rpcCoroutine(self.device_name, method_name, args or [])
+        with self._cancellation_guard():
+            return await _rpcCoroutine(self.device_name, method_name, args or [])
 
     async def _listener(self, method_name: str, args: list[typing.Any] | None = None) -> typing.Any:
         return await _rpcCoroutine(self.device_name + ".listener", method_name, args or [])
