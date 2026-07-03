@@ -12,6 +12,7 @@ members = [
   "ozobot-actors",
   "ozobot-ari",
   "ozobot-ble",
+  "ozobot-cli",
   "ozobot-common",
   "ozobot-linefollower",
   "ozobot-evo",
