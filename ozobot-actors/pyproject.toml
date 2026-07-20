@@ -13,7 +13,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ora = ["ozobot-ora~=1.0.6"]
+ora = [
+    "ozobot-ora>=1.1,<2.0",
+]
 ari = [
     "ozobot-ari>=0.3.0,<0.4.0",
 ]
