@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "ozobot-*-v*"
+      - "!ozobot-ora-*"  # do not build ora
       - "docs-v*"
 
 jobs:
