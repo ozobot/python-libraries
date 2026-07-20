@@ -1,4 +1,8 @@
 # Next
+
+
+# 1.1.0
+ - Prevent ORA use after cancellation
  - Require Python 3.13
  - Move to `python-libraries` repo, change structure to match repo conventions
  - ORA-341: add `replace` to datastructures
