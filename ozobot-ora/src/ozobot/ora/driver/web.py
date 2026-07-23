@@ -211,13 +211,20 @@ class OraWebDriver:
         ]
         return await self._controller(cmd_name, args)
 
-    async def move_simple(self, pose: Cartesian):
+    async def move_simple(
+        self,
+        pose: Cartesian,
+        speed: Value[domains.RatioDomain] | None = None,
+        acceleration: Value[domains.AngularAccelerationDomain] | None = None,
+        jerk: Value[domains.AngularJerkDomain] | None = None,
+    ):
         tuple_pose = _wpr_value_to_tuple(pose)
         return await self._controller(
             "moveToPosition",
             [
                 tuple_pose[:3],
                 tuple_pose[3:],
+                *self._construct_joint_movement_kwargs(speed=speed, acceleration=acceleration, jerk=jerk),
             ],
         )
 
