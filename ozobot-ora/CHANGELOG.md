@@ -1,5 +1,7 @@
 # Next
 
+# 1.1.1
+ - fix: add missing move_simple arguments
 
 # 1.1.0
  - Prevent ORA use after cancellation
