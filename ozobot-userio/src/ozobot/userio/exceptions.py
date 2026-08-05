@@ -1,3 +1,5 @@
+import typing
+
 from ozobot.common.exceptions import OzobotError
 
 
@@ -21,3 +23,10 @@ class UnexpectedUserIoPromptResponseReceivedError(UserIoError):
 class UnexpectedUserIoPromptTypeError(UserIoError):
     def __init__(self, _type: type) -> None:
         super().__init__(f"Unexpected user io prompt type given: {_type!r}")
+
+
+class UserIoPromptAbortedError(UserIoError):
+    def __init__(self, method: typing.Literal["UserIoAlert", "UserIoPrompt"]) -> None:
+        name = "alert" if method == "UserIoAlert" else "prompt"
+        super().__init__(f"{name.capitalize()} aborted by user")
+        self.add_context("method", method)
