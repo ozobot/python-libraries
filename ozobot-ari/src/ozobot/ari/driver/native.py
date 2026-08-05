@@ -40,7 +40,7 @@ from ozobot.linefollower.datatypes import (
     TimeOfFlight,
 )
 from ozobot.userio import conversions as userio_conversions
-from ozobot.userio.exceptions import UnexpectedUserIoPromptResponseReceivedError
+from ozobot.userio.exceptions import UnexpectedUserIoPromptResponseReceivedError, UserIoPromptAbortedError
 
 USER_IO_USER_CANCELLED_CODE = 17
 
@@ -52,6 +52,7 @@ type _AriExecutor = Executor[base.Message, base.Message, base.Cancellation, base
 async def _cancellation_handling(
     *,
     cancellation_code: int,
+    userio_method: typing.Literal["UserIoPrompt", "UserIoAlert"] | None = None,
 ) -> typing.AsyncIterator[None]:
     """
     Context manager that converts a specific JsonRpcError code to CancelledError.
@@ -62,8 +63,8 @@ async def _cancellation_handling(
     try:
         yield
     except JsonRpcError as e:
-        if e.code == cancellation_code:
-            raise asyncio.CancelledError(e.message) from e
+        if e.code == cancellation_code and userio_method:
+            raise UserIoPromptAbortedError(userio_method) from e
         raise
 
 
@@ -419,7 +420,7 @@ class AriNativeDriver:
             id=self._request_id.get_next(),
             params=request.UserIoAlertRequestParams(message=message, cancellable=cancellable),
         )
-        async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE):
+        async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE, userio_method="UserIoAlert"):
             async with self._executor.execute(Query(req, methods.USER_IO_ALERT)) as q:
                 _ = await q.response
 
@@ -441,7 +442,7 @@ class AriNativeDriver:
             ),
         )
 
-        async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE):
+        async with _cancellation_handling(cancellation_code=USER_IO_USER_CANCELLED_CODE, userio_method="UserIoPrompt"):
             async with self._executor.execute(Query(req, methods.USER_IO_PROMPT)) as q:
                 resp = await q.response
                 match resp.result, _type:
