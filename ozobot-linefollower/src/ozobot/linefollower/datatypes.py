@@ -10,7 +10,7 @@ _IS_COLOR_EPSILON = 0.01
 
 
 type TNamedColor = typing.Literal["Green", "Black", "Red", "Blue", "White"]
-type TDirection = typing.Literal["Forward", "Back", "Left", "Right"]
+type TDirection = typing.Literal["Straight", "Backward", "Left", "Right"]
 
 
 class Color(abc.ABC):

@@ -2,10 +2,11 @@ import asyncio
 import contextlib
 import math
 import typing
-from unittest.mock import ANY, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
 from ozobot.ari.driver.native import AriNativeDriver
+from ozobot.ari.exceptions import AriProtocolCommandError
 from ozobot.ari.protocol import memread, memwrite, methods, notification, request, response, types
 from ozobot.linefollower.datatypes import (
     ColorCode,
@@ -21,12 +22,11 @@ def _create_query(response=None, notifications=None):
     query_mock = Mock()
     evt = asyncio.Event()
 
-    class _MockQuery:
-        def __init__(self, *args, **kwargs):
-            query_mock(*args, **kwargs)
-
+    class _MockExecutor:
         @contextlib.asynccontextmanager
-        async def execute(self, *args, **kwargs):
+        async def execute(self, query, *args, **kwargs):
+            query_mock(query._request, query._method)
+
             async def _resp():
                 if notifications:
                     await evt.wait()
@@ -48,36 +48,57 @@ def _create_query(response=None, notifications=None):
             ret.notifications = _notifications() if notifications else None
             yield ret
 
-    return _MockQuery, query_mock
+    return _MockExecutor(), query_mock
 
 
 @patch("ozobot.ari.driver.sys.platform", "linux")
 def test_import_native() -> None:
     from ozobot.ari.driver import get_driver
 
-    with pytest.raises(NotImplementedError):
-        _ = get_driver()
-
-    # assert issubclass(get_driver(), AriNativeDriver)
+    assert issubclass(get_driver(), AriNativeDriver)
 
 
 async def test_open_ble() -> None:
-    async def _get_rk_mock(*args, out_queue, **kwargs):
-        await out_queue.put("anvil.abcdefgh")
+    mock_client = Mock()
 
-    with patch("ozobot.ari.driver.native._get_routing_key_from_ble", side_effect=_get_rk_mock) as routing_key_mock:
-        with patch("ozobot.ari.driver.native._create_webrtc_channel") as channel_mock:
-            async with AriNativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
-                assert isinstance(driver, AriNativeDriver)
-                routing_key_mock.assert_called_with(
-                    address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF", out_queue=ANY
-                )
-                channel_mock.assert_called_once_with("anvil.abcdefgh")
+    @contextlib.asynccontextmanager
+    async def _mock_open_client(**kwargs):
+        yield mock_client
+
+    async def _blocking_receive_str():
+        await asyncio.Future()
+        yield
+
+    channel_mock_obj = Mock()
+    channel_mock_obj.receive_str = _blocking_receive_str
+    channel_mock_obj.send = Mock()
+
+    with patch("ozobot.ari.driver.transport.open_client", side_effect=_mock_open_client):
+        with patch(
+            "ozobot.ari.driver.transport._fetch_routing_key_with_timeout", return_value="anvil.abcdefgh"
+        ) as routing_key_mock:
+            with patch(
+                "ozobot.ari.driver.transport._create_webrtc_channel", return_value=(AsyncMock(), channel_mock_obj)
+            ) as channel_mock:
+                async with AriNativeDriver.open(address="11:22:33:44:55:66", id="1234", name="EVO-ABCDEF") as driver:
+                    assert isinstance(driver, AriNativeDriver)
+                    routing_key_mock.assert_called_once_with(mock_client)
+                    channel_mock.assert_called_once_with("anvil.abcdefgh")
 
 
 async def test_open_connection_key() -> None:
-    with patch("ozobot.ari.driver.native._create_webrtc_channel") as channel_mock:
-        async with AriNativeDriver.open(connection_key="1234abcd") as driver:
+    async def _blocking_receive_str():
+        await asyncio.Future()
+        yield
+
+    channel_mock_obj = Mock()
+    channel_mock_obj.receive_str = _blocking_receive_str
+    channel_mock_obj.send = Mock()
+
+    with patch(
+        "ozobot.ari.driver.transport._create_webrtc_channel", return_value=(AsyncMock(), channel_mock_obj)
+    ) as channel_mock:
+        async with AriNativeDriver.open(connection_key="1234abcd", transport_backend="webrtc") as driver:
             assert isinstance(driver, AriNativeDriver)
             channel_mock.assert_called_once_with("anvil.1234abcd")
 
@@ -99,9 +120,7 @@ async def test_open_connection_key() -> None:
             "Rotate",
             [90, 10],
             (
-                request.RotateRequest(
-                    id=0, params=request.RotateRequestParams(angle=math.pi / 2, speed=math.radians(10))
-                ),
+                request.RotateRequest(id=0, params=request.RotateRequestParams(angle=90, speed=10)),
                 methods.ROTATE,
             ),
         ),
@@ -124,7 +143,7 @@ async def test_open_connection_key() -> None:
             "PlayTone",
             [1, 2000],
             (
-                request.PlayToneRequest(id=0, params=request.PlayToneRequestParams(frequency=1, duration=2, volume=1)),
+                request.PlayToneRequest(id=0, params=request.PlayToneRequestParams(frequency=1, duration=2)),
                 methods.PLAY_TONE,
             ),
         ),
@@ -162,13 +181,12 @@ async def test_open_connection_key() -> None:
 async def test_command_with_response(
     function_name: str, command_name: str, command_parameters: list[typing.Any], rpc_parameters: dict[str, typing.Any]
 ) -> None:
-    query_cls, query_cls_mock = _create_query()
-    with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = AriNativeDriver(Mock())
+    executor_mock, query_mock = _create_query()
+    driver = AriNativeDriver(executor_mock)
 
-        function = getattr(driver, function_name)
-        await function(*command_parameters)
-        query_cls_mock.assert_called_once_with(*rpc_parameters)
+    function = getattr(driver, function_name)
+    await function(*command_parameters)
+    query_mock.assert_called_once_with(*rpc_parameters)
 
 
 @pytest.mark.parametrize(
@@ -177,45 +195,56 @@ async def test_command_with_response(
     ids=lambda x: repr(x),
 )
 async def test_line_navigation(follow_bool: bool, follow_protocol: typing.Literal["Follow", "DoNotFollow"]) -> None:
-    query_cls, query_cls_mock = _create_query(
+    executor_mock, query_mock = _create_query(
         notifications=[
-            notification.LineNavigationNotification(id=0, result=types.Intersection(back=True)),
+            notification.LineNavigationNotification(id=0, result=types.Intersection(backward=True, left=True)),
             notification.LineNavigationNotification(
                 id=0, result=notification.LineNavigationColorNotificationBody(colors=["Red", "Black", "Blue"])
             ),
         ]
     )
-    with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = AriNativeDriver(Mock())
+    driver = AriNativeDriver(executor_mock)
 
-        async with driver.memory.intersection.watch() as intersection_it, driver.memory.color_code.watch() as cc_it:
-            await driver.line_navigation(Direction.LEFT, follow_bool)
+    async with driver.memory.intersection.watch() as intersection_it, driver.memory.color_code.watch() as cc_it:
+        await driver.line_navigation(Direction.LEFT, follow_bool)
 
-            assert await anext(aiter(intersection_it)) == SampleWithoutTimestamp(Direction.BACKWARD)
-            assert await anext(aiter(cc_it)) == SampleWithoutTimestamp(
-                ColorCode(colors=(NamedColor.RED, NamedColor.BLACK, NamedColor.BLUE)),
-            )
-
-        query_cls_mock.assert_called_once_with(
-            request.LineNavigationRequest(
-                id=0,
-                params=request.LineNavigationRequestParams(
-                    direction="Left", follow=follow_protocol, detect_color_codes=True
-                ),
-            ),
-            methods.LINE_NAVIGATION,
+        assert await anext(aiter(intersection_it)) == SampleWithoutTimestamp(Direction.BACKWARD | Direction.LEFT)
+        assert await anext(aiter(cc_it)) == SampleWithoutTimestamp(
+            ColorCode(colors=(NamedColor.RED, NamedColor.BLACK, NamedColor.BLUE)),
         )
+
+    query_mock.assert_called_once_with(
+        request.LineNavigationRequest(
+            id=0,
+            params=request.LineNavigationRequestParams(
+                direction="Left", follow=follow_protocol, detect_color_codes=True
+            ),
+        ),
+        methods.LINE_NAVIGATION,
+    )
+
+
+async def test_line_navigation_failure_raises_command_error_directly() -> None:
+    executor_mock, _ = _create_query(
+        notifications=[
+            notification.LineNavigationNotification(id=0, result=types.Intersection(backward=True, left=True)),
+        ],
+        response=Mock(type="error"),
+    )
+    driver = AriNativeDriver(executor_mock)
+
+    with pytest.raises(AriProtocolCommandError):
+        await driver.line_navigation(Direction.LEFT, True)
 
 
 async def test_request_id_counter() -> None:
-    query_cls, query_cls_mock = _create_query()
-    with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = AriNativeDriver(Mock())
-        await driver.move(0, 0)
-        await driver.move(1, 1)
+    executor_mock, query_mock = _create_query()
+    driver = AriNativeDriver(executor_mock)
+    await driver.move(0, 0)
+    await driver.move(1, 1)
 
-        assert query_cls_mock.call_args_list[0].args[0].id == 0
-        assert query_cls_mock.call_args_list[1].args[0].id == 1
+    assert query_mock.call_args_list[0].args[0].id == 0
+    assert query_mock.call_args_list[1].args[0].id == 1
 
 
 @pytest.mark.parametrize(
@@ -234,59 +263,56 @@ async def test_request_id_counter() -> None:
     ],
 )
 async def test_set_led(command_lights: LEDMask, rpc_lights: types.Lights) -> None:
-    query_cls, query_cls_mock = _create_query()
-    with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = AriNativeDriver(Mock())
+    executor_mock, query_mock = _create_query()
+    driver = AriNativeDriver(executor_mock)
 
-        await driver.set_led(command_lights, 0.1, 0.2, 0.3)
+    await driver.set_led(command_lights, 0.1, 0.2, 0.3)
 
-        query_cls_mock.assert_called_once_with(
-            request.SetLEDRequest(
-                id=0,
-                params=request.SetLEDRequestParams(
-                    lights=rpc_lights,
-                    color=types.Color(red=25, green=51, blue=76),
-                ),
+    query_mock.assert_called_once_with(
+        request.SetLEDRequest(
+            id=0,
+            params=request.SetLEDRequestParams(
+                lights=rpc_lights,
+                color=types.Color(red=25, green=51, blue=76),
             ),
-            methods.SET_LED,
-        )
+        ),
+        methods.SET_LED,
+    )
 
 
 async def test_native_data_access_read() -> None:
-    query_cls, query_cls_mock = _create_query(response=memread.MemReadResponseLinearVelocity(velocity=1.23))
-    with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = AriNativeDriver(Mock())
+    executor_mock, query_mock = _create_query(response=memread.MemReadResponseLinearVelocity(velocity=1.23))
+    driver = AriNativeDriver(executor_mock)
 
-        assert await driver.memory.line_following_speed.read() == 1230
+    assert await driver.memory.line_following_speed.read() == 1230
 
-        query_cls_mock.assert_called_with(
-            memread.MemReadRequest(
-                id=0,
-                params=memread.MemReadRequestParams(
-                    segment="lineFollowingSpeed",
-                ),
+    query_mock.assert_called_with(
+        memread.MemReadRequest(
+            id=0,
+            params=memread.MemReadRequestParams(
+                segment="lineFollowingSpeed",
             ),
-            methods.MEM_READ,
-        )
+        ),
+        methods.MEM_READ,
+    )
 
 
 async def test_native_data_access_write() -> None:
-    query_cls, query_cls_mock = _create_query()
-    with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = AriNativeDriver(Mock())
+    executor_mock, query_mock = _create_query()
+    driver = AriNativeDriver(executor_mock)
 
-        await driver.memory.line_following_speed.write(1230)
+    await driver.memory.line_following_speed.write(1230)
 
-        query_cls_mock.assert_called_with(
-            memwrite.MemWriteRequest(
-                id=0,
-                params=memwrite.MemWriteRequestLineFollowingSpeedParams(
-                    segment="lineFollowingSpeed",
-                    value=1.23,
-                ),
+    query_mock.assert_called_with(
+        memwrite.MemWriteRequest(
+            id=0,
+            params=memwrite.MemWriteRequestLineFollowingSpeedParams(
+                segment="lineFollowingSpeed",
+                value=1.23,
             ),
-            methods.MEM_WRITE,
-        )
+        ),
+        methods.MEM_WRITE,
+    )
 
 
 @pytest.mark.parametrize(
@@ -343,70 +369,71 @@ async def test_user_io_prompt(
     response_body: typing.Any,
     expected_result: typing.Any,
 ) -> None:
-    query_cls, query_cls_mock = _create_query(response=response_body)
-    with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = AriNativeDriver(Mock())
+    executor_mock, query_mock = _create_query(response=response_body)
+    driver = AriNativeDriver(executor_mock)
 
-        result = await driver.user_io_prompt("Choose an option", prompt_type, options)
-        assert result == expected_result
+    result = await driver.user_io_prompt("Choose an option", prompt_type, options)
+    assert result == expected_result
 
-        # Determine expected type name
-        type_name: typing.Any
-        if prompt_type == str:
-            type_name = "string"
-        elif prompt_type in (int, float):
-            type_name = "number"
-        elif prompt_type == bool:
-            type_name = "boolean"
-        elif prompt_type == NamedColor:
-            type_name = "surfaceColor"
-        elif prompt_type == Direction:
-            type_name = "direction"
+    # Determine expected type name
+    type_name: typing.Any
+    if prompt_type == str:
+        type_name = "string"
+    elif prompt_type in (int, float):
+        type_name = "number"
+    elif prompt_type == bool:
+        type_name = "boolean"
+    elif prompt_type == NamedColor:
+        type_name = "surfaceColor"
+    elif prompt_type == Direction:
+        type_name = "direction"
 
-        query_cls_mock.assert_called_once_with(
-            request.UserIoPromptRequest(
-                id=0,
-                params=request.UserIoPromptRequestParams(
-                    message="Choose an option", type=type_name, options=protocol_options, cancellable=False
-                ),
+    query_mock.assert_called_once_with(
+        request.UserIoPromptRequest(
+            id=0,
+            params=request.UserIoPromptRequestParams(
+                message="Choose an option", type=type_name, options=protocol_options, cancellable=False
             ),
-            methods.USER_IO_PROMPT,
-        )
+        ),
+        methods.USER_IO_PROMPT,
+    )
 
 
 async def test_native_data_access_watch() -> None:
-    query_cls, query_cls_mock = _create_query(
+    executor_mock, query_mock = _create_query(
         notifications=[
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="Red", light_source=True, timestamp=0)
+                id=0, notification=memread.MemReadResponseLineColor(color="White", light_source=True, timestamp=0)
             ),
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="Blue", light_source=True, timestamp=1)
+                id=0, notification=memread.MemReadResponseLineColor(color="Red", light_source=True, timestamp=1)
             ),
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="Green", light_source=True, timestamp=2)
+                id=0, notification=memread.MemReadResponseLineColor(color="Blue", light_source=True, timestamp=2)
+            ),
+            memread.WatchNotification(
+                id=0, notification=memread.MemReadResponseLineColor(color="Green", light_source=True, timestamp=3)
             ),
         ],
     )
-    with patch("ozobot.ari.driver.native.Query", query_cls):
-        driver = AriNativeDriver(Mock())
+    driver = AriNativeDriver(executor_mock)
 
-        async with driver.memory.line_color.watch() as container:
-            it = aiter(container)
-            notifications = [await anext(it) for _ in range(3)]
+    async with driver.memory.line_color.watch() as container:
+        it = aiter(container)
+        notifications = [await anext(it) for _ in range(3)]
 
-        assert notifications == [
-            Sample(NamedColor.RED, 0),
-            Sample(NamedColor.BLUE, 1),
-            Sample(NamedColor.GREEN, 2),
-        ]
+    assert notifications == [
+        Sample(NamedColor.RED, 1),
+        Sample(NamedColor.BLUE, 2),
+        Sample(NamedColor.GREEN, 3),
+    ]
 
-        query_cls_mock.assert_called_with(
-            memread.WatchRequest(
-                id=0,
-                params=memread.MemReadRequestParams(
-                    segment="lineColor",
-                ),
+    query_mock.assert_called_with(
+        memread.WatchRequest(
+            id=0,
+            params=memread.MemReadRequestParams(
+                segment="lineColor",
             ),
-            methods.WATCH,
-        )
+        ),
+        methods.WATCH,
+    )

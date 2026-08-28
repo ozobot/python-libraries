@@ -16,7 +16,7 @@ class BroadcastManager[T]:
 
     _queues: set[asyncio.Queue[T]]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._queues = set()
 
     def __contains__(self, item):

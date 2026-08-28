@@ -61,6 +61,11 @@ USER_IO_PROMPT = Method.without_notifications(
     response=response.UserIoPromptResponse,
 )
 
+HEALTH_CHECK = Method.without_notifications(
+    request=request.HealthCheckRequest,
+    response=response.HealthCheckResponse,
+)
+
 
 MEM_READ = Method.without_notifications(
     request=memread.MemReadRequest,
@@ -91,6 +96,7 @@ REQUEST_METHODS = {
         USER_IO_PRINT,
         USER_IO_ALERT,
         USER_IO_PROMPT,
+        HEALTH_CHECK,
         MEM_READ,
         MEM_WRITE,
         WATCH,

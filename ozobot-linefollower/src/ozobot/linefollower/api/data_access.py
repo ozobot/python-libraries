@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import typing
 
+from ozobot.common.asyncutils import BackgroundTask
 from ozobot.common.broadcast import BroadcastManager
 from ozobot.linefollower.conversions import _HasTimestamp
 
@@ -16,7 +17,7 @@ class _Watcher[T](typing.Protocol):
 
 async def deduplicate_samples[T: _HasTimestamp](
     it: typing.AsyncIterator[T], initial_value: float | None = None
-) -> typing.AsyncIterator[T]:
+) -> typing.AsyncGenerator[T]:
     """
     Deduplicates consecutive samples by timestamp:
 
@@ -138,35 +139,24 @@ class WatcherOutputContainerRunner[T]:
     def output_container(self) -> WatcherOutputContainer[T]:
         return self._container
 
-    def __init__(self) -> None:
+    def __init__(self, *, skip_initial_value: bool = False) -> None:
         self._container = WatcherOutputContainer[T]()
-        self._task: asyncio.Task | None = None
-        self._base_task = asyncio.current_task()
+        self._background_task = BackgroundTask()
         self._task_running = asyncio.Event()
+        self._skip_initial_value = skip_initial_value
 
-    async def __aenter__(self) -> WatcherOutputContainerRunner[T]:
+    async def __aenter__(self) -> typing.Self:
+        await self._background_task.__aenter__()
         return self
 
     async def __aexit__(self, *args) -> None:
-        if self._task:
-            self._task.remove_done_callback(self._on_task_done)
-            if not self._task.done():
-                self._task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._task
-
-    def _on_task_done(self, task: asyncio.Task) -> None:
-        if task.cancelled():
-            return
-
-        self._task_exception = task.exception()
-
-        if self._base_task and not self._base_task.done():
-            self._base_task.cancel()
+        await self._background_task.__aexit__(*args)
 
     async def start(self, it: typing.AsyncGenerator[T, None]) -> None:
         async def _run() -> None:
             self._task_running.set()
+            if self._skip_initial_value:
+                _ = await anext(it)  # drop initial value
             while True:
                 try:
                     data = await anext(it)
@@ -176,6 +166,5 @@ class WatcherOutputContainerRunner[T]:
                 except StopAsyncIteration:
                     return
 
-        self._task = asyncio.create_task(_run())
-        self._task.add_done_callback(self._on_task_done)
+        self._background_task.start(_run())
         await self._task_running.wait()
