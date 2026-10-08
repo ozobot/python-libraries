@@ -32,4 +32,4 @@ class TimeOfFlightNotificationBody(Model):
 
 
 class TimeOfFlightNotification(Notification):
-    result: TimeOfFlightNotificationBody
+    notification: TimeOfFlightNotificationBody

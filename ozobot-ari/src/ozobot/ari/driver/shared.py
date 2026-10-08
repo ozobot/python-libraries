@@ -1,3 +1,5 @@
+import typing
+
 from ozobot.linefollower.api.data_access import DataReadConstant
 from ozobot.linefollower.datatypes import RobotGeometry
 
@@ -10,3 +12,5 @@ geometry = DataReadConstant(
         max_speed_limit_mmps=300,
     )
 )
+
+TransportBackend = typing.Literal["ble", "webrtc", "auto"]

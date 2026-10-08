@@ -26,3 +26,11 @@ class CancelledByClientError(OzobotError):
 class UnknownFrameDecoderStateError(FramingError):
     def __init__(self) -> None:
         super().__init__("Unknown frame decoder state encountered")
+
+
+class JsonRpcError(OzobotError):
+    def __init__(self, id: int, code: int, message: str) -> None:
+        self.id = id
+        self.code = code
+        self.message = message
+        super().__init__(f"JSON-RPC error {code}: {message} (request {id})")

@@ -17,8 +17,8 @@ class Intersection(Model):
         ),
     )
 
-    back: bool | None = False
-    forward: bool | None = False
+    backward: bool | None = False
+    straight: bool | None = False
     left: bool | None = False
     right: bool | None = False
 

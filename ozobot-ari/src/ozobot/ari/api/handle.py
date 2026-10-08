@@ -2,7 +2,7 @@ import contextlib
 import typing
 from types import TracebackType
 
-from ozobot.ari.driver import AriDriver, get_driver
+from ozobot.ari.driver import AriDriver, TransportBackend, get_driver
 from ozobot.common.sync import as_sync_context_manager
 from ozobot.linefollower.api.handle import BaseHandle
 
@@ -11,9 +11,16 @@ from .sync import SyncAri
 
 
 class BaseAriHandle(BaseHandle):
-    def __init__(self, *, connection_key: str | None = None, **kwargs) -> None:
+    def __init__(
+        self,
+        *,
+        connection_key: str | None = None,
+        transport_backend: TransportBackend = "auto",
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
         self._connection_key = connection_key
+        self._transport_backend = transport_backend
 
     @property
     def connection_key(self) -> str | None:
@@ -24,9 +31,17 @@ class BaseAriHandle(BaseHandle):
 
         .. warning::
             If this field is set, all the other fields are ignored.
+
+        .. warning::
+            ``transport_backend`` must be set to ``"webrtc"`` when this field is used.
         """
 
         return self._connection_key
+
+    @property
+    def transport_backend(self) -> TransportBackend:
+        """Transport backend used for the connection. Must be ``"webrtc"`` when ``connection_key`` is set."""
+        return self._transport_backend
 
 
 class AriHandle(BaseAriHandle):
@@ -37,8 +52,15 @@ class AriHandle(BaseAriHandle):
         id: str | None = None,
         name: str | None = None,
         connection_key: str | None = None,
+        transport_backend: TransportBackend = "auto",
     ) -> None:
-        super().__init__(address=address, id=id, name=name, connection_key=connection_key)
+        super().__init__(
+            address=address,
+            id=id,
+            name=name,
+            connection_key=connection_key,
+            transport_backend=transport_backend,
+        )
         self._exit_stack = contextlib.AsyncExitStack()
 
     async def __aenter__(self) -> Ari:
@@ -46,7 +68,13 @@ class AriHandle(BaseAriHandle):
         # the cast is essential for mypy to correctly infer `enter_async_context` return value
         driver_context = typing.cast(
             contextlib.AbstractAsyncContextManager[AriDriver],
-            Driver.open(address=self.address, id=self.id, name=self.name, connection_key=self.connection_key),
+            Driver.open(
+                address=self.address,
+                id=self.id,
+                name=self.name,
+                connection_key=self.connection_key,
+                transport_backend=self.transport_backend,
+            ),
         )
 
         driver = await self._exit_stack.enter_async_context(driver_context)
@@ -66,12 +94,25 @@ class SyncAriHandle(BaseAriHandle):
         id: str | None = None,
         name: str | None = None,
         connection_key: str | None = None,
+        transport_backend: TransportBackend = "auto",
     ) -> None:
-        super().__init__(address=address, id=id, name=name, connection_key=connection_key)
+        super().__init__(
+            address=address,
+            id=id,
+            name=name,
+            connection_key=connection_key,
+            transport_backend=transport_backend,
+        )
         self._exit_stack = contextlib.ExitStack()
 
     def __enter__(self) -> SyncAri:
-        async_handle = AriHandle(address=self.address, id=self.id, name=self.name, connection_key=self.connection_key)
+        async_handle = AriHandle(
+            address=self.address,
+            id=self.id,
+            name=self.name,
+            connection_key=self.connection_key,
+            transport_backend=self.transport_backend,
+        )
         handle_context = self._exit_stack.enter_context(as_sync_context_manager(async_handle))
         return SyncAri(handle_context)
 

@@ -54,9 +54,9 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         request.LineNavigationRequest(
             id=1,
-            params=request.LineNavigationRequestParams(direction="Forward", follow="Follow", detect_color_codes=True),
+            params=request.LineNavigationRequestParams(direction="Straight", follow="Follow", detect_color_codes=True),
         ),
-        '{"id":1,"jsonrpc":"2.0","method":"LineNavigation","params":{"direction":"Forward","follow":"Follow","detectColorCodes":true}}',
+        '{"id":1,"jsonrpc":"2.0","method":"LineNavigation","params":{"direction":"Straight","follow":"Follow","detectColorCodes":true}}',
         None,
     ),
     (
@@ -77,9 +77,9 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     (
         notification.LineNavigationNotification(
             id=1,
-            result=types.Intersection(back=True, right=True),
+            result=types.Intersection(backward=True, right=True),
         ),
-        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"Back": true, "Right": true}}',
+        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"Backward": true, "Right": true}}',
         request.LineNavigationRequest,
     ),
     (
@@ -99,8 +99,8 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         request.SetLEDRequest,
     ),
     (
-        request.PlayToneRequest(id=1, params=request.PlayToneRequestParams(frequency=440, duration=1000, volume=50)),
-        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":440,"duration":1000,"volume":50}}',
+        request.PlayToneRequest(id=1, params=request.PlayToneRequestParams(frequency=440, duration=1000)),
+        '{"id":1,"jsonrpc":"2.0","method":"PlayTone","params":{"frequency":440,"duration":1000}}',
         None,
     ),
     (
@@ -119,18 +119,18 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
         request.PlaySoundRequest,
     ),
     (
-        request.TimeOfFlightRequest(id=1, params=request.TimeOfFlightRequestParams(latency=10)),
-        '{"id":1,"jsonrpc":"2.0","method":"TimeOfFlight","params":{"latency":10}}',
+        request.TimeOfFlightRequest(id=1, params=request.TimeOfFlightRequestParams()),
+        '{"id":1,"jsonrpc":"2.0","method":"TimeOfFlight","params":{}}',
         None,
     ),
     (
         notification.TimeOfFlightNotification(
             id=1,
-            result=notification.TimeOfFlightNotificationBody(
+            notification=notification.TimeOfFlightNotificationBody(
                 distance=1.0, deviation=2.0, ambient_rate=3.0, signal_rate=4.0, active_count=5, timestamp=6
             ),
         ),
-        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","result":{"distance":1.0,"deviation":2.0,"ambientRate":3.0,"signalRate":4.0,"activeCount":5,"timestamp":6}}',
+        '{"id":1,"jsonrpc":"com/ozobot/jsonrpc/2.0/notification","notification":{"distance":1.0,"deviation":2.0,"ambientRate":3.0,"signalRate":4.0,"activeCount":5,"timestamp":6}}',
         request.TimeOfFlightRequest,
     ),
     (
@@ -382,12 +382,12 @@ messages: tuple[tuple[base.Message, str, type[base.Request] | None], ...] = (
     ),
     (
         response.UserIoPromptResponse(id=1, result=response.UserIoPromptSurfaceColorResponseBody(value="Red")),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"surfaceColor","value":"red"}}',
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"surfaceColor","value":"Red"}}',
         request.UserIoPromptRequest,
     ),
     (
         response.UserIoPromptResponse(id=1, result=response.UserIoPromptLineColorResponseBody(value="Blue")),
-        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineColor","value":"blue"}}',
+        '{"id":1,"jsonrpc":"2.0","result":{"type":"lineColor","value":"Blue"}}',
         request.UserIoPromptRequest,
     ),
     (
