@@ -31,7 +31,7 @@ from ozobot.ari.protocol.serialization import (
 from ozobot.ble.connection import Client, open_client
 from ozobot.ble.exceptions import DeviceDescriptionError
 from ozobot.common.logging import logger
-from ozobot.jsonrpc.executor import Method
+from ozobot.common.rpc.executor import Method
 from ozobot.webrtc import messaging
 from ozobot.webrtc.connection import Channel, Connection
 from ozobot.webrtc.signaling import negotiation, token

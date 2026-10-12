@@ -1,7 +1,7 @@
 import typing
 
 from ozobot.ari.protocol import base, memread, memwrite, notification, request, response
-from ozobot.jsonrpc.executor import Method
+from ozobot.common.rpc.executor import Method
 
 MOVE_STRAIGHT = Method(
     request=request.MoveStraightRequest,

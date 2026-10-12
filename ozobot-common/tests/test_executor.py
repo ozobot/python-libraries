@@ -6,7 +6,7 @@ import typing
 from dataclasses import dataclass, field
 
 import pytest
-from ozobot.jsonrpc.executor import Executor, Method, Query
+from ozobot.common.rpc.executor import Executor, Method, Query
 
 
 @dataclass(frozen=True)
@@ -274,7 +274,7 @@ async def test_executor_cancellation_by_server() -> None:
 
 
 async def test_executor_error_response() -> None:
-    from ozobot.jsonrpc.exceptions import JsonRpcError
+    from ozobot.common.rpc.exceptions import JsonRpcError
 
     to_transport = asyncio.Queue[_Message | _Cancel | _Error]()
     from_transport = asyncio.Queue[_Message | _Cancel | _Error]()

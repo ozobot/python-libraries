@@ -17,7 +17,6 @@ members = [
   "ozobot-linefollower",
   "ozobot-evo",
   "ozobot-ora",
-  "ozobot-jsonrpc",
   "ozobot-userio",
   "ozobot-web",
   "ozobot-webrtc",
