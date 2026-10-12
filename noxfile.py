@@ -6,7 +6,7 @@ import nox_uv
 nox.options.default_venv_backend = "uv"
 
 default_python_version = "3.14"
-test_python_versions = ["3.13", "3.14"]
+test_python_versions = ["3.13", "3.14", "3.15"]
 
 
 def workspace_members(session):
