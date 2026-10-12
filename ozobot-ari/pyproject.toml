@@ -9,7 +9,6 @@ requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
     "ozobot-ble>=0.1; platform_system != 'Emscripten'",
-    "ozobot-jsonrpc>=0.2; platform_system != 'Emscripten'",
     "ozobot-webrtc>=0.1; platform_system != 'Emscripten'",
     "ozobot-common>=0.3.0,<0.4.0",
     "ozobot-linefollower>=0.3.0,<0.4.0",
@@ -39,7 +38,6 @@ only-include = ["src/ozobot"]
 [tool.uv.sources]
 ozobot-ble = { workspace = true }
 ozobot-common = { workspace = true }
-ozobot-jsonrpc = { workspace = true }
 ozobot-linefollower = { workspace = true }
 ozobot-userio = { workspace = true }
 ozobot-web = { workspace = true }

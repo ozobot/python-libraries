@@ -8,3 +8,4 @@ Common utilities and helpers for Ozobot projects. See the [monorepo](https://git
 - **Async Utilities**: Enhanced async task management with `CancellableTaskGroup`
 - **Logging**: Configurable logging setup with Loguru
 - **Exceptions**: Base exception structure used by other libraries
+- **RPC**: JSON-RPC 2.0 client support with Ozobot extensions (`Executor`, `Method`, `Query`) — see `ozobot.common.rpc`

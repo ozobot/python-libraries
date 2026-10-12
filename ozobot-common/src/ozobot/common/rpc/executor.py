@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from ozobot.common.asyncutils import CancellableTaskGroup, async_iterator_never
 from ozobot.common.broadcast import BroadcastManager
 from ozobot.common.logging import logger
-from ozobot.jsonrpc.exceptions import CancelledByClientError, CancelledByServerError, JsonRpcError
+from ozobot.common.rpc.exceptions import CancelledByClientError, CancelledByServerError, JsonRpcError
 
 type _TMessageId = int
 

@@ -20,8 +20,8 @@ from ozobot.ari.protocol.memread import MemReadResponseBody, MemWatchResponseBod
 from ozobot.ari.protocol.memwrite import MemWriteRequestParams
 from ozobot.common.asyncutils import BackgroundTask
 from ozobot.common.logging import logger
-from ozobot.jsonrpc.exceptions import JsonRpcError
-from ozobot.jsonrpc.executor import Executor, Query
+from ozobot.common.rpc.exceptions import JsonRpcError
+from ozobot.common.rpc.executor import Executor, Query
 from ozobot.linefollower.api.data_access import (
     EventWatcher,
     EventWatcherQueue,

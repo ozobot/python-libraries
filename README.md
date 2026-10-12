@@ -31,7 +31,6 @@ or command line utility to manage Ozobots
 But there are also other back end libraries such as:
 
  - [`ozobot-ble`](/ozobot-ble)
- - [`ozobot-jsonrpc`](/ozobot-jsonrpc)
  - [`ozobot-webrtc`](/ozobot-webrtc)
 
 ## Development
