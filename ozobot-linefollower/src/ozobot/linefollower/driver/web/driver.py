@@ -84,7 +84,7 @@ class WebDataAccessWatch[TProtoFrom: pydantic.BaseModel, TLib]:
             req = rpctypes.MemWatchRequest.create(
                 name=self._property_name, last_value=last_value.model_dump() if last_value else None
             )
-            response_model = pydantic.TypeAdapter(_get_response_model_list(self._type))
+            response_model = pydantic.TypeAdapter[list[TProtoFrom]](_get_response_model_list(self._type))
             values = await self._rpc.execute(req, response_model)
             last_value = values[-1]
             for sample in values:
