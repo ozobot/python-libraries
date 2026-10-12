@@ -5,6 +5,7 @@ import nox_uv
 
 nox.options.default_venv_backend = "uv"
 
+default_python_version = "3.14"
 test_python_versions = ["3.13", "3.14"]
 
 
@@ -38,7 +39,7 @@ def test(session):
         UvRunner(session=session, path=path).run_cmd("pytest", "-vv")
 
 
-@nox_uv.session()
+@nox_uv.session(python=default_python_version)
 def lint(session):
     for path in get_target_packages(session):
         UvRunner(session=session, path=path).run_cmd("ruff", "check")
