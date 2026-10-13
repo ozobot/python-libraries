@@ -53,7 +53,9 @@ class _MessageWriter[T: _AbstractJsonRpcMessage](typing.Protocol):
     async def write(self, data: T) -> None: ...
 
 
-class _MessageReaderWriter[T: _AbstractJsonRpcMessage](_MessageReader[T], _MessageWriter[T], typing.Protocol): ...
+class _MessageReaderWriter[TRead: _AbstractJsonRpcMessage, TWrite: _AbstractJsonRpcMessage](
+    _MessageReader[TRead], _MessageWriter[TWrite], typing.Protocol
+): ...
 
 
 _TRequest_co = typing.TypeVar("_TRequest_co", bound=_AbstractJsonRpcMessage, covariant=True)
@@ -123,7 +125,7 @@ class Executor[
     @contextlib.asynccontextmanager
     async def create(
         cls,
-        transport: _MessageReaderWriter[TIn | TCancellationMsg | TErrorMsg],
+        transport: _MessageReaderWriter[TIn | TCancellationMsg | TErrorMsg, TIn | TCancellationMsg],
         cancellation_message_type: type[TCancellationMsg],
         error_message_type: type[TErrorMsg],
     ) -> typing.AsyncIterator[Executor[TIn, TIn, TCancellationMsg, TErrorMsg]]:
