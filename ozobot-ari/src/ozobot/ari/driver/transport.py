@@ -31,7 +31,7 @@ from ozobot.ari.protocol.serialization import (
 from ozobot.ble.connection import Client, open_client
 from ozobot.ble.exceptions import DeviceDescriptionError
 from ozobot.common.logging import logger
-from ozobot.common.rpc.executor import Method
+from ozobot.common.rpc.executor import Method, StampedMessage
 from ozobot.webrtc import messaging
 from ozobot.webrtc.connection import Channel, Connection
 from ozobot.webrtc.signaling import negotiation, token
@@ -62,19 +62,20 @@ class SerializingTransportLayer:
         self._context: dict[int, Method[Request, Response, Notification]] = {}
         self._transport = transport
 
-    async def write(self, message: Message | Cancellation) -> None:
-        if isinstance(message, Request):
-            if message.id in self._context:
-                raise DuplicateMessageIdError(message.id)
+    async def write(self, message: StampedMessage[Message | Cancellation]) -> None:
+        id = message.id
+        if isinstance(message.message, Request):
+            if id in self._context:
+                raise DuplicateMessageIdError(id)
 
-            self._context[message.id] = REQUEST_METHODS[type(message)]
-        elif isinstance(message, Cancellation) and message.id in self._context:
-            _ = self._context.pop(message.id)
+            self._context[id] = REQUEST_METHODS[type(message.message)]
+        elif isinstance(message.message, Cancellation) and id in self._context:
+            _ = self._context.pop(id)
 
         raw = serialize(message)
         await self._transport.write(raw)
 
-    async def read(self) -> typing.AsyncIterator[Message | Error]:
+    async def read(self) -> typing.AsyncIterator[StampedMessage[Message | Error]]:
         async for data in self._transport.read():
             parsed = json.loads(data)
             msg_id = parsed.get("id", None)
@@ -104,17 +105,17 @@ class SerializingTransportLayer:
 
             try:
                 if parser:
-                    msg = deserialize(data, parser)
+                    stamped = deserialize(data, parser)
                 else:
-                    msg = None
+                    stamped = None
             except pydantic.ValidationError as err:
                 raise MalformedMessageError() from err
 
-            if isinstance(msg, Response | Cancellation | Error):
-                _ = self._context.pop(msg.id)
+            if stamped and isinstance(stamped.message, Response | Cancellation | Error):
+                _ = self._context.pop(msg_id)
 
-            if msg:
-                yield msg
+            if stamped:
+                yield stamped
 
 
 async def _fetch_routing_key(ble_client: Client) -> str:

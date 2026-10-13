@@ -13,10 +13,13 @@ from ozobot.common.rpc.exceptions import CancelledByClientError, CancelledByServ
 type _TMessageId = int
 
 
-class _AbstractJsonRpcMessage(typing.Protocol):
-    @property
-    def id(self) -> _TMessageId: ...
+@dataclass(frozen=True)
+class StampedMessage[T]:
+    id: _TMessageId
+    message: T
 
+
+class _AbstractJsonRpcMessage(typing.Protocol):
     @property
     def jsonrpc(self) -> str: ...
 
@@ -29,7 +32,7 @@ class _AbstractJsonRpcCancellationMessage(_AbstractJsonRpcMessage, typing.Protoc
     def message(self) -> str | None: ...
 
     @classmethod
-    def create(cls, id: int, code: int, message: str | None) -> typing.Self: ...
+    def create(cls, code: int, message: str | None) -> typing.Self: ...
 
 
 class _AbstractJsonRpcErrorDetail(typing.Protocol):
@@ -46,11 +49,11 @@ class _AbstractJsonRpcErrorMessage(_AbstractJsonRpcMessage, typing.Protocol):
 
 
 class _MessageReader[T: _AbstractJsonRpcMessage](typing.Protocol):
-    def read(self) -> typing.AsyncIterator[T]: ...
+    def read(self) -> typing.AsyncIterator[StampedMessage[T]]: ...
 
 
 class _MessageWriter[T: _AbstractJsonRpcMessage](typing.Protocol):
-    async def write(self, data: T) -> None: ...
+    async def write(self, data: StampedMessage[T]) -> None: ...
 
 
 class _MessageReaderWriter[TRead: _AbstractJsonRpcMessage, TWrite: _AbstractJsonRpcMessage](
@@ -109,6 +112,16 @@ class Query(typing.Generic[_TReq_co, _TRes_co, _TNotif_co]):
         self._method = method
 
 
+class _RequestIdCounter:
+    def __init__(self) -> None:
+        self._next_request_id = 0
+
+    def get_next(self) -> int:
+        rid = self._next_request_id
+        self._next_request_id += 1
+        return rid
+
+
 @dataclass(frozen=True)
 class Executor[
     TOut: _AbstractJsonRpcMessage,
@@ -116,10 +129,11 @@ class Executor[
     TCancellationMsg: _AbstractJsonRpcCancellationMessage,
     TErrorMsg: _AbstractJsonRpcErrorMessage,
 ]:
-    _broadcast: BroadcastManager[TIn | TCancellationMsg | TErrorMsg]
+    _broadcast: BroadcastManager[StampedMessage[TIn | TCancellationMsg | TErrorMsg]]
     _writer: _MessageWriter[TOut | TCancellationMsg]
     _cancellation_message_type: type[TCancellationMsg]
     _error_message_type: type[TErrorMsg]
+    _id_counter: _RequestIdCounter
 
     @classmethod
     @contextlib.asynccontextmanager
@@ -129,7 +143,7 @@ class Executor[
         cancellation_message_type: type[TCancellationMsg],
         error_message_type: type[TErrorMsg],
     ) -> typing.AsyncIterator[Executor[TIn, TIn, TCancellationMsg, TErrorMsg]]:
-        broadcast = BroadcastManager[TIn | TCancellationMsg | TErrorMsg]()
+        broadcast = BroadcastManager[StampedMessage[TIn | TCancellationMsg | TErrorMsg]]()
 
         async def _read() -> typing.Never:
             while True:
@@ -144,7 +158,11 @@ class Executor[
 
                 try:
                     yield Executor[TIn, TIn, TCancellationMsg, TErrorMsg](
-                        broadcast, transport, cancellation_message_type, error_message_type
+                        broadcast,
+                        transport,
+                        cancellation_message_type,
+                        error_message_type,
+                        _RequestIdCounter(),
                     )
                 except Exception as err:
                     program_exception = err
@@ -170,8 +188,8 @@ class Executor[
     async def execute[TRes: _AbstractJsonRpcMessage, TNotif: _AbstractJsonRpcMessage](
         self, query: Query[TOut, TRes, TNotif]
     ) -> typing.AsyncIterator[_ExecutorQuery[TRes, TNotif]]:
-        message_id = query._request.id
-        await self._writer.write(query._request)
+        message_id = self._id_counter.get_next()
+        await self._writer.write(StampedMessage(message_id, query._request))
 
         async with (
             self._expect_messages(message_id, query._method.response) as response_iter,
@@ -216,7 +234,7 @@ class Executor[
                 message = await anext(cancellation_iter)
                 if not cancellation_future.done():
                     cancellation_future.set_exception(
-                        CancelledByServerError(message.id, message.code, message.message or "")
+                        CancelledByServerError(message_id, message.code, message.message or "")
                     )
                 tg.cancel()
 
@@ -224,7 +242,7 @@ class Executor[
                 message = await anext(error_iter)
                 if not cancellation_future.done():
                     cancellation_future.set_exception(
-                        JsonRpcError(message.id, message.error.code, message.error.message)
+                        JsonRpcError(message_id, message.error.code, message.error.message)
                     )
                 tg.cancel()
 
@@ -279,14 +297,17 @@ class Executor[
     async def _iterate_messages[
         T: _AbstractJsonRpcMessage | _AbstractJsonRpcCancellationMessage | _AbstractJsonRpcErrorMessage
     ](
-        self, id: _TMessageId, message_type: type[T], read_queue: asyncio.Queue[TIn | TCancellationMsg | TErrorMsg]
+        self,
+        id: _TMessageId,
+        message_type: type[T],
+        read_queue: asyncio.Queue[StampedMessage[TIn | TCancellationMsg | TErrorMsg]],
     ) -> typing.AsyncGenerator[T]:
         while True:
-            message = await read_queue.get()
+            envelope = await read_queue.get()
 
-            if isinstance(message, message_type) and message.id == id:
-                yield message
+            if envelope.id == id and isinstance(envelope.message, message_type):
+                yield envelope.message
 
     async def _send_cancellation_message(self, id: _TMessageId, message: str) -> None:
-        msg = self._cancellation_message_type.create(id, 0, message)
-        await self._writer.write(msg)
+        msg = self._cancellation_message_type.create(0, message)
+        await self._writer.write(StampedMessage(id, msg))

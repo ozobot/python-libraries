@@ -111,7 +111,7 @@ async def test_open_connection_key() -> None:
             "MoveStraight",
             [200, 100],
             (
-                request.MoveStraightRequest(id=0, params=request.MoveStraightRequestParams(distance=0.2, speed=0.1)),
+                request.MoveStraightRequest(params=request.MoveStraightRequestParams(distance=0.2, speed=0.1)),
                 methods.MOVE_STRAIGHT,
             ),
         ),
@@ -120,7 +120,7 @@ async def test_open_connection_key() -> None:
             "Rotate",
             [90, 10],
             (
-                request.RotateRequest(id=0, params=request.RotateRequestParams(angle=90, speed=10)),
+                request.RotateRequest(params=request.RotateRequestParams(angle=90, speed=10)),
                 methods.ROTATE,
             ),
         ),
@@ -130,7 +130,6 @@ async def test_open_connection_key() -> None:
             [100, 10, 3000],
             (
                 request.VelocityRequest(
-                    id=0,
                     params=request.VelocityRequestParams(
                         linear_speed=0.1, rotation_speed=math.radians(10), expiration=3
                     ),
@@ -143,7 +142,7 @@ async def test_open_connection_key() -> None:
             "PlayTone",
             [1, 2000],
             (
-                request.PlayToneRequest(id=0, params=request.PlayToneRequestParams(frequency=1, duration=2)),
+                request.PlayToneRequest(params=request.PlayToneRequestParams(frequency=1, duration=2)),
                 methods.PLAY_TONE,
             ),
         ),
@@ -152,7 +151,7 @@ async def test_open_connection_key() -> None:
             "ExecuteFile",
             ["happy"],
             (
-                request.PlaySoundRequest(id=0, params=request.PlaySoundRequestParams(name="happy", loop=False)),
+                request.PlaySoundRequest(params=request.PlaySoundRequestParams(name="happy", loop=False)),
                 methods.PLAY_SOUND,
             ),
         ),
@@ -161,7 +160,7 @@ async def test_open_connection_key() -> None:
             "UserIoPrint",
             ["Hello World"],
             (
-                request.UserIoPrintRequest(id=0, params=request.UserIoPrintRequestParams(message="Hello World")),
+                request.UserIoPrintRequest(params=request.UserIoPrintRequestParams(message="Hello World")),
                 methods.USER_IO_PRINT,
             ),
         ),
@@ -171,7 +170,7 @@ async def test_open_connection_key() -> None:
             ["Alert Message"],
             (
                 request.UserIoAlertRequest(
-                    id=0, params=request.UserIoAlertRequestParams(message="Alert Message", cancellable=False)
+                    params=request.UserIoAlertRequestParams(message="Alert Message", cancellable=False)
                 ),
                 methods.USER_IO_ALERT,
             ),
@@ -197,9 +196,9 @@ async def test_command_with_response(
 async def test_line_navigation(follow_bool: bool, follow_protocol: typing.Literal["Follow", "DoNotFollow"]) -> None:
     executor_mock, query_mock = _create_query(
         notifications=[
-            notification.LineNavigationNotification(id=0, result=types.Intersection(backward=True, left=True)),
+            notification.LineNavigationNotification(result=types.Intersection(backward=True, left=True)),
             notification.LineNavigationNotification(
-                id=0, result=notification.LineNavigationColorNotificationBody(colors=["Red", "Black", "Blue"])
+                result=notification.LineNavigationColorNotificationBody(colors=["Red", "Black", "Blue"])
             ),
         ]
     )
@@ -215,7 +214,6 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: typing.Litera
 
     query_mock.assert_called_once_with(
         request.LineNavigationRequest(
-            id=0,
             params=request.LineNavigationRequestParams(
                 direction="Left", follow=follow_protocol, detect_color_codes=True
             ),
@@ -227,7 +225,7 @@ async def test_line_navigation(follow_bool: bool, follow_protocol: typing.Litera
 async def test_line_navigation_failure_raises_command_error_directly() -> None:
     executor_mock, _ = _create_query(
         notifications=[
-            notification.LineNavigationNotification(id=0, result=types.Intersection(backward=True, left=True)),
+            notification.LineNavigationNotification(result=types.Intersection(backward=True, left=True)),
         ],
         response=Mock(type="error"),
     )
@@ -235,16 +233,6 @@ async def test_line_navigation_failure_raises_command_error_directly() -> None:
 
     with pytest.raises(AriProtocolCommandError):
         await driver.line_navigation(Direction.LEFT, True)
-
-
-async def test_request_id_counter() -> None:
-    executor_mock, query_mock = _create_query()
-    driver = AriNativeDriver(executor_mock)
-    await driver.move(0, 0)
-    await driver.move(1, 1)
-
-    assert query_mock.call_args_list[0].args[0].id == 0
-    assert query_mock.call_args_list[1].args[0].id == 1
 
 
 @pytest.mark.parametrize(
@@ -270,7 +258,6 @@ async def test_set_led(command_lights: LEDMask, rpc_lights: types.Lights) -> Non
 
     query_mock.assert_called_once_with(
         request.SetLEDRequest(
-            id=0,
             params=request.SetLEDRequestParams(
                 lights=rpc_lights,
                 color=types.Color(red=25, green=51, blue=76),
@@ -288,7 +275,6 @@ async def test_native_data_access_read() -> None:
 
     query_mock.assert_called_with(
         memread.MemReadRequest(
-            id=0,
             params=memread.MemReadRequestParams(
                 segment="lineFollowingSpeed",
             ),
@@ -305,7 +291,6 @@ async def test_native_data_access_write() -> None:
 
     query_mock.assert_called_with(
         memwrite.MemWriteRequest(
-            id=0,
             params=memwrite.MemWriteRequestLineFollowingSpeedParams(
                 segment="lineFollowingSpeed",
                 value=1.23,
@@ -390,7 +375,6 @@ async def test_user_io_prompt(
 
     query_mock.assert_called_once_with(
         request.UserIoPromptRequest(
-            id=0,
             params=request.UserIoPromptRequestParams(
                 message="Choose an option", type=type_name, options=protocol_options, cancellable=False
             ),
@@ -403,16 +387,16 @@ async def test_native_data_access_watch() -> None:
     executor_mock, query_mock = _create_query(
         notifications=[
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="White", light_source=True, timestamp=0)
+                notification=memread.MemReadResponseLineColor(color="White", light_source=True, timestamp=0)
             ),
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="Red", light_source=True, timestamp=1)
+                notification=memread.MemReadResponseLineColor(color="Red", light_source=True, timestamp=1)
             ),
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="Blue", light_source=True, timestamp=2)
+                notification=memread.MemReadResponseLineColor(color="Blue", light_source=True, timestamp=2)
             ),
             memread.WatchNotification(
-                id=0, notification=memread.MemReadResponseLineColor(color="Green", light_source=True, timestamp=3)
+                notification=memread.MemReadResponseLineColor(color="Green", light_source=True, timestamp=3)
             ),
         ],
     )
@@ -430,7 +414,6 @@ async def test_native_data_access_watch() -> None:
 
     query_mock.assert_called_with(
         memread.WatchRequest(
-            id=0,
             params=memread.MemReadRequestParams(
                 segment="lineColor",
             ),

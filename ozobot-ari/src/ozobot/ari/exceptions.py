@@ -14,6 +14,11 @@ class MalformedMessageError(TransportError):
         super().__init__("Unable to parse received message")
 
 
+class MissingMessageIdError(TransportError):
+    def __init__(self, msg: str) -> None:
+        super().__init__(f"Message id is missing: {msg}")
+
+
 class AriProtocolError(OzobotError): ...
 
 
