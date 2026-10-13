@@ -1,3 +1,7 @@
+import json
+
+from ozobot.ari.exceptions import MalformedMessageError, MissingMessageIdError
+from ozobot.common.rpc.executor import StampedMessage
 from pydantic import TypeAdapter
 
 from . import request
@@ -16,9 +20,19 @@ MessageTypeAdapter = TypeAdapter[Message](
 )
 
 
-def serialize(message: Message) -> str:
-    return message.model_dump_json(by_alias=True)
+def serialize(message: StampedMessage[Message]) -> str:
+    payload = message.message.model_dump(mode="json", by_alias=True)
+    return json.dumps({"id": message.id, **payload}, separators=(",", ":"))
 
 
-def deserialize(data: str, adapter: TypeAdapter[Message]) -> Message:
-    return adapter.validate_json(data, by_alias=True)
+def deserialize(data: str, adapter: TypeAdapter[Message]) -> StampedMessage[Message]:
+    parsed = json.loads(data)
+    msg = adapter.validate_json(data, by_alias=True)
+    try:
+        id = parsed["id"]
+    except KeyError:
+        raise MissingMessageIdError(data) from None
+    if isinstance(id, bool) or not isinstance(id, int):
+        raise MalformedMessageError()
+
+    return StampedMessage(id, msg)

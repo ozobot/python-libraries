@@ -23,7 +23,6 @@ class Model(BaseModel):
 
 
 class Message(Model):
-    id: int
     jsonrpc: str
 
 
@@ -48,8 +47,8 @@ class Cancellation(Message):
     message: typing.Annotated[str | None, PlainSerializer(lambda x: x, when_used="unless-none")] = None
 
     @classmethod
-    def create(cls, id: int, code: int, message: str | None) -> Cancellation:
-        return Cancellation(id=id, code=code, message=message)
+    def create(cls, code: int, message: str | None) -> Cancellation:
+        return Cancellation(code=code, message=message)
 
 
 class ErrorDetail(Model):
