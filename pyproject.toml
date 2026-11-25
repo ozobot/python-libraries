@@ -77,6 +77,10 @@ select = [
     # async
     "ASYNC",
 ]
+ignore = [
+    # deprecated rule; tuples in isinstance/issubclass are fine (and faster)
+    "UP038",
+]
 
 [tool.pytest.ini_options]
 required_plugins = ["pytest-asyncio"]
