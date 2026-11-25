@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.13"
 resolution-markers = [
     "sys_platform == 'emscripten'",
@@ -14,6 +14,7 @@ members = [
     "ozobot-cli",
     "ozobot-common",
     "ozobot-evo",
+    "ozobot-libblockly",
     "ozobot-library",
     "ozobot-linefollower",
     "ozobot-ora",
@@ -973,6 +974,26 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [{ name = "ozobot-web", editable = "ozobot-web" }]
+
+[[package]]
+name = "ozobot-libblockly"
+source = { editable = "ozobot-libblockly" }
+dependencies = [
+    { name = "ozobot-actors" },
+    { name = "ozobot-common" },
+    { name = "ozobot-linefollower" },
+    { name = "ozobot-userio" },
+    { name = "ozobot-web" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ozobot-actors", editable = "ozobot-actors" },
+    { name = "ozobot-common", editable = "ozobot-common" },
+    { name = "ozobot-linefollower", editable = "ozobot-linefollower" },
+    { name = "ozobot-userio", editable = "ozobot-userio" },
+    { name = "ozobot-web", editable = "ozobot-web" },
+]
 
 [[package]]
 name = "ozobot-library"

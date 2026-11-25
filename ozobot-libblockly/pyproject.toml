@@ -1,0 +1,46 @@
+[project]
+name = "ozobot-libblockly"
+description = "Library with utility functions used by programs exported from Blockly by Ozobot Editor"
+readme = "README.md"
+authors = [
+    { name = "Ondrej Novak", email = "ondrej.novak@ozobot.com" }
+]
+requires-python = ">=3.13"
+dynamic = ["version"]
+dependencies = [
+    "ozobot-actors>=0.3.0,<0.4.0",
+    "ozobot-common>=0.3.0,<0.4.0",
+    "ozobot-linefollower>=0.3.0,<0.4.0",
+    "ozobot-userio>=0.3.0,<0.4.0",
+]
+
+[project.urls]
+Homepage = "https://ozobot.com"
+Github = "https://github.com/ozobot/python-libraries"
+
+[tool.hatch.build.targets.sdist]
+sources = ["src"]
+only-include = ["src/ozobot"]
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+only-include = ["src/ozobot"]
+
+[tool.uv.sources]
+ozobot-actors = { workspace = true }
+ozobot-common = { workspace = true }
+ozobot-linefollower = { workspace = true }
+ozobot-userio = { workspace = true }
+ozobot-web = { workspace = true }
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "no-guess-dev"
+root = "../"
+git_describe_command = ['git', 'describe', '--dirty', '--tags', '--long', '--abbrev=40', '--match', 'ozobot-libblockly-*']
