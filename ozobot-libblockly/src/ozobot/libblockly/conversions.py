@@ -15,7 +15,9 @@ class InvalidValue(OzobotError):
 
 
 def type_cast_number(value: Any) -> int | float:
-    if isinstance(value, (int | float)):
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int | float):
         return value
 
     try:
@@ -26,8 +28,6 @@ def type_cast_number(value: Any) -> int | float:
         return float(str(value))
     except ValueError as e:
         raise InvalidValue(value, "number") from e
-
-    raise InvalidValue(value, "number")
 
 
 def type_cast_bool(value: Any) -> bool:
