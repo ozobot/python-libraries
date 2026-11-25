@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import typing
 import contextlib
 
 from ozobot.common.exceptions import OzobotError
