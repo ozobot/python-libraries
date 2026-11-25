@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from _ozo import _rpcCoroutine
+from ozobot.actors.actors import context
 from ozobot.linefollower.datatypes import Direction, NamedColor
+from ozobot.linefollower.driver.web import Rpc
 from ozobot.userio import conversions
 from ozobot.userio.web import UserIoWebDriverComponent
-from ozobot.linefollower.driver.web import Rpc
-from ozobot.actors.actors import context
-
 
 IMPLICIT_BROWSER_TERMINAL_NAME = "BROWSER_TERMINAL"
 
@@ -37,9 +36,7 @@ class BrowserTerminal:
         *,
         cancellable: bool = False,
     ) -> T:
-        return await self._userio_component.prompt(
-            message, _type, options, cancellable=cancellable
-        )
+        return await self._userio_component.prompt(message, _type, options, cancellable=cancellable)
 
 
 class LLMBot:
