@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 import math
 
-from ozobot.linefollower.api.core import LineFollower
-from ozobot.actors.linefollower import set_velocity
 from ozobot.actors.actors import context
+from ozobot.actors.linefollower import set_velocity
+from ozobot.linefollower.api.core import LineFollower
 
 
 async def set_wheel_speed(left_mmps: float, right_mmps: float) -> None:
