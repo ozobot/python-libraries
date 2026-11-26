@@ -1,3 +1,6 @@
+import sys
+
+
 class OzobotError(Exception):
     """Base Ozobot library error"""
 
@@ -26,3 +29,13 @@ class OzobotError(Exception):
             args = [message_str]
         name = self.__class__.__name__
         return f"{name}({', '.join(args)})"
+
+
+class PlatformNotSupportedError(OzobotError):
+    """Feature is not available on the current platform."""
+
+    def __init__(self, feature: str) -> None:
+        super().__init__(
+            f"{feature} is not supported on platform {sys.platform!r}",
+            context={"feature": feature, "platform": sys.platform},
+        )
