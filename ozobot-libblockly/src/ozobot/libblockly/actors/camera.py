@@ -3,17 +3,22 @@ from __future__ import annotations
 import sys
 import typing
 
+import pydantic
 from ozobot.actors.actors import context
 from ozobot.common.exceptions import PlatformNotSupportedError
-from ozobot.web.browser import _rpcCoroutine
+from ozobot.linefollower.driver.web import Rpc, rpctypes
+
+
+class GrabImageRequest(rpctypes.BaseRequest):
+    method: typing.Literal["grabImage"] = "grabImage"
 
 
 class CameraWebDriver:
     def __init__(self, name: str) -> None:
-        self._name = name
+        self._rpc = Rpc(name)
 
     async def grab_image(self) -> str:
-        return await _rpcCoroutine(self._name, "grabImage", [])
+        return await self._rpc.execute(GrabImageRequest(), pydantic.TypeAdapter(str))
 
 
 if typing.TYPE_CHECKING:
