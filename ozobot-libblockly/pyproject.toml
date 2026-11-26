@@ -12,7 +12,8 @@ dependencies = [
     "ozobot-common>=0.3.0,<0.4.0",
     "ozobot-linefollower>=0.3.0,<0.4.0",
     "ozobot-userio>=0.3.0,<0.4.0",
-    "ozobot-web>=0.3.0,<0.4.0",
+    "pydantic>=2.10.5; platform_system == 'Emscripten'",
+    "pydantic>=2.11.5; platform_system != 'Emscripten'",
 ]
 
 [project.urls]
@@ -32,7 +33,6 @@ ozobot-actors = { workspace = true }
 ozobot-common = { workspace = true }
 ozobot-linefollower = { workspace = true }
 ozobot-userio = { workspace = true }
-ozobot-web = { workspace = true }
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
