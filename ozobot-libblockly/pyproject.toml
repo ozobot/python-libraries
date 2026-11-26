@@ -12,6 +12,7 @@ dependencies = [
     "ozobot-common>=0.3.0,<0.4.0",
     "ozobot-linefollower>=0.3.0,<0.4.0",
     "ozobot-userio>=0.3.0,<0.4.0",
+    "ozobot-web>=0.3.0,<0.4.0",
 ]
 
 [project.urls]
