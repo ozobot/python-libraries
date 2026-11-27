@@ -57,7 +57,7 @@ async def library_animation_rainbow() -> None:
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
     def _clamp(val: float) -> float:
         return max(0, min(val, 1))
-    local_gradient = 0
+    local_gradient = 0.0
     while local_gradient < 1:
         await set_led(LEDMask.ALL_FRONT | LEDMask.TOP, RawColor(_clamp(1 - local_gradient), _clamp(local_gradient), 0))
         local_gradient = local_gradient + 1 / 127
