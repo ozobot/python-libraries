@@ -12,7 +12,7 @@ async def _infinite():
 async def test_async_iterator_never() -> None:
     it = async_iterator_never()
 
-    typing.assert_type(it, typing.AsyncGenerator[typing.Never])
+    typing.assert_type(it, typing.AsyncGenerator[typing.Never, None])
 
     with pytest.raises(asyncio.TimeoutError):
         async with asyncio.timeout(0.1):

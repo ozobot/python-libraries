@@ -4,7 +4,7 @@ import typing
 from builtins import RuntimeError
 
 
-async def async_iterator_never() -> typing.AsyncGenerator[typing.Never]:
+async def async_iterator_never() -> typing.AsyncGenerator[typing.Never, None]:
     yield await asyncio.Future()
 
 
