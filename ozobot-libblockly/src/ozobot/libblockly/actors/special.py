@@ -7,12 +7,12 @@ from ozobot.actors.linefollower import move, rotate, set_led, set_velocity
 from ozobot.linefollower.datatypes import LEDMask, NamedColor, RawColor
 
 
-async def library_generate_circle(radius: float, speed: float, side: float, delay: float) -> None:
+async def move_circle(radius: float, speed: float, side: float, delay: float) -> None:
     diff = round(speed / radius) * side
     await set_velocity(speed, math.degrees(diff / 10), delay)
 
 
-async def library_move_zigzag(speed: float) -> None:
+async def move_zigzag(speed: float) -> None:
     angular_speed = speed * 2850
     linear_speed = speed * 1000
     await rotate(-45, angular_speed)
@@ -27,7 +27,7 @@ async def library_move_zigzag(speed: float) -> None:
     await rotate(-45, angular_speed)
 
 
-async def library_move_wave(speed: float) -> None:
+async def move_wave(speed: float) -> None:
     angle_speed = abs(50 * speed)
     try:
         task = asyncio.create_task(rotate(math.degrees(1), math.degrees(angle_speed)))
@@ -41,7 +41,7 @@ async def library_move_wave(speed: float) -> None:
         task.cancel()
 
 
-async def library_animation_police_lights() -> None:
+async def animate_police_lights() -> None:
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
     for _ in range(3):
         for _ in range(6):
@@ -57,7 +57,7 @@ async def library_animation_police_lights() -> None:
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
 
 
-async def library_animation_rainbow() -> None:
+async def animate_rainbow() -> None:
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
 
     def _clamp(val: float) -> float:
@@ -79,7 +79,7 @@ async def library_animation_rainbow() -> None:
     await set_led(LEDMask.ALL_FRONT | LEDMask.TOP, NamedColor.BLACK)
 
 
-async def library_animation_traffic_lights() -> None:
+async def animate_traffic_lights() -> None:
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
     await set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_RIGHT, RawColor(0, 1, 0))
     await asyncio.sleep(4)
@@ -95,7 +95,7 @@ async def library_animation_traffic_lights() -> None:
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
 
 
-async def library_set_front_lights(
+async def _set_front_lights(
     color_1: list[float],
     color_2: list[float],
     color_3: list[float],
@@ -109,62 +109,62 @@ async def library_set_front_lights(
     await set_led(LEDMask.FRONT_RIGHT, RawColor(color_5[0], color_5[1], color_5[2]))
 
 
-async def library_animation_disco() -> None:
+async def animate_disco() -> None:
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
     await set_led(LEDMask.TOP, RawColor(1, 0, 0))
-    await library_set_front_lights([1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0.5, 0], [0, 1, 1])
+    await _set_front_lights([1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0.5, 0], [0, 1, 1])
     await asyncio.sleep(0.1)
     await set_led(LEDMask.TOP, RawColor(0, 1, 0))
-    await library_set_front_lights([0, 0, 1], [1, 0.5, 0], [0, 1, 1], [1, 0, 0], [1, 1, 0])
+    await _set_front_lights([0, 0, 1], [1, 0.5, 0], [0, 1, 1], [1, 0, 0], [1, 1, 0])
     await asyncio.sleep(0.1)
     await set_led(LEDMask.TOP, RawColor(0, 0, 1))
-    await library_set_front_lights([0, 1, 1], [1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 1, 0])
+    await _set_front_lights([0, 1, 1], [1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 1, 0])
     await asyncio.sleep(0.1)
     await set_led(LEDMask.TOP, RawColor(1, 0.5, 0))
-    await library_set_front_lights([1, 1, 0], [1, 1, 1], [0, 1, 0], [1, 0, 0], [0.5, 0, 1])
+    await _set_front_lights([1, 1, 0], [1, 1, 1], [0, 1, 0], [1, 0, 0], [0.5, 0, 1])
     await asyncio.sleep(0.1)
     await set_led(LEDMask.TOP, RawColor(0, 1, 1))
-    await library_set_front_lights([0, 1, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1], [1, 0.5, 0])
+    await _set_front_lights([0, 1, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1], [1, 0.5, 0])
     await asyncio.sleep(0.1)
     await set_led(LEDMask.TOP, RawColor(1, 0, 0))
-    await library_set_front_lights([0, 1, 0], [0, 0, 1], [1, 0.5, 0], [0, 1, 1], [1, 0, 0])
+    await _set_front_lights([0, 1, 0], [0, 0, 1], [1, 0.5, 0], [0, 1, 1], [1, 0, 0])
     await asyncio.sleep(0.1)
     await set_led(LEDMask.TOP, RawColor(1, 1, 0))
-    await library_set_front_lights([1, 0.5, 0], [0, 1, 1], [1, 0, 0], [1, 1, 0], [1, 1, 1])
+    await _set_front_lights([1, 0.5, 0], [0, 1, 1], [1, 0, 0], [1, 1, 0], [1, 1, 1])
     await asyncio.sleep(0.1)
     await set_led(LEDMask.TOP, RawColor(1, 1, 1))
-    await library_set_front_lights([1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 1, 0], [100 / 127, 5 / 127, 29 / 127])
+    await _set_front_lights([1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 1, 0], [100 / 127, 5 / 127, 29 / 127])
     await asyncio.sleep(0.1)
     await set_led(LEDMask.TOP, RawColor(0, 1, 1))
-    await library_set_front_lights([1, 1, 1], [0, 1, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1])
+    await _set_front_lights([1, 1, 1], [0, 1, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1])
     await asyncio.sleep(0.1)
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
 
 
-async def library_animation_christmas_tree() -> None:
+async def animate_christmas_tree() -> None:
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
     await set_led(LEDMask.TOP, RawColor(0, 1, 1))
-    await library_set_front_lights([0, 1, 0], [1, 0, 0], [1, 0.5, 0], [0, 0, 1], [1, 1, 0])
+    await _set_front_lights([0, 1, 0], [1, 0, 0], [1, 0.5, 0], [0, 0, 1], [1, 1, 0])
     await asyncio.sleep(1)
     await set_led(LEDMask.TOP, RawColor(1, 1, 0))
-    await library_set_front_lights([0, 1, 1], [0, 1, 0], [1, 0, 0], [1, 0.5, 0], [0, 0, 1])
+    await _set_front_lights([0, 1, 1], [0, 1, 0], [1, 0, 0], [1, 0.5, 0], [0, 0, 1])
     await asyncio.sleep(1)
     await set_led(LEDMask.TOP, RawColor(0, 0, 1))
-    await library_set_front_lights([1, 1, 0], [0, 1, 1], [0, 1, 0], [1, 0, 0], [1, 0.5, 0])
+    await _set_front_lights([1, 1, 0], [0, 1, 1], [0, 1, 0], [1, 0, 0], [1, 0.5, 0])
     await asyncio.sleep(1)
     await set_led(LEDMask.TOP, RawColor(1, 0.5, 0))
-    await library_set_front_lights([0, 0, 1], [1, 1, 0], [0, 1, 1], [0, 1, 0], [1, 0, 0])
+    await _set_front_lights([0, 0, 1], [1, 1, 0], [0, 1, 1], [0, 1, 0], [1, 0, 0])
     await asyncio.sleep(1)
     await set_led(LEDMask.TOP, RawColor(1, 0, 0))
-    await library_set_front_lights([1, 0.5, 0], [0, 0, 1], [1, 1, 0], [0, 1, 1], [0, 1, 0])
+    await _set_front_lights([1, 0.5, 0], [0, 0, 1], [1, 1, 0], [0, 1, 1], [0, 1, 0])
     await asyncio.sleep(1)
     await set_led(LEDMask.TOP, RawColor(0, 1, 0))
-    await library_set_front_lights([1, 0, 0], [1, 0.5, 0], [0, 0, 1], [1, 1, 0], [0, 1, 1])
+    await _set_front_lights([1, 0, 0], [1, 0.5, 0], [0, 0, 1], [1, 1, 0], [0, 1, 1])
     await asyncio.sleep(1)
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
 
 
-async def library_animation_firework() -> None:
+async def animate_firework() -> None:
     all_lights = LEDMask.ALL_FRONT | LEDMask.TOP
     await set_led(all_lights, NamedColor.BLACK)
     local_timer = 0
