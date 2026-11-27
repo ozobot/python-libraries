@@ -16,7 +16,7 @@ async def library_move_zigzag(speed: float) -> None:
     linear_speed = speed * 1000
     await rotate(-45, angular_speed)
     await move(10, linear_speed)
-    for count in range(2):
+    for _ in range(2):
         await rotate(90, angular_speed)
         await move(20, linear_speed)
         await rotate(-90, angular_speed)
@@ -40,13 +40,13 @@ async def library_move_wave(speed: float) -> None:
 
 async def library_animation_police_lights() -> None:
     await set_led(LEDMask.ALL_ROBOT, NamedColor.BLACK)
-    for count in range(3):
-        for i in range(6):
+    for _ in range(3):
+        for _ in range(6):
             await set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_LEFT_CENTER, RawColor(100/127, 0, 0))
             await asyncio.sleep(0.05)
             await set_led(LEDMask.FRONT_LEFT | LEDMask.FRONT_LEFT_CENTER, NamedColor.BLACK)
             await asyncio.sleep(0.02)
-        for i in range(6):
+        for _ in range(6):
             await set_led(LEDMask.FRONT_RIGHT_CENTER | LEDMask.FRONT_RIGHT, RawColor(0, 0, 100/127))
             await asyncio.sleep(0.05)
             await set_led(LEDMask.FRONT_RIGHT_CENTER | LEDMask.FRONT_RIGHT, NamedColor.BLACK)
@@ -188,9 +188,9 @@ async def library_animation_firework() -> None:
         await asyncio.sleep(0.01)
         local_timer = local_timer + 1
     await asyncio.sleep(0.5)
-    for count in range(3):
+    for _ in range(3):
         color_value = 0
-        for count in range(3):
+        for _ in range(3):
             local_timer = 127
             while local_timer > 0:
                 if local_timer > 127 - white_treshold:
